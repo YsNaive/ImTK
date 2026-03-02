@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../ImTK/ImTK.csproj" />
+  <Project Path="ImTK.Test.csproj" />
+</Solution>
