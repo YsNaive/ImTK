@@ -1,6 +1,7 @@
 ﻿using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -17,6 +18,8 @@ namespace ImTK
         {
             s_root = new MenuItem("main-menu-root", null); 
 
+            List<Tuple<MethodInfo, MainMenuAttribute>> matched = new();
+
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 // 略過系統組件以提升效能 (可選)
@@ -27,11 +30,10 @@ namespace ImTK
                 {
                     // 搜尋所有靜態方法
                     var methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                    List<Tuple<MethodInfo, MainMenuAttribute>> matched = new();
                     foreach (var method in methods)
                     {
                         // 檢查是否純 Action
-                        if (method.GetParameters().Length > 0)
+                        if (method.GetParameters().Length > 0 || method.ReturnType != typeof(void))
                             continue;
 
                         // 檢查是否有 MainMenuAttribute
@@ -41,12 +43,13 @@ namespace ImTK
 
                         matched.Add(new(method, attr));
                     }
-                    foreach(var match in  matched.OrderBy(item => -item.Item2.priority))
-                    {
-                        var action = (Action)Delegate.CreateDelegate(typeof(Action), match.Item1);
-                        RegisterItem(match.Item2.path, action);
-                    }
                 }
+            }
+
+            foreach(var match in matched.OrderBy(item => -item.Item2.priority))
+            {
+                var action = (Action)Delegate.CreateDelegate(typeof(Action), match.Item1);
+                RegisterItem(match.Item2.path, action);
             }
         }
 

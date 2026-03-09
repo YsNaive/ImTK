@@ -36,9 +36,10 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
     public void UpdateVisualTree(double deltaTime)
     {
         this.Update(deltaTime);
-        foreach (var ve in hierarchy.Children())
+        for (int i = hierarchy.childrenCount - 1; i >= 0; i--)
         {
-            if (ve.enable)
+            var ve = hierarchy.ChildAt(i);
+            if (ve != null && ve.enable)
             {
                 ve.UpdateVisualTree(deltaTime);
             }
@@ -70,9 +71,10 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
     public virtual void RenderVisualTree(double deltaTime)
     {
         this.Render(deltaTime);
-        foreach(var ve in hierarchy.Children())
+        for (int i = 0; i < hierarchy.childrenCount; i++)
         {
-            if (ve.enable)
+            var ve = hierarchy.ChildAt(i);
+            if (ve != null && ve.enable)
             {
                 ve.RenderVisualTree(deltaTime);
             }
