@@ -14,7 +14,7 @@ public static class ImTKSilk
     private static GL s_gl;
     private static IInputContext s_input;
     private static ImGuiController s_controller;
-
+    
     private static Action<float> s_onUpdate;
     private static Action<float> s_onRender;
 
@@ -55,6 +55,23 @@ public static class ImTKSilk
                 ImGuiIOPtr io = ImGui.GetIO();
                 io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
                 io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+
+                int fontSize = 16;
+                string 
+                    fontPath = @"C:\Windows\Fonts\jf-openhuninn-2.1.ttf";
+                if (!System.IO.File.Exists(fontPath))
+                    fontPath = @"C:\Windows\Fonts\msjh.ttc";
+                if (!System.IO.File.Exists(fontPath))
+                    fontPath = "";
+
+                if (!string.IsNullOrEmpty(fontPath))
+                {
+                    io.Fonts.AddFontFromFileTTF(fontPath, fontSize, null, io.Fonts.GetGlyphRangesChineseFull());
+                }
+                else
+                {
+                    io.FontGlobalScale = fontSize / 13f; // 13 是 ImGui 預設字體大小
+                }
             }
         );
     }
@@ -82,22 +99,19 @@ public static class ImTKSilk
 
         ImGuiIOPtr io = ImGui.GetIO();
 
-        ImGuiWindowFlags windowFlags =
-            ImGuiWindowFlags.MenuBar |
-            ImGuiWindowFlags.NoDocking;
-
         ImGuiViewportPtr viewport = ImGui.GetMainViewport();
 
         ImGui.SetNextWindowPos(viewport.WorkPos);
         ImGui.SetNextWindowSize(viewport.WorkSize);
         ImGui.SetNextWindowViewport(viewport.ID);
 
-        windowFlags |=
-            ImGuiWindowFlags.NoTitleBar |
-            ImGuiWindowFlags.NoCollapse |
-            ImGuiWindowFlags.NoResize |
-            ImGuiWindowFlags.NoMove |
-            ImGuiWindowFlags.NoBringToFrontOnFocus |
+        ImGuiWindowFlags windowFlags =
+            ImGuiWindowFlags.NoDocking              |
+            ImGuiWindowFlags.NoTitleBar             |
+            ImGuiWindowFlags.NoCollapse             |
+            ImGuiWindowFlags.NoResize               |
+            ImGuiWindowFlags.NoMove                 |
+            ImGuiWindowFlags.NoBringToFrontOnFocus  |
             ImGuiWindowFlags.NoNavFocus;
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0.0f);

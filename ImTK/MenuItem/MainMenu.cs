@@ -50,14 +50,20 @@ namespace ImTK
             }
         }
 
-        public static MenuItem RegisterItem(string path, Action onClick)
+        public static MenuItem RegisterItem(string path)
         {
             var item = root.MakePath(path);
+            return item;
+        }
+
+        public static MenuItem RegisterItem(string path, Action onClick)
+        {
+            var item = RegisterItem(path);
             item.onClick += onClick;
             return item;
         }
 
-        public static void Render()
+        public static void RenderAll()
         {
             ImGui.BeginMainMenuBar();
             foreach(var menu in root.Children())
