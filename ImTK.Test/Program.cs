@@ -42,7 +42,7 @@ class Program
             },
             onRender: (dt) =>
             {
-                MainMenu.Render();
+                MainMenu.RenderAll();
 
                 ImGui.Begin("Dock Test Window 1");
                 ImGui.Text("Window 1");
