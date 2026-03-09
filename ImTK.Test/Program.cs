@@ -33,14 +33,16 @@ class Program
     static void RunImTKSilk()
     {
         // 註冊時直接傳入邏輯
-        ImTKSilk.Initialize(
-            "ImTK Action Test",
-            1280, 720,
-            onUpdate: (dt) =>
+        ImTKSilk.Initialize(new ImTKSilkConstant
+        {
+            WindowTitle = "ImTK Action Test",
+            WindowWidth = 1280,
+            WindowHeight = 720,
+            OnUpdate = (dt) =>
             {
                 // 更新邏輯
             },
-            onRender: (dt) =>
+            OnRender = (dt) =>
             {
                 MainMenu.RenderAll();
 
@@ -59,7 +61,7 @@ class Program
                 }
                 ImGui.End();
             }
-        );
+        });
 
         ImTKSilk.Start();
     }

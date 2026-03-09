@@ -15,17 +15,15 @@ public static class ImTKSilk
     private static IInputContext s_input;
     private static ImGuiController s_controller;
     
-    private static Action<float> s_onUpdate;
-    private static Action<float> s_onRender;
+    private static ImTKSilkConstant s_constant;
 
-    public static void Initialize(string title, int width, int height, Action<float> onUpdate, Action<float> onRender)
+    public static void Initialize(ImTKSilkConstant constant)
     {
-        s_onUpdate = onUpdate;
-        s_onRender = onRender;
+        s_constant = constant ?? new ImTKSilkConstant();
 
-        var options = WindowOptions.Default;
-        options.Size = new Vector2D<int>(width, height);
-        options.Title = title;
+        var options = s_constant.CustomWindowOptions ?? WindowOptions.Default;
+        options.Size = new Vector2D<int>(s_constant.WindowWidth, s_constant.WindowHeight);
+        options.Title = s_constant.WindowTitle;
 
         s_window = Window.Create(options);
 
@@ -53,24 +51,15 @@ public static class ImTKSilk
             () =>
             {
                 ImGuiIOPtr io = ImGui.GetIO();
-                io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-                io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+                io.ConfigFlags |= s_constant.ConfigFlags;
 
-                int fontSize = 16;
-                string 
-                    fontPath = @"C:\Windows\Fonts\jf-openhuninn-2.1.ttf";
-                if (!System.IO.File.Exists(fontPath))
-                    fontPath = @"C:\Windows\Fonts\msjh.ttc";
-                if (!System.IO.File.Exists(fontPath))
-                    fontPath = "";
-
-                if (!string.IsNullOrEmpty(fontPath))
+                if (!string.IsNullOrEmpty(s_constant.FontPath) && System.IO.File.Exists(s_constant.FontPath))
                 {
-                    io.Fonts.AddFontFromFileTTF(fontPath, fontSize, null, io.Fonts.GetGlyphRangesChineseFull());
+                    io.Fonts.AddFontFromFileTTF(s_constant.FontPath, s_constant.FontSize, null, io.Fonts.GetGlyphRangesChineseFull());
                 }
                 else
                 {
-                    io.FontGlobalScale = fontSize / 13f; // 13 是 ImGui 預設字體大小
+                    io.FontGlobalScale = s_constant.FontSize / 13f; // 13 is ImGui default font size
                 }
             }
         );
@@ -88,7 +77,7 @@ public static class ImTKSilk
     {
         float dt = (float)deltaTime;
         s_controller.Update(dt);
-        s_onUpdate?.Invoke(dt);
+        s_constant.OnUpdate?.Invoke(dt);
     }
 
     private static void OnRender(double deltaTime)
@@ -129,7 +118,7 @@ public static class ImTKSilk
             ImGuiDockNodeFlags.PassthruCentralNode
         );
 
-        s_onRender?.Invoke(dt);
+        s_constant.OnRender?.Invoke(dt);
 
         ImGui.End();
 
