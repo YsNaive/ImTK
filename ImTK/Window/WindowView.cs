@@ -36,6 +36,19 @@ public abstract class WindowView : VisualElement
         openedWindows.UpdateVisualTree(deltaTime);
     }
 
+    public class Module : ImTKModule
+    {
+        public override void Update(double deltaTime)
+        {
+            WindowView.UpdateAll(deltaTime);
+        }
+
+        public override void Render(double deltaTime)
+        {
+            WindowView.RenderAll(deltaTime);
+        }
+    }
+
     #endregion
 
     public abstract string displayName { get; }

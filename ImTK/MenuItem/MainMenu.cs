@@ -73,6 +73,24 @@ namespace ImTK
                 menu.Render();
             ImGui.EndMainMenuBar();
         }
+
+        public class Module : ImTKModule
+        {
+            static Module()
+            {
+                // Ensure Module is loaded? It will be loaded if registered manually or via reflection
+            }
+
+            public override void Update(double deltaTime)
+            {
+                // MainMenu currently has no update logic
+            }
+
+            public override void Render(double deltaTime)
+            {
+                MainMenu.RenderAll();
+            }
+        }
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]

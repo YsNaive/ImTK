@@ -22,6 +22,8 @@ public static class ImTKSilk
 
     public static void Initialize(ImTKSilkConstant constant)
     {
+        ImTKModule.InitializeAll();
+
         s_constant = constant ?? new ImTKSilkConstant();
 
         var options = s_constant.options ?? WindowOptions.Default;
@@ -80,6 +82,7 @@ public static class ImTKSilk
     {
         float dt = (float)deltaTime;
         s_controller.Update(dt);
+        ImTKModule.UpdateAll(dt);
         onUpdate?.Invoke(dt);
     }
 
@@ -121,7 +124,9 @@ public static class ImTKSilk
             ImGuiDockNodeFlags.PassthruCentralNode
         );
 
-        onRender.Invoke(dt);
+        ImTKModule.RenderAll(dt);
+
+        onRender?.Invoke(dt);
 
         ImGui.End();
 

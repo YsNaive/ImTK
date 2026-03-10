@@ -46,8 +46,6 @@ class Program
 
         ImTKSilk.onRender += (dt) =>
         {
-            MainMenu.RenderAll();
-
             ImGui.Begin("Dock Test Window 1");
             ImGui.Text("Window 1");
             ImGui.End();
