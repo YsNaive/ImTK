@@ -42,18 +42,12 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
         int count = hierarchy.childrenCount;
         if (count == 0) return;
 
-        var snapshot = System.Buffers.ArrayPool<VisualElement>.Shared.Rent(count);
-
+        hierarchy.BeginIteration();
         try
         {
-            for (int i = 0; i < count; i++)
-            {
-                snapshot[i] = hierarchy.ChildAt(i);
-            }
-
             for (int i = count - 1; i >= 0; i--)
             {
-                var ve = snapshot[i];
+                var ve = hierarchy.ChildAt(i);
                 if (ve != null && ve.enable && ve.parent == this)
                 {
                     ve.UpdateVisualTree(deltaTime);
@@ -62,7 +56,7 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
         }
         finally
         {
-            System.Buffers.ArrayPool<VisualElement>.Shared.Return(snapshot, clearArray: true);
+            hierarchy.EndIteration();
         }
     }
 
@@ -95,18 +89,12 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
         int count = hierarchy.childrenCount;
         if (count == 0) return;
 
-        var snapshot = System.Buffers.ArrayPool<VisualElement>.Shared.Rent(count);
-
+        hierarchy.BeginIteration();
         try
         {
             for (int i = 0; i < count; i++)
             {
-                snapshot[i] = hierarchy.ChildAt(i);
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                var ve = snapshot[i];
+                var ve = hierarchy.ChildAt(i);
                 if (ve != null && ve.enable && ve.parent == this)
                 {
                     ve.RenderVisualTree(deltaTime);
@@ -115,7 +103,7 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
         }
         finally
         {
-            System.Buffers.ArrayPool<VisualElement>.Shared.Return(snapshot, clearArray: true);
+            hierarchy.EndIteration();
         }
     }
 
@@ -126,13 +114,42 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
         private List<VisualElement> m_children = new List<VisualElement>();
         private VisualElement m_owner;
 
+        private int m_iterationCount = 0;
+        private List<Action> m_pendingActions = null;
+
         public Hierarchy(VisualElement owner)
         {
             m_owner = owner;
         }
 
+        internal void BeginIteration()
+        {
+            m_iterationCount++;
+        }
+
+        internal void EndIteration()
+        {
+            m_iterationCount--;
+            if (m_iterationCount == 0 && m_pendingActions != null && m_pendingActions.Count > 0)
+            {
+                var actions = m_pendingActions.ToArray();
+                m_pendingActions.Clear();
+                foreach (var action in actions)
+                {
+                    action();
+                }
+            }
+        }
+
         public void Add(VisualElement ve)
         {
+            if (m_iterationCount > 0)
+            {
+                if (m_pendingActions == null) m_pendingActions = new List<Action>();
+                m_pendingActions.Add(() => Add(ve));
+                return;
+            }
+
             if (m_children.Contains(ve))
             {
                 m_children.Remove(ve);
@@ -143,6 +160,15 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
 
         public void AddRange(IEnumerable<VisualElement> ves)
         {
+            if (m_iterationCount > 0)
+            {
+                // To avoid multiple evaluation or changes in the enumerable, we realize it
+                var vesList = new List<VisualElement>(ves);
+                if (m_pendingActions == null) m_pendingActions = new List<Action>();
+                m_pendingActions.Add(() => AddRange(vesList));
+                return;
+            }
+
             foreach (var ve in ves)
             {
                 Add(ve);
@@ -151,6 +177,13 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
 
         public void Insert(int index, VisualElement ve)
         {
+            if (m_iterationCount > 0)
+            {
+                if (m_pendingActions == null) m_pendingActions = new List<Action>();
+                m_pendingActions.Add(() => Insert(index, ve));
+                return;
+            }
+
             if (m_children.Contains(ve))
             {
                 int currentIndex = m_children.IndexOf(ve);
@@ -174,6 +207,13 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
 
         public void Remove(VisualElement ve)
         {
+            if (m_iterationCount > 0)
+            {
+                if (m_pendingActions == null) m_pendingActions = new List<Action>();
+                m_pendingActions.Add(() => Remove(ve));
+                return;
+            }
+
             if (m_children.Remove(ve))
             {
                 ve.m_physicalParent = null;
@@ -182,6 +222,13 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
 
         public void Clear()
         {
+            if (m_iterationCount > 0)
+            {
+                if (m_pendingActions == null) m_pendingActions = new List<Action>();
+                m_pendingActions.Add(() => Clear());
+                return;
+            }
+
             foreach (var child in m_children)
             {
                 child.m_physicalParent = null;

@@ -18,38 +18,41 @@ namespace ImTK
         {
             s_root = new MenuItem("main-menu-root", null); 
 
-            List<Tuple<MethodInfo, MainMenuAttribute>> matched = new();
+            var matched = new List<(MethodInfo method, MainMenuAttribute attr)>();
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                // 略過系統組件以提升效能 (可選)
                 if (assembly.FullName.StartsWith("System") || assembly.FullName.StartsWith("Microsoft"))
                     continue;
 
-                foreach (var type in assembly.GetTypes())
+                try
                 {
-                    // 搜尋所有靜態方法
-                    var methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                    foreach (var method in methods)
+                    foreach (var type in assembly.GetTypes())
                     {
-                        // 檢查是否純 Action
-                        if (method.GetParameters().Length > 0 || method.ReturnType != typeof(void))
-                            continue;
+                        var methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                        foreach (var method in methods)
+                        {
+                            if (method.GetParameters().Length > 0 || method.ReturnType != typeof(void))
+                                continue;
 
-                        // 檢查是否有 MainMenuAttribute
-                        var attr = method.GetCustomAttribute<MainMenuAttribute>();
-                        if (attr == null) 
-                            continue;
-
-                        matched.Add(new(method, attr));
+                            var attr = method.GetCustomAttribute<MainMenuAttribute>();
+                            if (attr != null)
+                            {
+                                matched.Add((method, attr));
+                            }
+                        }
                     }
+                }
+                catch (ReflectionTypeLoadException)
+                {
+                    // Ignore loading errors from inaccessible types
                 }
             }
 
-            foreach(var match in matched.OrderBy(item => -item.Item2.priority))
+            foreach(var match in matched.OrderByDescending(item => item.attr.priority))
             {
-                var action = (Action)Delegate.CreateDelegate(typeof(Action), match.Item1);
-                RegisterItem(match.Item2.path, action);
+                var action = (Action)Delegate.CreateDelegate(typeof(Action), match.method);
+                RegisterItem(match.attr.path, action);
             }
         }
 

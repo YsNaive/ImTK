@@ -2,7 +2,7 @@
 
 namespace ImTK;
 
-public class MenuItem : Hierarchy<MenuItem>
+public class MenuItem
 {
     public MenuItem(string name) : this(name, null) { }
     public MenuItem(string name, Action clicked)
@@ -15,6 +15,54 @@ public class MenuItem : Hierarchy<MenuItem>
     private string m_name;
 
     public event Action clicked;
+
+    // Hierarchy implementation
+    public MenuItem parent { get; private set; }
+    private List<MenuItem> m_children = new List<MenuItem>();
+
+    public int childrenCount => m_children.Count;
+
+    public IEnumerable<MenuItem> Children()
+    {
+        return m_children;
+    }
+
+    public void Add(MenuItem item)
+    {
+        if (item != null && !m_children.Contains(item))
+        {
+            item.parent?.Remove(item);
+            item.parent = this;
+            m_children.Add(item);
+        }
+    }
+
+    public void Remove(MenuItem item)
+    {
+        if (item != null && m_children.Remove(item))
+        {
+            item.parent = null;
+        }
+    }
+
+    public void Insert(int index, MenuItem item)
+    {
+        if (item != null && !m_children.Contains(item))
+        {
+            item.parent?.Remove(item);
+            item.parent = this;
+            m_children.Insert(index, item);
+        }
+    }
+
+    public void Clear()
+    {
+        foreach (var child in m_children)
+        {
+            child.parent = null;
+        }
+        m_children.Clear();
+    }
 
     /// <summary>
     /// if true, will invoke ImGui.CloseCurrentPopup()
@@ -70,7 +118,7 @@ public class MenuItem : Hierarchy<MenuItem>
 
         foreach (string part in parts)
         {
-            MenuItem next = m_children.Find(item => item.name == part);
+            MenuItem next = current.m_children.Find(item => item.name == part);
 
             if (next == null)
             {
