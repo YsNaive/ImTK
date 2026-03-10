@@ -44,25 +44,53 @@ class Program
 
         };
 
-        ImTKSilk.onRender += (dt) =>
-        {
-            ImGui.Begin("Dock Test Window 1");
-            ImGui.Text("Window 1");
-            ImGui.End();
-
-            ImGui.Begin("Dock Test Window 2");
-            ImGui.Text("Window 2");
-            ImGui.End();
-
-            ImGui.Begin("Action Window");
-            ImGui.Text($"Delta Time: {dt}");
-            if (ImGui.Button("Close Window"))
-            {
-            }
-            ImGui.End();
-        };
-
         ImTKSilk.Initialize(constant);
         ImTKSilk.Start();
+    }
+}
+
+public class AppTestModule : ImTKModule
+{
+    private AppTestModule() { }
+
+    public override void OnLoad()
+    {
+        Console.WriteLine("AppTestModule Loaded! Opening windows...");
+        WindowView.Open<TestWindow>();
+    }
+
+    public override void OnClose()
+    {
+        Console.WriteLine("AppTestModule Closed! Saving cache...");
+    }
+
+    public override void Update(double deltaTime)
+    {
+        // Add specific app-wide update logic if any
+    }
+
+    public override void Render(double deltaTime)
+    {
+        // Add specific app-wide rendering logic if any
+    }
+}
+
+public class TestWindow : WindowView
+{
+    public override string displayName => "Custom Test Window";
+
+    public TestWindow()
+    {
+        // Add a simple visual element or text (If VisualElement API supports text directly)
+    }
+
+    public override void RenderVisualTree(double deltaTime)
+    {
+        base.RenderVisualTree(deltaTime);
+        ImGui.Text("Hello from TestWindow!");
+        if (ImGui.Button("Click Me!"))
+        {
+            Console.WriteLine("Button Clicked in TestWindow!");
+        }
     }
 }
