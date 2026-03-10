@@ -66,20 +66,9 @@ namespace ImTK
             return item;
         }
 
-        public static void RenderAll()
+        private class Module : ImTKModule
         {
-            ImGui.BeginMainMenuBar();
-            foreach(var menu in root.Children())
-                menu.Render();
-            ImGui.EndMainMenuBar();
-        }
-
-        public class Module : ImTKModule
-        {
-            static Module()
-            {
-                // Ensure Module is loaded? It will be loaded if registered manually or via reflection
-            }
+            private Module() { }
 
             public override void Update(double deltaTime)
             {
@@ -88,7 +77,10 @@ namespace ImTK
 
             public override void Render(double deltaTime)
             {
-                MainMenu.RenderAll();
+                ImGui.BeginMainMenuBar();
+                foreach(var menu in root.Children())
+                    menu.Render();
+                ImGui.EndMainMenuBar();
             }
         }
     }

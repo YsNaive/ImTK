@@ -7,7 +7,9 @@ public abstract class ImTKModule
 {
     private static readonly List<ImTKModule> modules = new List<ImTKModule>();
 
-    public static void Register(ImTKModule module)
+    protected ImTKModule() { }
+
+    private static void Register(ImTKModule module)
     {
         if (module != null && !modules.Contains(module))
         {
@@ -28,7 +30,7 @@ public abstract class ImTKModule
                 {
                     if (type.IsClass && !type.IsAbstract && type.IsSubclassOf(typeof(ImTKModule)))
                     {
-                        var module = (ImTKModule)Activator.CreateInstance(type);
+                        var module = (ImTKModule)Activator.CreateInstance(type, nonPublic: true);
                         Register(module);
                     }
                 }
