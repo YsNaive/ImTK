@@ -60,6 +60,25 @@ public abstract class ImTKModule
         }
     }
 
+    public static void LoadAll()
+    {
+        for (int i = 0; i < modules.Count; i++)
+        {
+            modules[i].OnLoad();
+        }
+    }
+
+    public static void CloseAll()
+    {
+        for (int i = 0; i < modules.Count; i++)
+        {
+            modules[i].OnClose();
+        }
+    }
+
     public abstract void Update(double deltaTime);
     public abstract void Render(double deltaTime);
+
+    public virtual void OnLoad() { }
+    public virtual void OnClose() { }
 }

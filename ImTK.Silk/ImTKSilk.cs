@@ -68,6 +68,8 @@ public static class ImTKSilk
                 }
             }
         );
+
+        ImTKModule.LoadAll();
     }
 
     private static void OnFramebufferResize(Vector2D<int> size)
@@ -141,6 +143,8 @@ public static class ImTKSilk
 
     private static void OnClose()
     {
+        ImTKModule.CloseAll();
+
         s_controller?.Dispose();
         s_input?.Dispose();
         s_gl?.Dispose();
