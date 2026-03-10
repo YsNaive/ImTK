@@ -38,13 +38,31 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
     public void UpdateVisualTree(double deltaTime)
     {
         this.Update(deltaTime);
-        for (int i = hierarchy.childrenCount - 1; i >= 0; i--)
+
+        int count = hierarchy.childrenCount;
+        if (count == 0) return;
+
+        var snapshot = System.Buffers.ArrayPool<VisualElement>.Shared.Rent(count);
+
+        try
         {
-            var ve = hierarchy.ChildAt(i);
-            if (ve != null && ve.enable)
+            for (int i = 0; i < count; i++)
             {
-                ve.UpdateVisualTree(deltaTime);
+                snapshot[i] = hierarchy.ChildAt(i);
             }
+
+            for (int i = count - 1; i >= 0; i--)
+            {
+                var ve = snapshot[i];
+                if (ve != null && ve.enable && ve.parent == this)
+                {
+                    ve.UpdateVisualTree(deltaTime);
+                }
+            }
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<VisualElement>.Shared.Return(snapshot, clearArray: true);
         }
     }
 
@@ -73,13 +91,31 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
     public virtual void RenderVisualTree(double deltaTime)
     {
         this.Render(deltaTime);
-        for (int i = 0; i < hierarchy.childrenCount; i++)
+
+        int count = hierarchy.childrenCount;
+        if (count == 0) return;
+
+        var snapshot = System.Buffers.ArrayPool<VisualElement>.Shared.Rent(count);
+
+        try
         {
-            var ve = hierarchy.ChildAt(i);
-            if (ve != null && ve.enable)
+            for (int i = 0; i < count; i++)
             {
-                ve.RenderVisualTree(deltaTime);
+                snapshot[i] = hierarchy.ChildAt(i);
             }
+
+            for (int i = 0; i < count; i++)
+            {
+                var ve = snapshot[i];
+                if (ve != null && ve.enable && ve.parent == this)
+                {
+                    ve.RenderVisualTree(deltaTime);
+                }
+            }
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<VisualElement>.Shared.Return(snapshot, clearArray: true);
         }
     }
 

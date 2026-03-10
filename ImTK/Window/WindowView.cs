@@ -111,15 +111,16 @@ public abstract class WindowView : VisualElement
     }
     public readonly MenuItem menuBar = new MenuItem("MenuBar");
 
-    public bool enableContextMenu = true;
+    public bool enableContextMenu { get; set; } = true;
     public readonly VisualElement contextMenu = new VisualElement();
 
-    public bool isOpen = true;
+    public bool isOpen { get; set; } = true;
 
     public virtual void Close()
     {
         isOpen = false;
         openedWindows.Remove(this);
+        windowsTable.Remove(this.GetType());
     }
 
     public override void RenderVisualTree(double deltaTime)
@@ -140,7 +141,7 @@ public abstract class WindowView : VisualElement
 
         if (isAppearing)
         {
-            if (enableMenuBar)
+            if (enableMenuBar && menuBar.childrenCount > 0)
             {
                 if (ImGui.BeginMenuBar())
                 {
@@ -152,8 +153,9 @@ public abstract class WindowView : VisualElement
                 }
             }
 
-            if (enableContextMenu)
+            if (enableContextMenu && contextMenu.childrenCount > 0)
             {
+                ImGui.SetNextWindowSizeConstraints(new Vector2(200, 150), Vector2.PositiveInfinity);
                 if (ImGui.BeginPopupContextWindow())
                 {
                     contextMenu.RenderVisualTree(deltaTime);
