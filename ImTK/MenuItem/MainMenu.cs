@@ -62,7 +62,7 @@ namespace ImTK
         public static MenuItem RegisterItem(string path, Action onClick)
         {
             var item = RegisterItem(path);
-            item.onClick += onClick;
+            item.clicked += onClick;
             return item;
         }
 
@@ -78,8 +78,7 @@ namespace ImTK
             public override void Render(double deltaTime)
             {
                 ImGui.BeginMainMenuBar();
-                foreach(var menu in root.Children())
-                    menu.Render();
+                root.RenderMenuTree();
                 ImGui.EndMainMenuBar();
             }
         }

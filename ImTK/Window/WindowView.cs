@@ -112,7 +112,7 @@ public abstract class WindowView : VisualElement
     public readonly MenuItem menuBar = new MenuItem("MenuBar");
 
     public bool enableContextMenu { get; set; } = true;
-    public readonly VisualElement contextMenu = new VisualElement();
+    public readonly MenuItem contextMenu = new MenuItem("window-context-menu-root");
 
     public bool isOpen { get; set; } = true;
 
@@ -145,10 +145,7 @@ public abstract class WindowView : VisualElement
             {
                 if (ImGui.BeginMenuBar())
                 {
-                    foreach (var child in menuBar.Children())
-                    {
-                        child.Render();
-                    }
+                    menuBar.RenderMenuTree();
                     ImGui.EndMenuBar();
                 }
             }
@@ -158,7 +155,7 @@ public abstract class WindowView : VisualElement
                 ImGui.SetNextWindowSizeConstraints(new Vector2(200, 150), Vector2.PositiveInfinity);
                 if (ImGui.BeginPopupContextWindow())
                 {
-                    contextMenu.RenderVisualTree(deltaTime);
+                    contextMenu.RenderMenuTree();
                     ImGui.EndPopup();
                 }
             }

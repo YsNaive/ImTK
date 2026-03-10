@@ -5,34 +5,49 @@ namespace ImTK;
 public class MenuItem : Hierarchy<MenuItem>
 {
     public MenuItem(string name) : this(name, null) { }
-    public MenuItem(string name, Action onClick)
+    public MenuItem(string name, Action clicked)
     {
-        this.m_name = name;
-        this.onClick += onClick;
+        this.m_name   = name;
+        this.clicked += clicked;
     }
 
     public string name { get { return m_name; } }
     private string m_name;
 
-    public event Action onClick;
+    public event Action clicked;
 
-    public void Render()
+    /// <summary>
+    /// if true, will invoke ImGui.CloseCurrentPopup()
+    /// </summary>
+    public bool isPopup {  get; set; }
+
+    public void RenderMenuTree(bool renderSelf = false)
     {
-        if (onClick != null)
+        if (renderSelf)
+            RenderMenuTreeRecursive(this);
+        else
         {
-            if (ImGui.MenuItem(this.name))
+            foreach (var item in Children())
             {
-                onClick.Invoke();
+                RenderMenuTreeRecursive(item);
             }
         }
-        if(this.childrenCount > 0)
+    }
+    private static void RenderMenuTreeRecursive(MenuItem root)
+    {
+        if (root.clicked != null)
         {
-            if (ImGui.BeginMenu(this.name))
+            if (ImGui.MenuItem(root.name))
             {
-                foreach (var childMenuItem in Children())
-                {
-                    childMenuItem.Render();
-                }
+                root.clicked.Invoke();
+            }
+        }
+        if (root.childrenCount > 0)
+        {
+            if (ImGui.BeginMenu(root.name))
+            {
+                foreach (var childMenuItem in root.Children())
+                    childMenuItem.RenderMenuTree(true);
                 ImGui.EndMenu();
             }
         }
