@@ -27,13 +27,19 @@ public abstract class WindowView : VisualElement
         return matched as T;
     }
 
-    public static void RenderAll(double deltaTime)
+    private class Module : ImTKModule
     {
-        openedWindows.RenderVisualTree(deltaTime);
-    }
-    public static void UpdateAll(double deltaTime)
-    {
-        openedWindows.UpdateVisualTree(deltaTime);
+        private Module() { }
+
+        public override void Update(double deltaTime)
+        {
+            openedWindows.UpdateVisualTree(deltaTime);
+        }
+
+        public override void Render(double deltaTime)
+        {
+            openedWindows.RenderVisualTree(deltaTime);
+        }
     }
 
     #endregion
