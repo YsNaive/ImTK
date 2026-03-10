@@ -21,6 +21,8 @@ public interface IVisualElementHierarchy<T>
 
 public class VisualElement : IVisualElementHierarchy<VisualElement>
 {
+    public event Action<VisualElement> onHierarchyChanged;
+
     public VisualElement()
     {
         hierarchy = new Hierarchy(this);
@@ -234,6 +236,8 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
 
         ve.m_logicalParent = this;
         _add(ve);
+
+        onHierarchyChanged?.Invoke(this);
     }
 
     private void _add(VisualElement ve)
@@ -250,9 +254,27 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
 
     public void AddRange(IEnumerable<VisualElement> ves)
     {
+        bool changed = false;
         foreach (var ve in ves)
         {
-            Add(ve);
+            if (ve == null || ve.IsAncestorOf(this))
+            {
+                continue;
+            }
+
+            if (ve.parent != null)
+            {
+                ve.parent.Remove(ve);
+            }
+
+            ve.m_logicalParent = this;
+            _add(ve);
+            changed = true;
+        }
+
+        if (changed)
+        {
+            onHierarchyChanged?.Invoke(this);
         }
     }
 
@@ -270,6 +292,8 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
 
         ve.m_logicalParent = this;
         _insert(index, ve);
+
+        onHierarchyChanged?.Invoke(this);
     }
 
     private void _insert(int logicalIndex, VisualElement ve)
@@ -293,6 +317,8 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
 
         _remove(ve);
         ve.m_logicalParent = null;
+
+        onHierarchyChanged?.Invoke(this);
     }
 
     private void _remove(VisualElement ve)
@@ -315,10 +341,20 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
             elementsToRemove.Add(child);
         }
 
-        foreach (var child in elementsToRemove)
+        if (elementsToRemove.Count == 0) return;
+
+        foreach (var ve in elementsToRemove)
         {
-            Remove(child);
+            if (ve == null || ve.parent != this)
+            {
+                continue;
+            }
+
+            _remove(ve);
+            ve.m_logicalParent = null;
         }
+
+        onHierarchyChanged?.Invoke(this);
     }
 
     public int IndexOf(VisualElement ve)
