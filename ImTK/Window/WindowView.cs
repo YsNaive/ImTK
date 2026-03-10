@@ -23,6 +23,7 @@ public abstract class WindowView : VisualElement
             matched = new T();
             windowsTable.Add (typeof (T), matched);
         }
+        matched.isOpen = true;
         openedWindows.Add (matched);
         return matched as T;
     }
@@ -46,11 +47,123 @@ public abstract class WindowView : VisualElement
 
     public abstract string displayName { get; }
     public Vector2 minSize = new Vector2(300, 200);
+
+    public ImGuiWindowFlags windowFlags = ImGuiWindowFlags.None;
+
+    public bool enableDocking
+    {
+        get => !windowFlags.HasFlag(ImGuiWindowFlags.NoDocking);
+        set
+        {
+            if (value) windowFlags &= ~ImGuiWindowFlags.NoDocking;
+            else windowFlags |= ImGuiWindowFlags.NoDocking;
+        }
+    }
+
+    public bool isResizable
+    {
+        get => !windowFlags.HasFlag(ImGuiWindowFlags.NoResize);
+        set
+        {
+            if (value) windowFlags &= ~ImGuiWindowFlags.NoResize;
+            else windowFlags |= ImGuiWindowFlags.NoResize;
+        }
+    }
+
+    public bool isMovable
+    {
+        get => !windowFlags.HasFlag(ImGuiWindowFlags.NoMove);
+        set
+        {
+            if (value) windowFlags &= ~ImGuiWindowFlags.NoMove;
+            else windowFlags |= ImGuiWindowFlags.NoMove;
+        }
+    }
+
+    public bool isCollapsible
+    {
+        get => !windowFlags.HasFlag(ImGuiWindowFlags.NoCollapse);
+        set
+        {
+            if (value) windowFlags &= ~ImGuiWindowFlags.NoCollapse;
+            else windowFlags |= ImGuiWindowFlags.NoCollapse;
+        }
+    }
+
+    public bool showTitleBar
+    {
+        get => !windowFlags.HasFlag(ImGuiWindowFlags.NoTitleBar);
+        set
+        {
+            if (value) windowFlags &= ~ImGuiWindowFlags.NoTitleBar;
+            else windowFlags |= ImGuiWindowFlags.NoTitleBar;
+        }
+    }
+
+    public bool enableMenuBar
+    {
+        get => windowFlags.HasFlag(ImGuiWindowFlags.MenuBar);
+        set
+        {
+            if (value) windowFlags |= ImGuiWindowFlags.MenuBar;
+            else windowFlags &= ~ImGuiWindowFlags.MenuBar;
+        }
+    }
+    public readonly MenuItem menuBar = new MenuItem("MenuBar");
+
+    public bool enableContextMenu = true;
+    public readonly VisualElement contextMenu = new VisualElement();
+
+    public bool isOpen = true;
+
+    public virtual void Close()
+    {
+        isOpen = false;
+        openedWindows.Remove(this);
+    }
+
     public override void RenderVisualTree(double deltaTime)
     {
+        if (!isOpen) return;
+
         ImGui.SetNextWindowSizeConstraints(minSize, Vector2.PositiveInfinity);
-        ImGui.Begin(displayName);
-        base.RenderVisualTree(deltaTime);
+
+        bool isWindowOpen = isOpen;
+        bool isAppearing = ImGui.Begin(displayName, ref isWindowOpen, windowFlags);
+
+        if (!isWindowOpen)
+        {
+            ImGui.End();
+            Close();
+            return;
+        }
+
+        if (isAppearing)
+        {
+            if (enableMenuBar)
+            {
+                if (ImGui.BeginMenuBar())
+                {
+                    foreach (var child in menuBar.Children())
+                    {
+                        child.Render();
+                    }
+                    ImGui.EndMenuBar();
+                }
+            }
+
+            if (enableContextMenu)
+            {
+                if (ImGui.BeginPopupContextWindow())
+                {
+                    contextMenu.RenderVisualTree(deltaTime);
+                    ImGui.EndPopup();
+                }
+            }
+
+            base.RenderVisualTree(deltaTime);
+        }
+
         ImGui.End();
     }
 }
