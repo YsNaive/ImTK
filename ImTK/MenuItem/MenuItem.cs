@@ -18,23 +18,38 @@ public class MenuItem : Hierarchy<MenuItem>
 
     public void Render()
     {
-        if (onClick != null)
+        if (ImGui.MenuItem(this.name))
         {
-            if (ImGui.MenuItem(this.name))
-            {
-                onClick.Invoke();
-            }
+            onClick?.Invoke();
         }
-        if(this.childrenCount > 0)
+    }
+
+    public void RenderMenuTree(bool isMainMenu = false)
+    {
+        if (this.childrenCount > 0)
         {
-            if (ImGui.BeginMenu(this.name))
+            if (isMainMenu)
             {
                 foreach (var childMenuItem in Children())
                 {
-                    childMenuItem.Render();
+                    childMenuItem.RenderMenuTree();
                 }
-                ImGui.EndMenu();
             }
+            else
+            {
+                if (ImGui.BeginMenu(this.name))
+                {
+                    foreach (var childMenuItem in Children())
+                    {
+                        childMenuItem.RenderMenuTree();
+                    }
+                    ImGui.EndMenu();
+                }
+            }
+        }
+        else if (!isMainMenu)
+        {
+            this.Render();
         }
     }
 
