@@ -32,37 +32,39 @@ class Program
 
     static void RunImTKSilk()
     {
-        // 註冊時直接傳入邏輯
-        ImTKSilk.Initialize(new ImTKSilkConstant
+        ImTKSilkConstant constant = new ImTKSilkConstant
         {
-            WindowTitle = "ImTK Action Test",
-            WindowWidth = 1280,
-            WindowHeight = 720,
-            OnUpdate = (dt) =>
+            title = "ImTK Action Test",
+            width = 1280,
+            height = 720,
+        };
+
+        ImTKSilk.onUpdate += (dt) =>
+        {
+
+        };
+
+        ImTKSilk.onRender += (dt) =>
+        {
+            MainMenu.RenderAll();
+
+            ImGui.Begin("Dock Test Window 1");
+            ImGui.Text("Window 1");
+            ImGui.End();
+
+            ImGui.Begin("Dock Test Window 2");
+            ImGui.Text("Window 2");
+            ImGui.End();
+
+            ImGui.Begin("Action Window");
+            ImGui.Text($"Delta Time: {dt}");
+            if (ImGui.Button("Close Window"))
             {
-                // 更新邏輯
-            },
-            OnRender = (dt) =>
-            {
-                MainMenu.RenderAll();
-
-                ImGui.Begin("Dock Test Window 1");
-                ImGui.Text("Window 1");
-                ImGui.End();
-
-                ImGui.Begin("Dock Test Window 2");
-                ImGui.Text("Window 2");
-                ImGui.End();
-
-                ImGui.Begin("Action Window");
-                ImGui.Text($"Delta Time: {dt}");
-                if (ImGui.Button("Close Window"))
-                {
-                }
-                ImGui.End();
             }
-        });
+            ImGui.End();
+        };
 
+        ImTKSilk.Initialize(constant);
         ImTKSilk.Start();
     }
 }

@@ -17,13 +17,16 @@ public static class ImTKSilk
     
     private static ImTKSilkConstant s_constant;
 
+    public static event Action<double> onUpdate;
+    public static event Action<double> onRender;
+
     public static void Initialize(ImTKSilkConstant constant)
     {
         s_constant = constant ?? new ImTKSilkConstant();
 
-        var options = s_constant.CustomWindowOptions ?? WindowOptions.Default;
-        options.Size = new Vector2D<int>(s_constant.WindowWidth, s_constant.WindowHeight);
-        options.Title = s_constant.WindowTitle;
+        var options = s_constant.options ?? WindowOptions.Default;
+        options.Size = new Vector2D<int>(s_constant.width, s_constant.height);
+        options.Title = s_constant.title;
 
         s_window = Window.Create(options);
 
@@ -51,15 +54,15 @@ public static class ImTKSilk
             () =>
             {
                 ImGuiIOPtr io = ImGui.GetIO();
-                io.ConfigFlags |= s_constant.ConfigFlags;
+                io.ConfigFlags |= s_constant.configFlags;
 
-                if (!string.IsNullOrEmpty(s_constant.FontPath) && System.IO.File.Exists(s_constant.FontPath))
+                if (!string.IsNullOrEmpty(s_constant.fontPath) && System.IO.File.Exists(s_constant.fontPath))
                 {
-                    io.Fonts.AddFontFromFileTTF(s_constant.FontPath, s_constant.FontSize, null, io.Fonts.GetGlyphRangesChineseFull());
+                    io.Fonts.AddFontFromFileTTF(s_constant.fontPath, s_constant.fontSize, null, io.Fonts.GetGlyphRangesChineseFull());
                 }
                 else
                 {
-                    io.FontGlobalScale = s_constant.FontSize / 13f; // 13 is ImGui default font size
+                    io.FontGlobalScale = s_constant.fontSize / 13f; // 13 is ImGui default font size
                 }
             }
         );
@@ -77,7 +80,7 @@ public static class ImTKSilk
     {
         float dt = (float)deltaTime;
         s_controller.Update(dt);
-        s_constant.OnUpdate?.Invoke(dt);
+        onUpdate?.Invoke(dt);
     }
 
     private static void OnRender(double deltaTime)
@@ -118,7 +121,7 @@ public static class ImTKSilk
             ImGuiDockNodeFlags.PassthruCentralNode
         );
 
-        s_constant.OnRender?.Invoke(dt);
+        onRender.Invoke(dt);
 
         ImGui.End();
 
