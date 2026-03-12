@@ -29,6 +29,19 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
 
     }
 
+    private ImStyle m_style = null;
+    public ImStyle style
+    {
+        get
+        {
+            if (m_style == null)
+            {
+                m_style = new ImStyle();
+            }
+            return m_style;
+        }
+    }
+
     public bool enable = true;
 
     public virtual void Update(double deltaTime)
@@ -84,26 +97,35 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
     /// </summary>
     public virtual void RenderVisualTree(double deltaTime)
     {
-        this.Render(deltaTime);
-
-        int count = hierarchy.childrenCount;
-        if (count == 0) return;
-
-        hierarchy.BeginIteration();
+        m_style?.Push();
         try
         {
-            for (int i = 0; i < count; i++)
+            this.Render(deltaTime);
+
+            int count = hierarchy.childrenCount;
+            if (count > 0)
             {
-                var ve = hierarchy.ChildAt(i);
-                if (ve != null && ve.enable && ve.parent == this)
+                hierarchy.BeginIteration();
+                try
                 {
-                    ve.RenderVisualTree(deltaTime);
+                    for (int i = 0; i < count; i++)
+                    {
+                        var ve = hierarchy.ChildAt(i);
+                        if (ve != null && ve.enable && ve.parent == this)
+                        {
+                            ve.RenderVisualTree(deltaTime);
+                        }
+                    }
+                }
+                finally
+                {
+                    hierarchy.EndIteration();
                 }
             }
         }
         finally
         {
-            hierarchy.EndIteration();
+            m_style?.Pop();
         }
     }
 
