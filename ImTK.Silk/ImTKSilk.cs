@@ -164,6 +164,7 @@ public static class ImTKSilk
 
     private static void OnClose()
     {
+        s_window.IsVisible = s_constant.visibleOnClose;
         ImTKModule.CloseAll();
 
         s_controller?.Dispose();

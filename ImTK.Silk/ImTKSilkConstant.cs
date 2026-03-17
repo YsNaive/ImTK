@@ -29,4 +29,10 @@ public class ImTKSilkConstant
     /// Defaults to the application base directory.
     /// </summary>
     public string configFolderPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory;
+
+    /// <summary>
+    /// set window.visible
+    /// make window visible/invisible right after user close it
+    /// </summary>
+    public bool visibleOnClose { get; set; } = true;
 }
