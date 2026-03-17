@@ -3,12 +3,36 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
+using System.IO;
+using System.Text.Json;
+using System.Linq;
+using System.Reflection;
 
 namespace ImTK;
 
 public abstract class WindowView : VisualElement
 {
     #region static utils
+
+    public static string configFolderPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory;
+
+    private static void SaveWindowState()
+    {
+        try
+        {
+            if (!Directory.Exists(configFolderPath))
+                Directory.CreateDirectory(configFolderPath);
+
+            string path = Path.Combine(configFolderPath, "window_state.json");
+            var openWindowTypes = windowsTable.Keys.Select(t => t.AssemblyQualifiedName).ToList();
+            string json = JsonSerializer.Serialize(openWindowTypes);
+            File.WriteAllText(path, json);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ImTK] Failed to save window state: {ex.Message}");
+        }
+    }
 
     public readonly static VisualElement openedWindows = new ();
     private readonly static Dictionary<Type, WindowView> windowsTable = new();
@@ -25,12 +49,57 @@ public abstract class WindowView : VisualElement
         }
         matched.isOpen = true;
         openedWindows.Add (matched);
+        SaveWindowState();
         return matched as T;
     }
 
     private class Module : ImTKModule
     {
         private Module() { }
+
+        public override void OnLoad()
+        {
+            try
+            {
+                string path = Path.Combine(configFolderPath, "window_state.json");
+                if (File.Exists(path))
+                {
+                    string json = File.ReadAllText(path);
+                    var openWindowTypes = JsonSerializer.Deserialize<List<string>>(json);
+                    bool needsResave = false;
+
+                    if (openWindowTypes != null)
+                    {
+                        foreach (string typeName in openWindowTypes)
+                        {
+                            Type type = Type.GetType(typeName);
+                            if (type != null && type.IsSubclassOf(typeof(WindowView)))
+                            {
+                                MethodInfo openMethod = typeof(WindowView).GetMethod("Open", BindingFlags.Public | BindingFlags.Static);
+                                if (openMethod != null)
+                                {
+                                    MethodInfo genericOpen = openMethod.MakeGenericMethod(type);
+                                    genericOpen.Invoke(null, null);
+                                }
+                            }
+                            else
+                            {
+                                needsResave = true;
+                            }
+                        }
+                    }
+
+                    if (needsResave)
+                    {
+                        SaveWindowState();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ImTK] Failed to load window state: {ex.Message}");
+            }
+        }
 
         public override void Update(double deltaTime)
         {
@@ -121,6 +190,7 @@ public abstract class WindowView : VisualElement
         isOpen = false;
         openedWindows.Remove(this);
         windowsTable.Remove(this.GetType());
+        SaveWindowState();
     }
 
     public override void RenderVisualTree(double deltaTime)

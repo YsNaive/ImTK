@@ -23,4 +23,10 @@ public class ImTKSilkConstant
     public int fontSize { get; set; } = 16;
 
     public ImGuiConfigFlags configFlags { get; set; } = ImGuiConfigFlags.DockingEnable | ImGuiConfigFlags.ViewportsEnable;
+
+    /// <summary>
+    /// Directory path where imgui.ini and window_state.json will be saved.
+    /// Defaults to the application base directory.
+    /// </summary>
+    public string configFolderPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory;
 }
