@@ -5,6 +5,8 @@ using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Maths;
 using System;
 using ImGuiNET;
+using System.IO;
+using System.Runtime.InteropServices;
 
 namespace ImTK.Silk;
 
@@ -16,6 +18,7 @@ public static class ImTKSilk
     private static ImGuiController s_controller;
     
     private static ImTKSilkConstant s_constant;
+    private static IntPtr s_iniFilenamePtr = IntPtr.Zero;
 
     public static event Action<double> onUpdate;
     public static event Action<double> onRender;
@@ -37,6 +40,13 @@ public static class ImTKSilk
         s_window.Render += OnRender;
         s_window.FramebufferResize += OnFramebufferResize;
         s_window.Closing += OnClose;
+
+        if (!Directory.Exists(s_constant.configFolderPath))
+        {
+            Directory.CreateDirectory(s_constant.configFolderPath);
+        }
+
+        WindowView.configFolderPath = s_constant.configFolderPath;
     }
 
     public static void Start()
@@ -68,6 +78,17 @@ public static class ImTKSilk
                 }
             }
         );
+
+        unsafe
+        {
+            ImGuiIOPtr io = ImGui.GetIO();
+            string iniPath = Path.Combine(s_constant.configFolderPath, "imgui.ini");
+            // Allocate string in unmanaged memory, ImGui takes ownership or just reads it?
+            // Usually we can just allocate and leak this small string for the lifetime of the program,
+            // or store the pointer to free it on close. For simplicity we store a static pointer and free on close.
+            s_iniFilenamePtr = Marshal.StringToCoTaskMemUTF8(iniPath);
+            io.NativePtr->IniFilename = (byte*)s_iniFilenamePtr.ToPointer();
+        }
 
         ImTKModule.LoadAll();
     }
@@ -146,6 +167,12 @@ public static class ImTKSilk
         ImTKModule.CloseAll();
 
         s_controller?.Dispose();
+
+        if (s_iniFilenamePtr != IntPtr.Zero)
+        {
+            Marshal.FreeCoTaskMem(s_iniFilenamePtr);
+            s_iniFilenamePtr = IntPtr.Zero;
+        }
         s_input?.Dispose();
         s_gl?.Dispose();
         s_window?.Dispose();

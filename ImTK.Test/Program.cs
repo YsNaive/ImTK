@@ -25,6 +25,7 @@ class Program
         Console.WriteLine("Load");
     }
 
+
     public static void Main(string[] args)
     {
         RunImTKSilk();
@@ -56,7 +57,6 @@ public class AppTestModule : ImTKModule
     public override void OnLoad()
     {
         Console.WriteLine("AppTestModule Loaded! Opening windows...");
-        WindowView.Open<TestWindow>();
     }
 
     public override void OnClose()
@@ -77,20 +77,40 @@ public class AppTestModule : ImTKModule
 
 public class TestWindow : WindowView
 {
-    public override string displayName => "Custom Test Window";
+    [MainMenu("Window/Test")]
+    public static void OpenTestWindow()
+    {
+        WindowView.Open<TestWindow>();
+    }
+    public override string displayName => "Test";
 
     public TestWindow()
     {
         // Add a simple visual element or text (If VisualElement API supports text directly)
     }
 
-    public override void RenderVisualTree(double deltaTime)
+    public override void Render(double deltaTime)
     {
-        base.RenderVisualTree(deltaTime);
+        base.Render(deltaTime);
         ImGui.Text("Hello from TestWindow!");
         if (ImGui.Button("Click Me!"))
         {
             Console.WriteLine("Button Clicked in TestWindow!");
         }
+    }
+}
+
+public class TestWindow2 : WindowView
+{
+    [MainMenu("Window/Test2")]
+    public static void OpenTestWindow()
+    {
+        WindowView.Open<TestWindow2>();
+    }
+    public override string displayName => "Test2";
+
+    public TestWindow2()
+    {
+        // Add a simple visual element or text (If VisualElement API supports text directly)
     }
 }
