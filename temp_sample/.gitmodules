@@ -1,0 +1,3 @@
+[submodule "dashboard/ImTK"]
+	path = dashboard/ImTK
+	url = https://github.com/YsNaive/ImTK.git

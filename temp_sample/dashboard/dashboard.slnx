@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="dashboard.csproj" />
+  <Project Path="ImTK/ImTK.Silk/ImTK.Silk.csproj" />
+  <Project Path="ImTK/ImTK/ImTK.csproj" />
+</Solution>
