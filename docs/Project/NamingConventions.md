@@ -27,10 +27,10 @@
    - **說明**：主要職責為容器，負責管理內部子元件的空間排列或滾動等佈局行為。
    - **範例**：`HorizontalView`, `ScrollView`
 
-3. **資料交互元件 (Field / Slider)**
-   - **格式**：`{name}Field` 或 `{name}Slider`
-   - **說明**：允許使用者輸入或編輯資料的欄位，通常實作 `IFieldElement` 或繼承自 `FieldElement<T>`。
-   - **範例**：`TextField`, `IntSlider`, `FloatField`
+3. **資料交互與繪製元件 (Drawer)**
+   - **格式**：`{name}Drawer`
+   - **說明**：負責資料展示與輸入交互的元件，通常繼承自 `RuntimeDrawer` 或 `RuntimeDrawer<T>`，支援 Unity 風格的縮排與標籤對齊。
+   - **範例**：`IntDrawer`, `Vector3Drawer`, `TextDrawer`, `FoldoutDrawer`
 
 4. **視窗層級元件 (Window)**
    - **格式**：`{name}Window`
