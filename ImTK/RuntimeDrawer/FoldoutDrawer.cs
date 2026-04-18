@@ -50,11 +50,11 @@ public class FoldoutDrawer : RuntimeDrawer
     {
         if (!enable) return;
 
-        // Apply indent
-        if (indentLevel > 0)
-        {
-            ImGui.Indent(indentLevel * ImGui.GetTreeNodeToLabelSpacing());
-        }
+        float indentWidth = GetDrawerIndentWidth() * indentLevel;
+
+        // Apply absolute cursor pos for our custom indent system
+        float startX = ImGui.GetCursorPosX() + indentWidth;
+        ImGui.SetCursorPosX(startX);
 
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.SpanAvailWidth;
         if (m_isOpen)
@@ -87,12 +87,6 @@ public class FoldoutDrawer : RuntimeDrawer
             hierarchy.EndIteration();
 
             ImGui.TreePop();
-        }
-
-        // Revert indent
-        if (indentLevel > 0)
-        {
-            ImGui.Unindent(indentLevel * ImGui.GetTreeNodeToLabelSpacing());
         }
     }
 }

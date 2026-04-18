@@ -51,6 +51,40 @@ public abstract class RuntimeDrawer : VisualElement, IDrawer
     }
 
     /// <summary>
+    /// Gets the cascaded drawer label width from styles, or the default value.
+    /// </summary>
+    protected float GetDrawerLabelWidth()
+    {
+        VisualElement current = this;
+        while (current != null)
+        {
+            if (current.style != null && current.style.drawerLabelWidth.HasValue)
+            {
+                return current.style.drawerLabelWidth.Value;
+            }
+            current = current.parent;
+        }
+        return ImGui.CalcTextSize("A").X * 14f;
+    }
+
+    /// <summary>
+    /// Gets the cascaded drawer indent width from styles, or the default value.
+    /// </summary>
+    protected float GetDrawerIndentWidth()
+    {
+        VisualElement current = this;
+        while (current != null)
+        {
+            if (current.style != null && current.style.drawerIndentWidth.HasValue)
+            {
+                return current.style.drawerIndentWidth.Value;
+            }
+            current = current.parent;
+        }
+        return ImGui.CalcTextSize("A").X * 2f;
+    }
+
+    /// <summary>
     /// Triggers the value changed event and bubbles it up the UI tree.
     /// </summary>
     protected void NotifyValueChanged()
@@ -74,29 +108,33 @@ public abstract class RuntimeDrawer : VisualElement, IDrawer
     {
         if (!enable) return;
 
+        float indentWidth = GetDrawerIndentWidth() * m_indentLevel;
+        float labelWidth = GetDrawerLabelWidth();
         bool hasLabel = !string.IsNullOrEmpty(m_label);
 
-        // Apply indent
-        if (m_indentLevel > 0)
-        {
-            ImGui.Indent(m_indentLevel * ImGui.GetTreeNodeToLabelSpacing());
-        }
+        // Calculate cursor starting position including absolute indent
+        float startX = ImGui.GetCursorPosX() + indentWidth;
+        ImGui.SetCursorPosX(startX);
 
-        // Draw label
+        // Draw label with fixed width block
         if (hasLabel)
         {
+            // Instead of using ImGui.Text directly, we ensure the label aligns to a fixed width
+            // by using an invisible item or setting cursor pos after text.
             ImGui.Text(m_label);
+
+            // Advance cursor to the start position of the input field
             ImGui.SameLine();
+            ImGui.SetCursorPosX(startX + labelWidth);
+        }
+        else
+        {
+            // If no label, we might still want to shift the controls to align properly,
+            // but typical behavior without label just takes up the indent space.
         }
 
         // Let subclasses render their specific ImGui controls
         OnRenderDrawer();
-
-        // Revert indent
-        if (m_indentLevel > 0)
-        {
-            ImGui.Unindent(m_indentLevel * ImGui.GetTreeNodeToLabelSpacing());
-        }
 
         // Render children inside contentContainer
         hierarchy.BeginIteration();
