@@ -4,6 +4,9 @@ ImTK 的核心模組負責將 ImGui (Immediate Mode GUI) 封裝為 C# / .NET 生
 
 ## 核心機制：自動模組管理系統 (`ImTKModule`)
 
+> 關於生命週期的細節與防呆規範，請參閱 [ImTKModule 專屬架構文件](../Core/ImTKModule.md)。
+
+
 在多數的 ImGui 應用中，開發者必須在一個巨大的迴圈中手動呼叫各個元件的 Update 和 Render。ImTK 徹底解決了這個問題，提供了一個基於反射的全自動生命週期框架。
 
 ### 生命週期階段

@@ -24,3 +24,8 @@
 
 ### 2.3 知識點的提煉
 若在開發過程中遇到特殊的邊界條件（例如 ImGui.NET 的指標釋放，或是 VisualElement 走訪陣列時的分配限制），必須將其提煉為「知識點」，並將其記錄在相關的 `README.md` 中，以防止未來的開發者踩坑。
+
+
+### 2.4 VS 方案總管可視化 (Solution Explorer Visibility)
+由於專案採用了最新的 `.slnx` 方案格式，為了確保所有的文檔都能在 Visual Studio 的方案總管中直接查閱：
+* **強制規範**：所有新建、刪除或重新命名的 `.md` 文檔，**必須同步更新** `ImTK.Test.slnx` 檔案中的 `<Folder Name="docs">` 虛擬資料夾路徑。

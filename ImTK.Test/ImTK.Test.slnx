@@ -1,4 +1,17 @@
 <Solution>
+  <Folder Name="docs">
+    <File Path="../docs/README.md" />
+    <File Path="../docs/Project/AGENT.md" />
+    <File Path="../docs/Project/TODO.md" />
+    <File Path="../docs/Project/NamingConventions.md" />
+    <File Path="../docs/Project/DocStandards.md" />
+    <File Path="../docs/Project/DevelopmentWrapUp.md" />
+    <File Path="../docs/ImTK/README.md" />
+    <File Path="../docs/Core/ImTKModule.md" />
+    <File Path="../docs/ImTK_Silk/README.md" />
+    <File Path="../docs/VisualElement/README.md" />
+    <File Path="../docs/Window/README.md" />
+  </Folder>
   <Project Path="../ImTK.Silk/ImTK.Silk.csproj" />
   <Project Path="../ImTK/ImTK.csproj" />
   <Project Path="ImTK.Test.csproj" />
