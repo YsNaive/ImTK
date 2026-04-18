@@ -136,12 +136,19 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
         private List<VisualElement> m_children = new List<VisualElement>();
         private VisualElement m_owner;
 
-        private int m_iterationCount = 0;
+        internal int m_iterationCount = 0;
         private List<Action> m_pendingActions = null;
 
         public Hierarchy(VisualElement owner)
         {
             m_owner = owner;
+        }
+
+
+        internal void AddPendingAction(Action action)
+        {
+            if (m_pendingActions == null) m_pendingActions = new List<Action>();
+            m_pendingActions.Add(action);
         }
 
         internal void BeginIteration()
@@ -301,6 +308,19 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
         }
     }
 
+
+    private void TriggerHierarchyChanged()
+    {
+        if (hierarchy.m_iterationCount > 0)
+        {
+            hierarchy.AddPendingAction(() => onHierarchyChanged?.Invoke(this));
+        }
+        else
+        {
+            onHierarchyChanged?.Invoke(this);
+        }
+    }
+
     public readonly Hierarchy hierarchy;
     private VisualElement m_logicalParent = null;
     private VisualElement m_physicalParent = null;
@@ -342,7 +362,7 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
         ve.m_logicalParent = this;
         _add(ve);
 
-        onHierarchyChanged?.Invoke(this);
+        TriggerHierarchyChanged();
     }
 
     private void _add(VisualElement ve)
@@ -398,7 +418,7 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
         ve.m_logicalParent = this;
         _insert(index, ve);
 
-        onHierarchyChanged?.Invoke(this);
+        TriggerHierarchyChanged();
     }
 
     private void _insert(int logicalIndex, VisualElement ve)
@@ -423,7 +443,7 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
         _remove(ve);
         ve.m_logicalParent = null;
 
-        onHierarchyChanged?.Invoke(this);
+        TriggerHierarchyChanged();
     }
 
     private void _remove(VisualElement ve)
@@ -459,7 +479,7 @@ public class VisualElement : IVisualElementHierarchy<VisualElement>
             ve.m_logicalParent = null;
         }
 
-        onHierarchyChanged?.Invoke(this);
+        TriggerHierarchyChanged();
     }
 
     public int IndexOf(VisualElement ve)

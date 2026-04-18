@@ -1,0 +1,31 @@
+# 文檔撰寫與結構規範 (Documentation Standards)
+
+本文件定義了 ImTK 專案中所有技術文檔的結構與撰寫 SOP。所有開發者（與 AI Agent）在新增或修改 `docs/` 目錄時，必須嚴格遵守以下規範。
+
+## 1. 目錄結構與模組化 (Package-like Structure)
+
+所有的獨立邏輯或核心模組（例如 ImTK, VisualElement, Window），都必須在 `docs/` 下擁有自己專屬的資料夾，並遵守以下檔案配置約定：
+
+* `README.md` **(必備)**：模組的入口規格書，只記載「當前的架構」與「核心機制原理解析」。
+* `CHANGELOG.md` **(視情況建立)**：用於記錄重大架構更動的歷史軌跡。包含「過去的架構痛點」與「為什麼重構」。
+* `DESIGN_NOTES.md` **(視情況建立)**：用於記錄為了物理限制、效能或特殊原因而作的「工程妥協設計」。
+
+## 2. 邊界與撰寫規範界定
+
+為了維持文檔的長期健康，開發者必須遵守以下界線：
+
+### 2.1 現狀 vs. 歷史包袱
+* `README.md` **絕對禁止**留存「舊版怎麼做」的敘述。這是一份給當下與未來開發者看的規格書。
+* 所有歷史的比較與過去架構的痛點，一律歸檔至該模組的 `CHANGELOG.md`。
+
+### 2.2 註解 vs. 高階文檔
+* **程式碼註解 (XML Documentation)**：負責說明 **What** (參數意義) 與 **How** (呼叫方式)。例如 `<summary>Open a singleton window</summary>`。
+* **Markdown 高階文檔 (`docs/`)**：負責說明 **Why** (設計理念) 與 **Architecture** (架構原理、內部機制與邊界條件)。
+
+### 2.3 知識點的提煉
+若在開發過程中遇到特殊的邊界條件（例如 ImGui.NET 的指標釋放，或是 VisualElement 走訪陣列時的分配限制），必須將其提煉為「知識點」，並將其記錄在相關的 `README.md` 中，以防止未來的開發者踩坑。
+
+
+### 2.4 VS 方案總管可視化 (Solution Explorer Visibility)
+為了確保所有的文檔都能在 Visual Studio 的方案總管中直接查閱：
+* **強制規範**：所有新建、刪除或重新命名的 `.md` 文檔，**確保** `ImTK/ImTK.csproj` 中的 `<None Include="../docs/**/*.md" />` 能涵蓋到該檔案，或者手動更新 csproj 以確保其在 Visual Studio 的 `ImTK` 專案節點下可見。
