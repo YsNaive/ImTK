@@ -27,5 +27,5 @@
 
 
 ### 2.4 VS 方案總管可視化 (Solution Explorer Visibility)
-由於專案採用了最新的 `.slnx` 方案格式，為了確保所有的文檔都能在 Visual Studio 的方案總管中直接查閱：
-* **強制規範**：所有新建、刪除或重新命名的 `.md` 文檔，**必須同步更新** `ImTK.Test.slnx` 檔案中的 `<Folder Name="docs">` 虛擬資料夾路徑。
+為了確保所有的文檔都能在 Visual Studio 的方案總管中直接查閱：
+* **強制規範**：所有新建、刪除或重新命名的 `.md` 文檔，**確保** `ImTK/ImTK.csproj` 中的 `<None Include="../docs/**/*.md" />` 能涵蓋到該檔案，或者手動更新 csproj 以確保其在 Visual Studio 的 `ImTK` 專案節點下可見。
