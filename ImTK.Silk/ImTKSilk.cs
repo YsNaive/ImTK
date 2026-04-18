@@ -33,7 +33,7 @@ public static class ImTKSilk
         options.Size = new Vector2D<int>(s_constant.width, s_constant.height);
         options.Title = s_constant.title;
 
-        s_window = Window.Create(options);
+        s_window = global::Silk.NET.Windowing.Window.Create(options);
 
         s_window.Load += OnLoad;
         s_window.Update += OnUpdate;
@@ -46,7 +46,7 @@ public static class ImTKSilk
             Directory.CreateDirectory(s_constant.configFolderPath);
         }
 
-        WindowView.configFolderPath = s_constant.configFolderPath;
+        ImTK.Window.configFolderPath = s_constant.configFolderPath;
     }
 
     public static void Start()

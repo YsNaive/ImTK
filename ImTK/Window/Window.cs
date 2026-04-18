@@ -10,11 +10,17 @@ using System.Reflection;
 
 namespace ImTK;
 
-public abstract class WindowView : VisualElement
+public abstract class Window : VisualElement
 {
     #region static utils
 
     public static string configFolderPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory;
+
+    public class WindowStateData
+    {
+        public string typeName { get; set; }
+        public string customDataJson { get; set; }
+    }
 
     private static void SaveWindowState()
     {
@@ -24,8 +30,22 @@ public abstract class WindowView : VisualElement
                 Directory.CreateDirectory(configFolderPath);
 
             string path = Path.Combine(configFolderPath, "window_state.json");
-            var openWindowTypes = windowsTable.Keys.Select(t => t.AssemblyQualifiedName).ToList();
-            string json = JsonSerializer.Serialize(openWindowTypes);
+
+            var states = new List<WindowStateData>();
+            foreach (var kvp in windowsTable)
+            {
+                var window = kvp.Value;
+                if (window.isOpen)
+                {
+                    states.Add(new WindowStateData
+                    {
+                        typeName = kvp.Key.AssemblyQualifiedName,
+                        customDataJson = window.SerializeState()
+                    });
+                }
+            }
+
+            string json = JsonSerializer.Serialize(states);
             File.WriteAllText(path, json);
         }
         catch (Exception ex)
@@ -35,20 +55,23 @@ public abstract class WindowView : VisualElement
     }
 
     public readonly static VisualElement openedWindows = new ();
-    private readonly static Dictionary<Type, WindowView> windowsTable = new();
+    private readonly static Dictionary<Type, Window> windowsTable = new();
+    private readonly static HashSet<string> s_usedWindowNames = new();
+
     /// <summary>
-    /// Add window T to openedWindows, each T will only got 1 instance with this function
+    /// Open a singleton window of type T
     /// </summary>
-    public static T Open<T>() where T : WindowView, new()
+    public static T Open<T>() where T : Window, new()
     {
-        WindowView matched = null;
-        windowsTable.TryGetValue (typeof (T), out matched);
-        if (matched == null) { 
+        Window matched = null;
+        windowsTable.TryGetValue(typeof(T), out matched);
+        if (matched == null)
+        {
             matched = new T();
-            windowsTable.Add (typeof (T), matched);
+            windowsTable.Add(typeof(T), matched);
         }
-        matched.isOpen = true;
-        openedWindows.Add (matched);
+
+        matched.Open();
         SaveWindowState();
         return matched as T;
     }
@@ -65,21 +88,25 @@ public abstract class WindowView : VisualElement
                 if (File.Exists(path))
                 {
                     string json = File.ReadAllText(path);
-                    var openWindowTypes = JsonSerializer.Deserialize<List<string>>(json);
+                    var openWindowTypes = JsonSerializer.Deserialize<List<WindowStateData>>(json);
                     bool needsResave = false;
 
                     if (openWindowTypes != null)
                     {
-                        foreach (string typeName in openWindowTypes)
+                        foreach (var state in openWindowTypes)
                         {
-                            Type type = Type.GetType(typeName);
-                            if (type != null && type.IsSubclassOf(typeof(WindowView)))
+                            Type type = Type.GetType(state.typeName);
+                            if (type != null && type.IsSubclassOf(typeof(Window)))
                             {
-                                MethodInfo openMethod = typeof(WindowView).GetMethod("Open", BindingFlags.Public | BindingFlags.Static);
+                                MethodInfo openMethod = typeof(Window).GetMethod("Open", BindingFlags.Public | BindingFlags.Static);
                                 if (openMethod != null)
                                 {
                                     MethodInfo genericOpen = openMethod.MakeGenericMethod(type);
-                                    genericOpen.Invoke(null, null);
+                                    Window windowInstance = (Window)genericOpen.Invoke(null, null);
+                                    if (!string.IsNullOrEmpty(state.customDataJson))
+                                    {
+                                        windowInstance.DeserializeState(state.customDataJson);
+                                    }
                                 }
                             }
                             else
@@ -113,6 +140,17 @@ public abstract class WindowView : VisualElement
     }
 
     #endregion
+
+    /// <summary>
+    /// Override this to return custom state to be saved
+    /// </summary>
+    public virtual string SerializeState() { return null; }
+
+    /// <summary>
+    /// Override this to restore custom state
+    /// </summary>
+    public virtual void DeserializeState(string json) { }
+
 
     public abstract string displayName { get; }
     public Vector2 minSize = new Vector2(300, 200);
@@ -183,15 +221,39 @@ public abstract class WindowView : VisualElement
     public bool enableContextMenu { get; set; } = true;
     public readonly MenuItem contextMenu = new MenuItem("window-context-menu-root");
 
-    public bool isOpen { get; set; } = true;
+    public bool isOpen { get; set; } = false;
+
+
+    public virtual void Open()
+    {
+        if (isOpen) return;
+
+        if (s_usedWindowNames.Contains(displayName))
+        {
+            throw new InvalidOperationException($"Window name '{displayName}' is already in use. Window names must be unique to prevent ImGui layout conflicts.");
+        }
+
+        s_usedWindowNames.Add(displayName);
+        isOpen = true;
+        openedWindows.Add(this);
+    }
 
     public virtual void Close()
     {
+        if (!isOpen) return;
+
         isOpen = false;
         openedWindows.Remove(this);
-        windowsTable.Remove(this.GetType());
-        SaveWindowState();
+        s_usedWindowNames.Remove(displayName);
+
+        // If it's a singleton tool window, we resave state.
+        // If it's a dynamically instantiated window, we don't save it to windowsTable anyway.
+        if (windowsTable.ContainsValue(this))
+        {
+            SaveWindowState();
+        }
     }
+
 
     public override void RenderVisualTree(double deltaTime)
     {

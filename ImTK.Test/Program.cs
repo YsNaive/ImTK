@@ -75,12 +75,12 @@ public class AppTestModule : ImTKModule
     }
 }
 
-public class TestWindow : WindowView
+public class TestWindow : Window
 {
     [MainMenu("Window/Test")]
     public static void OpenTestWindow()
     {
-        WindowView.Open<TestWindow>();
+        Window.Open<TestWindow>();
     }
     public override string displayName => "Test";
 
@@ -100,12 +100,12 @@ public class TestWindow : WindowView
     }
 }
 
-public class TestWindow2 : WindowView
+public class TestWindow2 : Window
 {
     [MainMenu("Window/Test2")]
     public static void OpenTestWindow()
     {
-        WindowView.Open<TestWindow2>();
+        Window.Open<TestWindow2>();
     }
     public override string displayName => "Test2";
 

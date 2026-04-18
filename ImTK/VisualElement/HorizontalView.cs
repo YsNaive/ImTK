@@ -3,7 +3,7 @@ using System;
 
 namespace ImTK;
 
-public class Horizontal : VisualElement
+public class HorizontalView : VisualElement
 {
     public override void RenderVisualTree(double deltaTime)
     {
