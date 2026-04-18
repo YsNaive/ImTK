@@ -8,6 +8,10 @@ public class ImStyle
     private int pushedVarsCount = 0;
     private int pushedColorsCount = 0;
 
+    // Custom Drawer Styles
+    public float? drawerLabelWidth { get; set; }
+    public float? drawerIndentWidth { get; set; }
+
     // ImGuiStyleVar - float
     public float? alpha { get; set; }
     public float? disabledAlpha { get; set; }
