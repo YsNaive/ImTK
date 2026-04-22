@@ -21,9 +21,46 @@ public abstract class RuntimeDrawer<T> : RuntimeDrawer
         set => SetValue(value);
     }
 
+    /// <summary>
+    /// If true, the drawer will automatically pull the value from the getter delegate in its Update loop.
+    /// </summary>
+    public bool autoSync { get; set; } = false;
+
+    /// <summary>
+    /// Optional delegate to retrieve the external value.
+    /// Used for auto-syncing or data binding.
+    /// </summary>
+    public Func<T> getter { get; set; }
+
+    /// <summary>
+    /// Optional delegate to write the value back to an external source.
+    /// Used for data binding.
+    /// </summary>
+    public Action<T> setter { get; set; }
+
     protected RuntimeDrawer(string label = "", T initialValue = default) : base(label)
     {
         m_value = initialValue;
+
+        // Automatically write back to setter when UI value changes
+        RegisterValueChanged(() =>
+        {
+            setter?.Invoke(m_value);
+        });
+    }
+
+    public override void Update(double deltaTime)
+    {
+        base.Update(deltaTime);
+
+        if (autoSync && getter != null)
+        {
+            T extValue = getter();
+            if (!EqualityComparer<T>.Default.Equals(m_value, extValue))
+            {
+                SetValueWithoutNotify(extValue);
+            }
+        }
     }
 
     /// <summary>
