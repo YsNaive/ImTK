@@ -226,7 +226,11 @@ public abstract class Window : VisualElement
 
     public virtual void Open()
     {
-        if (isOpen) return;
+        if (isOpen)
+        {
+            ImGui.SetWindowFocus(displayName);
+            return;
+        }
 
         if (s_usedWindowNames.Contains(displayName))
         {
@@ -236,6 +240,7 @@ public abstract class Window : VisualElement
         s_usedWindowNames.Add(displayName);
         isOpen = true;
         openedWindows.Add(this);
+        ImGui.SetWindowFocus(displayName);
     }
 
     public virtual void Close()

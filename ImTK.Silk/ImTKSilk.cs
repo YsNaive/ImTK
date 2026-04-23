@@ -88,6 +88,8 @@ public static class ImTKSilk
             // or store the pointer to free it on close. For simplicity we store a static pointer and free on close.
             s_iniFilenamePtr = Marshal.StringToCoTaskMemUTF8(iniPath);
             io.NativePtr->IniFilename = (byte*)s_iniFilenamePtr.ToPointer();
+
+            ImGui.LoadIniSettingsFromDisk(iniPath);
         }
 
         ImTKModule.LoadAll();
