@@ -10,9 +10,10 @@
 * 實作全新的雙層生命週期架構 (`ImTKModule` & `ImTKObject`) 與階段性 Hooks (OnInitializeSelf, OnGraphicsSetup 等)。
 * 實作 `ImTKDatabase` 執行期資源快取管理器與 `IAsset` 介面。
 * 實作 `ImTKLog` 日誌系統（包含 `LogContext`, `ILogSink` 介面與 `MemoryRingBufferSink`）。
+* 實作 `ImTKDispatcher` 執行緒調度與 `ImTKEventBus` 隱式生命週期解綁事件系統。
 
 ## 🔴 已完成 (Done)
-* 完善開發文檔規章與架構深度探勘（建立次世代架構藍圖：00_Global_Architecture.md, 01_Core_Lifecycle.md, 02_ImTKDatabase_AssetSystem.md, 03_Logging_Debugging.md）。
+* 完善開發文檔規章與架構深度探勘（建立次世代架構藍圖：00_Global_Architecture.md, 01_Core_Lifecycle.md, 02_ImTKDatabase_AssetSystem.md, 03_Logging_Debugging.md, 04_EventBus_Dispatcher.md）。
 * 重構 `VisualElement`，確保 `onHierarchyChanged` 事件在延遲隊列觸發時，其物理與邏輯狀態已一致。
 * 重構命名規範，將 `Horizontal` 更名為 `HorizontalView`，將 `WindowView` 更名為 `Window`。
 * 擴充 `Window` 以支援多實例操作 (`instance.Open()`) 與動態名稱唯一性檢查。
