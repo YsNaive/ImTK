@@ -19,6 +19,7 @@
 
 ## 🛠️ 核心框架與子模組 (Core Framework & Modules)
 
+* **[架構設計藍圖 (Architecture Blueprints)](./Project/Architecture/)**：存放次世代重構的最高指導原則（包含全域生命週期、Lifecycle 雙層架構、ImTKDatabase 資源系統設計、日誌與偵錯系統、事件匯流排、視覺樹事件與排版系統）。
 * **[ImTK 核心機制](./ImTK/README.md)**：系統級功能核心，涵蓋 `ImTKModule` 的自動註冊與生命週期。
 * **[ImTK.Silk 整合橋接](./ImTK_Silk/README.md)**：Silk.NET 視窗整合與生命週期驅動，以及 ImGui.NET 的記憶體指標管理。
 * **[VisualElement 基礎架構](./VisualElement/README.md)**：核心 UI 架構設計，解析邏輯/物理雙層樹狀結構與安全走訪機制。
