@@ -1,5 +1,5 @@
 using System;
-using ImTK.Core;
+using ImTK.Silk;
 
 namespace ImTK.Test
 {
@@ -7,32 +7,19 @@ namespace ImTK.Test
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Starting ImTK Logic Test (Headless)...");
+            Console.WriteLine("Starting ImTK Integration Test...");
 
-            // Since GLFW fails to init in this sandbox (no display),
-            // we will just manually drive the Lifecycle to verify reflection and state machine.
-
-            try
+            var config = new ImTKSilkConstant
             {
-                ImTKApplication.Lifecycle.Initialize();
-                Console.WriteLine("Initialization passed. Modules found: " + (ImTKApplication.CurrentState == ApplicationState.AwaitingGraphicsSetup));
+                windowTitle = "ImTK Architecture Test",
+                windowWidth = 1024,
+                windowHeight = 768
+            };
 
-                ImTKApplication.Lifecycle.GraphicsSetup();
+            // Drive the entire ImTK application using the Silk.NET entry point
+            ImTKSilk.Run(config);
 
-                ImTKApplication.Lifecycle.LogicUpdate(0.016);
-                ImTKApplication.Lifecycle.GuiRender();
-                ImTKApplication.Lifecycle.GizmoRender();
-                ImTKApplication.Lifecycle.LateUpdate();
-
-                Console.WriteLine("Main loop passed. Current State: " + ImTKApplication.CurrentState);
-
-                ImTKApplication.Lifecycle.Close();
-                Console.WriteLine("Shutdown passed.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error: " + ex);
-            }
+            Console.WriteLine("Application Closed gracefully.");
         }
     }
 }
