@@ -50,19 +50,23 @@ namespace ImTK.Silk
             s_gl = s_window.CreateOpenGL();
 
             // Initialize ImGui Controller
+            // Important: We must use the 'onConfigureIO' callback parameter to configure ViewportsEnable.
+            // ImGuiController initializes fonts and might implicitly call NewFrame or build states early.
+            // If we set ConfigFlags AFTER the constructor finishes, ImGui will throw an assertion failure:
+            // "Please set ViewportsEnable before the first call to NewFrame()!"
             s_imguiController = new ImGuiController(
                 s_gl,
                 s_window,
-                s_window.CreateInput()
+                s_window.CreateInput(),
+                () =>
+                {
+                    var io = ImGui.GetIO();
+                    if (s_config.enableViewports)
+                    {
+                        io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+                    }
+                }
             );
-
-            // Configure ImGui IO based on constants
-            var io = ImGui.GetIO();
-
-            if (s_config.enableViewports)
-            {
-                io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
-            }
 
             // Phase 3: Setup graphics resources for ImTK modules
             ImTKApplication.Lifecycle.GraphicsSetup();

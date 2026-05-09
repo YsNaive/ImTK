@@ -31,7 +31,7 @@ namespace ImTK.Core
         public static T GetModule<T>() where T : ImTKModule
         {
             if (s_modules.TryGetValue(typeof(T), out var module))
-            {
+        {
                 return (T)module;
             }
             throw new InvalidOperationException($"Module of type {typeof(T).Name} is not registered or initialized.");
@@ -64,25 +64,25 @@ namespace ImTK.Core
         public static class Lifecycle
         {
             private static void SetState(ApplicationState newState)
-            {
+        {
                 CurrentState = newState;
             }
 
             private static void RequireState(ApplicationState expectedState)
-            {
+        {
                 if (CurrentState != expectedState)
                     throw new InvalidOperationException($"Lifecycle error: Expected state {expectedState}, but current state is {CurrentState}.");
             }
 
             private static void EnforceFrameOrder(ApplicationState phase)
-            {
+        {
                 RequireState(ApplicationState.Idle);
                 if (phase < s_minAllowedFrameState)
                     throw new InvalidOperationException($"Lifecycle order violation: Cannot execute {phase} because minimum allowed state is {s_minAllowedFrameState}. Did you call phases out of order or repeat a phase?");
             }
 
             public static void Initialize()
-            {
+        {
                 RequireState(ApplicationState.Uninitialized);
 
                 // Scanning and instantiation
@@ -123,7 +123,7 @@ namespace ImTK.Core
             }
 
             public static void GraphicsSetup()
-            {
+        {
                 RequireState(ApplicationState.AwaitingGraphicsSetup);
                 SetState(ApplicationState.GraphicsSetup);
 
@@ -137,7 +137,7 @@ namespace ImTK.Core
             }
 
             public static void LogicUpdate(double rawDeltaTime)
-            {
+        {
                 EnforceFrameOrder(ApplicationState.LogicUpdate);
 
                 Time.Update(rawDeltaTime);
@@ -159,7 +159,7 @@ namespace ImTK.Core
             }
 
             public static void GuiRender()
-            {
+        {
                 EnforceFrameOrder(ApplicationState.GuiRender);
                 SetState(ApplicationState.GuiRender);
 
@@ -178,7 +178,7 @@ namespace ImTK.Core
             }
 
             public static void GizmoRender()
-            {
+        {
                 EnforceFrameOrder(ApplicationState.GizmoRender);
                 SetState(ApplicationState.GizmoRender);
 
@@ -197,7 +197,7 @@ namespace ImTK.Core
             }
 
             public static void LateUpdate()
-            {
+        {
                 EnforceFrameOrder(ApplicationState.LateUpdate);
                 SetState(ApplicationState.LateUpdate);
 
@@ -220,7 +220,7 @@ namespace ImTK.Core
             }
 
             public static void Close()
-            {
+        {
                 if (CurrentState == ApplicationState.Closed || CurrentState == ApplicationState.Close) return;
 
                 SetState(ApplicationState.Close);
@@ -245,7 +245,7 @@ namespace ImTK.Core
             }
 
                         private static void ProcessPendingQueuesAndStateChanges()
-            {
+        {
                 // Add pending objects (copy to array to prevent modification during iteration)
                 if (s_pendingAdd.Count > 0)
                 {
