@@ -25,12 +25,37 @@ public class LogFormatterBuilder
         return this;
     }
 
-    public LogFormatterBuilder Level(string prefix = "[", string postfix = "]", int rightPadding = 7)
+    public LogFormatterBuilder TimeSinceStartup(string format = @"hh\:mm\:ss", string prefix = "[", string postfix = "]")
     {
         _actions.Add((sb, entry) =>
         {
             if (prefix != null) sb.Append(prefix);
-            sb.Append(entry.Level.ToString().PadRight(rightPadding));
+            var span = entry.Timestamp - ImTK.Core.Time.StartupTime;
+            sb.Append(span.ToString(format));
+            if (postfix != null) sb.Append(postfix);
+        });
+        return this;
+    }
+
+    public LogFormatterBuilder Level(string prefix = "[", string postfix = "]", int width = 7)
+    {
+        _actions.Add((sb, entry) =>
+        {
+            if (prefix != null) sb.Append(prefix);
+
+            string levelStr = entry.Level.ToString();
+            int totalPad = width - levelStr.Length;
+            if (totalPad > 0)
+            {
+                int leftPad = totalPad / 2;
+                int rightPad = totalPad - leftPad;
+                sb.Append(' ', leftPad).Append(levelStr).Append(' ', rightPad);
+            }
+            else
+            {
+                sb.Append(levelStr);
+            }
+
             if (postfix != null) sb.Append(postfix);
         });
         return this;

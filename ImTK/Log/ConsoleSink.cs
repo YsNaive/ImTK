@@ -9,7 +9,7 @@ public class ConsoleSink : LogSinkBase
     public override string description => "Standard console output sink";
 
     private readonly Func<LogEntry, string> _formatter = new LogFormatterBuilder()
-        .Timestamp()
+        .TimeSinceStartup()
         .Level()
         .ContextName()
         .Text(" ")

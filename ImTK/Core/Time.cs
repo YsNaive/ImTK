@@ -1,3 +1,5 @@
+using System;
+
 namespace ImTK.Core
 {
     /// <summary>
@@ -5,6 +7,11 @@ namespace ImTK.Core
     /// </summary>
     public static class Time
     {
+        /// <summary>
+        /// The absolute system time when the application first initialized this static class.
+        /// </summary>
+        public static readonly DateTime StartupTime = DateTime.Now;
+
         /// <summary>
         /// The time elapsed since the last frame, scaled by TimeScale.
         /// </summary>
