@@ -93,17 +93,33 @@ namespace ImTK.Core
         {
                 RequireState(ApplicationState.Uninitialized);
 
+                // --- Reflection Phase 0: Log Sinks ---
+                // Sinks must be initialized before anything else to ensure early logs (and fatal errors) are captured.
+                var allTypes = AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(a => !a.FullName.StartsWith("System") && !a.FullName.StartsWith("Microsoft"))
+                    .SelectMany(a => a.GetTypes());
+
+                var sinkTypes = allTypes.Where(t => t.IsClass && !t.IsAbstract && typeof(ILogSink).IsAssignableFrom(t));
+
+                foreach (var type in sinkTypes)
+                {
+                    // Enforce one parameterless non-public constructor for automatic sinks
+                    var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (constructors.Length == 1 && constructors[0].GetParameters().Length == 0 && !constructors[0].IsPublic)
+                    {
+                        var sinkInstance = (ILogSink)Activator.CreateInstance(type, true);
+                        ImTKLog.AddSink(sinkInstance);
+                    }
+                }
+
                 s_log.Info($"ImTK Framework Version {Version} Initializing...");
 
-                // Scanning and instantiation
+                // --- Reflection Phase 1: ImTKModules ---
                 SetState(ApplicationState.InitializeSelf);
 
                 s_log.Debug("Discovering ImTKModules via reflection...");
 
-                var moduleTypes = AppDomain.CurrentDomain.GetAssemblies()
-                    .Where(a => !a.FullName.StartsWith("System") && !a.FullName.StartsWith("Microsoft"))
-                    .SelectMany(a => a.GetTypes())
-                    .Where(t => t.IsClass && !t.IsAbstract && typeof(ImTKModule).IsAssignableFrom(t));
+                var moduleTypes = allTypes.Where(t => t.IsClass && !t.IsAbstract && typeof(ImTKModule).IsAssignableFrom(t));
 
                 foreach (var type in moduleTypes)
                 {

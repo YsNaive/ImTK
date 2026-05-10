@@ -5,16 +5,20 @@ namespace ImTK.Log;
 
 public abstract class LogSinkBase : ILogSink
 {
-    public LogLevel MinimumLevel { get; set; } = LogLevel.Debug;
-    public HashSet<string> ExcludedContexts { get; } = new HashSet<string>();
-    public Func<LogEntry, string> Formatter { get; set; }
+    public bool enabled { get; set; } = true;
+    public LogLevel minimumLevel { get; set; } = LogLevel.Debug;
+    public HashSet<string> excludedContexts { get; } = new HashSet<string>();
+
+    public abstract string description { get; }
+    public abstract Func<LogEntry, string> formatter { get; }
 
     public void Emit(LogEntry entry)
     {
-        if (entry.Level < MinimumLevel) return;
-        if (ExcludedContexts.Contains(entry.ContextName)) return;
+        if (!enabled) return;
+        if (entry.Level < minimumLevel) return;
+        if (excludedContexts.Contains(entry.ContextName)) return;
 
-        string formattedMsg = Formatter != null ? Formatter(entry) : entry.Message;
+        string formattedMsg = formatter != null ? formatter(entry) : entry.Message;
         WriteToTarget(formattedMsg, entry);
     }
 

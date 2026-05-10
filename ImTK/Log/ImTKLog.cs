@@ -24,6 +24,18 @@ public static class ImTKLog
         ImmutableInterlocked.Update(ref _sinks, sinks => sinks.Clear());
     }
 
+    public static void SetSinkEnabled<T>(bool enabled) where T : ILogSink
+    {
+        var currentSinks = _sinks;
+        for (int i = 0; i < currentSinks.Length; i++)
+        {
+            if (currentSinks[i] is T targetSink)
+            {
+                targetSink.enabled = enabled;
+            }
+        }
+    }
+
     public static void Emit(LogEntry entry)
     {
         var currentSinks = _sinks;

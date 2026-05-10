@@ -6,6 +6,20 @@ public class ConsoleSink : LogSinkBase
 {
     private readonly object _lock = new object();
 
+    public override string description => "Standard console output sink";
+
+    private readonly Func<LogEntry, string> _formatter = new LogFormatterBuilder()
+        .Timestamp()
+        .Level()
+        .ContextName()
+        .Text(" ")
+        .Message()
+        .Build();
+
+    public override Func<LogEntry, string> formatter => _formatter;
+
+    protected ConsoleSink() { }
+
     protected override void WriteToTarget(string formattedMsg, LogEntry originalEntry)
     {
         lock (_lock)
