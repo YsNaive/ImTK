@@ -49,7 +49,7 @@ public readonly struct LogEntry
 ### 2.3 核心分派器：`ImTKLog` (Manager)
 唯一的靜態全域入口。
 *   **職責**：管理所有的輸出端 (`ILogSink`)，接收 `LogContext` 傳來的 `LogEntry` 並安全地分派。
-*   **全域過濾**：提供全域的 `MinimumLevel` 設定，提早攔截不必要的日誌。
+*   **無全域過濾**：為保持最大彈性，不提供全域的層級過濾，所有層級的日誌都會被派發，過濾職責完全交由各個 `ILogSink` 自行決定。
 
 ### 2.4 終端輸出：`ILogSink` (接收端)
 借鑑 Serilog 等現代框架的術語，Sink 代表「日誌資料最終流入並被處理的水槽」。
