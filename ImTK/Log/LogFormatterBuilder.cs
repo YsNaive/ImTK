@@ -25,12 +25,12 @@ public class LogFormatterBuilder
         return this;
     }
 
-    public LogFormatterBuilder Level(string prefix = "[", string postfix = "]")
+    public LogFormatterBuilder Level(string prefix = "[", string postfix = "]", int rightPadding = 7)
     {
         _actions.Add((sb, entry) =>
         {
             if (prefix != null) sb.Append(prefix);
-            sb.Append(entry.Level.ToString());
+            sb.Append(entry.Level.ToString().PadRight(rightPadding));
             if (postfix != null) sb.Append(postfix);
         });
         return this;

@@ -16,17 +16,15 @@ public class ConsoleSink : LogSinkBase
         .Message()
         .Build();
 
-    public override Func<LogEntry, string> formatter => _formatter;
-
     protected ConsoleSink() { }
 
-    protected override void WriteToTarget(string formattedMsg, LogEntry originalEntry)
+    protected override void WriteToTarget(LogEntry entry)
     {
         lock (_lock)
         {
-            // TODO: Implement color formatting based on originalEntry.Level
+            // TODO: Implement color formatting based on entry.Level
             // when the VisualElement Style system is developed.
-            Console.WriteLine(formattedMsg);
+            Console.WriteLine(_formatter(entry));
         }
     }
 }

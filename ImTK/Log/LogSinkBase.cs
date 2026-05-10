@@ -10,7 +10,6 @@ public abstract class LogSinkBase : ILogSink
     public HashSet<string> excludedContexts { get; } = new HashSet<string>();
 
     public abstract string description { get; }
-    public abstract Func<LogEntry, string> formatter { get; }
 
     public void Emit(LogEntry entry)
     {
@@ -18,9 +17,8 @@ public abstract class LogSinkBase : ILogSink
         if (entry.Level < minimumLevel) return;
         if (excludedContexts.Contains(entry.ContextName)) return;
 
-        string formattedMsg = formatter != null ? formatter(entry) : entry.Message;
-        WriteToTarget(formattedMsg, entry);
+        WriteToTarget(entry);
     }
 
-    protected abstract void WriteToTarget(string formattedMsg, LogEntry originalEntry);
+    protected abstract void WriteToTarget(LogEntry entry);
 }
