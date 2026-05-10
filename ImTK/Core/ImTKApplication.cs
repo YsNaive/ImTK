@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ImTK.Log;
 
 namespace ImTK.Core
 {
@@ -11,6 +12,8 @@ namespace ImTK.Core
     /// </summary>
     public static class ImTKApplication
     {
+        private static readonly LogContext s_log = new LogContext("ImTKApplication");
+
         /// <summary>
         /// Gets the current version of the ImTK framework (e.g., "0.1.0-alpha").
         /// </summary>
@@ -90,28 +93,60 @@ namespace ImTK.Core
         {
                 RequireState(ApplicationState.Uninitialized);
 
-                // Scanning and instantiation
+                // --- Reflection Phase 0: Log Sinks ---
+                // Sinks must be initialized before anything else to ensure early logs (and fatal errors) are captured.
+                var allTypes = AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(a => !a.FullName.StartsWith("System") && !a.FullName.StartsWith("Microsoft"))
+                    .SelectMany(a => a.GetTypes());
+
+                var sinkTypes = allTypes.Where(t => t.IsClass && !t.IsAbstract && typeof(ILogSink).IsAssignableFrom(t));
+
+                foreach (var type in sinkTypes)
+                {
+                    // Enforce one parameterless non-public constructor for automatic sinks
+                    var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (constructors.Length == 1 && constructors[0].GetParameters().Length == 0 && !constructors[0].IsPublic)
+                    {
+                        var sinkInstance = (ILogSink)Activator.CreateInstance(type, true);
+                        ImTKLog.AddSink(sinkInstance);
+                    }
+                }
+
+                s_log.Info($"ImTK Framework Version {Version} Initializing...");
+
+                // --- Reflection Phase 1: ImTKModules ---
                 SetState(ApplicationState.InitializeSelf);
 
-                var moduleTypes = AppDomain.CurrentDomain.GetAssemblies()
-                    .Where(a => !a.FullName.StartsWith("System") && !a.FullName.StartsWith("Microsoft"))
-                    .SelectMany(a => a.GetTypes())
-                    .Where(t => t.IsClass && !t.IsAbstract && typeof(ImTKModule).IsAssignableFrom(t));
+                s_log.Debug("Discovering ImTKModules via reflection...");
+
+                var moduleTypes = allTypes.Where(t => t.IsClass && !t.IsAbstract && typeof(ImTKModule).IsAssignableFrom(t));
 
                 foreach (var type in moduleTypes)
                 {
-                    // Strict constructor checking (must be exactly one parameterless non-public constructor)
-                    var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (constructors.Length > 1 || constructors[0].GetParameters().Length > 0 || constructors[0].IsPublic)
+                    try
                     {
-                        throw new InvalidOperationException($"ImTKModule rule violation: {type.FullName} must have exactly one parameterless non-public constructor.");
-                    }
+                        // Strict constructor checking (must be exactly one parameterless non-public constructor)
+                        var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        if (constructors.Length > 1 || constructors[0].GetParameters().Length > 0 || constructors[0].IsPublic)
+                        {
+                            throw new InvalidOperationException($"ImTKModule rule violation: {type.FullName} must have exactly one parameterless non-public constructor.");
+                        }
 
-                    var instance = (ImTKModule)Activator.CreateInstance(type, true);
-                    s_modules[type] = instance;
+                        var instance = (ImTKModule)Activator.CreateInstance(type, true);
+                        s_modules[type] = instance;
+                        s_log.Trace($"Instantiated module: {type.Name}");
+                    }
+                    catch (Exception ex)
+                    {
+                        s_log.Fatal(ex, $"Failed to instantiate module: {type.Name}");
+                        throw;
+                    }
                 }
 
+                s_log.Info($"Discovered and instantiated {s_modules.Count} modules.");
+
                 // Phase 1: Initialize Self
+                s_log.Debug("Executing module OnInitializeSelf...");
                 foreach (var module in s_modules.Values)
                 {
                     module.OnInitializeSelf();
@@ -119,12 +154,14 @@ namespace ImTK.Core
 
                 // Phase 2: Initialize Dependencies
                 SetState(ApplicationState.InitializeDependencies);
+                s_log.Debug("Executing module OnInitializeDependencies...");
                 foreach (var module in s_modules.Values)
                 {
                     module.OnInitializeDependencies();
                 }
 
                 SetState(ApplicationState.AwaitingGraphicsSetup);
+                s_log.Info("ImTKApplication initialized successfully.");
             }
 
             public static void GraphicsSetup()
@@ -132,6 +169,7 @@ namespace ImTK.Core
                 RequireState(ApplicationState.AwaitingGraphicsSetup);
                 SetState(ApplicationState.GraphicsSetup);
 
+                s_log.Debug("Executing module OnGraphicsSetup...");
                 foreach (var module in s_modules.Values)
                 {
                     module.OnGraphicsSetup();
@@ -139,6 +177,7 @@ namespace ImTK.Core
 
                 SetState(ApplicationState.Idle);
                 s_minAllowedFrameState = ApplicationState.LogicUpdate;
+                s_log.Info("Graphics setup completed. Entering runtime loop.");
             }
 
             public static void LogicUpdate(double rawDeltaTime)
@@ -151,12 +190,16 @@ namespace ImTK.Core
 
                 foreach (var module in s_modules.Values)
                 {
-                    if (module.m_activeInHierarchy) module.OnLogicUpdate();
+                    if (!module.m_activeInHierarchy) continue;
+                    try { module.OnLogicUpdate(); }
+                    catch (Exception ex) { s_log.Error(ex, $"Exception thrown during LogicUpdate by {module.GetType().Name}"); }
                 }
 
                 foreach (var obj in s_objects)
                 {
-                    if (obj.m_activeInHierarchy) obj.OnLogicUpdate();
+                    if (!obj.m_activeInHierarchy) continue;
+                    try { obj.OnLogicUpdate(); }
+                    catch (Exception ex) { s_log.Error(ex, $"Exception thrown during LogicUpdate by {obj.GetType().Name}"); }
                 }
 
                 SetState(ApplicationState.Idle);
@@ -170,12 +213,16 @@ namespace ImTK.Core
 
                 foreach (var module in s_modules.Values)
                 {
-                    if (module.m_activeInHierarchy) module.OnGuiRender();
+                    if (!module.m_activeInHierarchy) continue;
+                    try { module.OnGuiRender(); }
+                    catch (Exception ex) { s_log.Error(ex, $"Exception thrown during GuiRender by {module.GetType().Name}"); }
                 }
 
                 foreach (var obj in s_objects)
                 {
-                    if (obj.m_activeInHierarchy) obj.OnGuiRender();
+                    if (!obj.m_activeInHierarchy) continue;
+                    try { obj.OnGuiRender(); }
+                    catch (Exception ex) { s_log.Error(ex, $"Exception thrown during GuiRender by {obj.GetType().Name}"); }
                 }
 
                 SetState(ApplicationState.Idle);
@@ -189,12 +236,16 @@ namespace ImTK.Core
 
                 foreach (var module in s_modules.Values)
                 {
-                    if (module.m_activeInHierarchy) module.OnGizmoRender();
+                    if (!module.m_activeInHierarchy) continue;
+                    try { module.OnGizmoRender(); }
+                    catch (Exception ex) { s_log.Error(ex, $"Exception thrown during GizmoRender by {module.GetType().Name}"); }
                 }
 
                 foreach (var obj in s_objects)
                 {
-                    if (obj.m_activeInHierarchy) obj.OnGizmoRender();
+                    if (!obj.m_activeInHierarchy) continue;
+                    try { obj.OnGizmoRender(); }
+                    catch (Exception ex) { s_log.Error(ex, $"Exception thrown during GizmoRender by {obj.GetType().Name}"); }
                 }
 
                 SetState(ApplicationState.Idle);
@@ -209,12 +260,16 @@ namespace ImTK.Core
                 // Run normal LateUpdate
                 foreach (var module in s_modules.Values)
                 {
-                    if (module.m_activeInHierarchy) module.OnLateUpdate();
+                    if (!module.m_activeInHierarchy) continue;
+                    try { module.OnLateUpdate(); }
+                    catch (Exception ex) { s_log.Error(ex, $"Exception thrown during LateUpdate by {module.GetType().Name}"); }
                 }
 
                 foreach (var obj in s_objects)
                 {
-                    if (obj.m_activeInHierarchy) obj.OnLateUpdate();
+                    if (!obj.m_activeInHierarchy) continue;
+                    try { obj.OnLateUpdate(); }
+                    catch (Exception ex) { s_log.Error(ex, $"Exception thrown during LateUpdate by {obj.GetType().Name}"); }
                 }
 
                 // Process pending collections and Enable/Disable state changes
@@ -228,8 +283,10 @@ namespace ImTK.Core
         {
                 if (CurrentState == ApplicationState.Closed || CurrentState == ApplicationState.Close) return;
 
+                s_log.Info("Application closing. Teardown initiated...");
                 SetState(ApplicationState.Close);
 
+                s_log.Debug($"Disabling and destroying active ImTKObjects ({s_objects.Count}).");
                 // Disable all objects and modules
                 foreach (var obj in s_objects)
                 {
@@ -237,6 +294,7 @@ namespace ImTK.Core
                     obj.OnDestroy();
                 }
 
+                s_log.Debug($"Disabling and closing ImTKModules ({s_modules.Count}).");
                 foreach (var module in s_modules.Values)
                 {
                     if (module.m_activeInHierarchy) module.OnDisable();
@@ -247,6 +305,7 @@ namespace ImTK.Core
                 s_modules.Clear();
 
                 SetState(ApplicationState.Closed);
+                s_log.Info("ImTKApplication shutdown complete.");
             }
 
                         private static void ProcessPendingQueuesAndStateChanges()
@@ -259,6 +318,7 @@ namespace ImTK.Core
                     foreach (var obj in adding)
                     {
                         s_objects.Add(obj);
+                        s_log.Trace($"Registered new ImTKObject: {obj.GetType().Name}");
                         if (obj.m_enabled)
                         {
                             obj.m_activeInHierarchy = true;
@@ -312,6 +372,7 @@ namespace ImTK.Core
                         }
                         obj.OnDestroy();
                         s_objects.Remove(obj);
+                        s_log.Trace($"Destroyed ImTKObject: {obj.GetType().Name}");
                     }
                 }
             }

@@ -49,7 +49,7 @@ public readonly struct LogEntry
 ### 2.3 核心分派器：`ImTKLog` (Manager)
 唯一的靜態全域入口。
 *   **職責**：管理所有的輸出端 (`ILogSink`)，接收 `LogContext` 傳來的 `LogEntry` 並安全地分派。
-*   **全域過濾**：提供全域的 `MinimumLevel` 設定，提早攔截不必要的日誌。
+*   **全域過濾**：已拔除全域過濾機制。過濾職責完全交由各個 `ILogSink` 自行處理，以提供更高的靈活性（例如：Console 顯示 Warning 以上，File 記錄 Trace）。
 
 ### 2.4 終端輸出：`ILogSink` (接收端)
 借鑑 Serilog 等現代框架的術語，Sink 代表「日誌資料最終流入並被處理的水槽」。
@@ -62,42 +62,42 @@ public readonly struct LogEntry
 為確保未來的開發者能輕鬆擴充自訂的輸出端（如寫入 Discord Webhook），系統採用「管線與過濾 (Pipeline & Filter)」設計，提供一個虛擬基底類別 `LogSinkBase`。
 
 ### 3.1 `LogSinkBase` 基底類別
-此類別封裝了通用的「層級過濾」、「模組排除 (黑名單)」與「格式化 (Formatting)」邏輯。
+此類別封裝了通用的「層級過濾」與「模組排除 (黑名單)」邏輯，並提供 Sink 啟閉控制與描述，達成更靈活的職責分離。為了最大化效能與自由度，格式化責任由各自的 Sink 子類處理。
 
 ```csharp
-public abstract class LogSinkBase : ILoggerSink
+public abstract class LogSinkBase : ILogSink
 {
-    public LogLevel MinimumLevel { get; set; } = LogLevel.Debug;
-    public HashSet<string> ExcludedContexts { get; } = new HashSet<string>();
+    public bool enabled { get; set; } = true;
+    public LogLevel minimumLevel { get; set; } = LogLevel.Debug;
+    public HashSet<string> excludedContexts { get; } = new HashSet<string>();
 
-    // 格式化委派 (方案 B)：提供絕對自由度的樣板
-    public Func<LogEntry, string> Formatter { get; set; } = LogFormatters.Standard;
+    public abstract string description { get; }
 
     public void Emit(LogEntry entry)
     {
-        if (entry.Level < MinimumLevel) return;
-        if (ExcludedContexts.Contains(entry.ContextName)) return;
+        if (!enabled) return;
+        if (entry.Level < minimumLevel) return;
+        if (excludedContexts.Contains(entry.ContextName)) return;
 
-        string formattedMsg = Formatter(entry);
-        WriteToTarget(formattedMsg, entry); // 交由子類實作具體 I/O
+        WriteToTarget(entry); // 將純粹的 LogEntry 直接交給子類實作具體 I/O 或序列化
     }
 
-    protected abstract void WriteToTarget(string formattedMsg, LogEntry originalEntry);
+    protected abstract void WriteToTarget(LogEntry entry);
 }
 ```
 
-### 3.2 基於委派的樣板格式化 (Delegate-based Formatting)
-放棄繁瑣的 `bool` 開關設定，改採提供靜態格式化樣板，開發者亦可傳入自訂的 Lambda 表達式：
+### 3.2 基於 Builder 的樣板格式化 (Builder-based Formatting)
+雖然基底類別拔除了強制格式化要求，但對於需要輸出字串的終端 (如 ConsoleSink 或 FileSink)，系統仍提供鏈式調用的 `LogFormatterBuilder` 來定義輸出格式，並自動整合 Exception 的處理，以 `StringBuilder` 降低記憶體開銷。
 
 ```csharp
-public static class LogFormatters
-{
-    // 極簡版 (適合 UI Console): [Info] Message
-    public static string Minimal(LogEntry e) => $"[{e.Level}] {e.Message}";
-
-    // 標準版: [15:30:00][Info][Graphics] Texture loaded
-    public static string Standard(LogEntry e) => $"[{e.Timestamp:HH:mm:ss}][{e.Level}][{e.ContextName}] {e.Message}";
-}
+// 在 ConsoleSink 內部使用
+private readonly Func<LogEntry, string> _formatter = new LogFormatterBuilder()
+    .Timestamp()     // 預設為 [HH:mm:ss]
+    .Level()         // 預設為 [Level]
+    .ContextName()   // 預設為 [ContextName]
+    .Text(" ")       // 補一個空白
+    .Message()       // 輸出訊息本體 (若有 Exception 則一併輸出)
+    .Build();
 ```
 
 ---
