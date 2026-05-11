@@ -10,6 +10,7 @@ namespace ImTK.UI
         void Add(VisualElement child);
         void Remove(VisualElement child);
         void Clear();
+        void AddRange(IEnumerable<VisualElement> children);
         IEnumerable<VisualElement> Children();
     }
 }

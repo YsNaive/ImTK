@@ -38,13 +38,29 @@ namespace ImTK.UI
 
             if (child == null) throw new ArgumentNullException(nameof(child));
 
-            if (child.hierarchy.parent != null)
+            NodeType type = child.GetNodeType();
+            if (type == NodeType.LogicNode)
+            {
+                child.parent.Remove(child);
+            }
+            else if (type == NodeType.PhysicsNode)
             {
                 child.hierarchy.parent.hierarchy.Remove(child);
             }
 
             m_children.Add(child);
             child.hierarchy.parent = m_owner;
+
+            EventDispatcher.MarkHierarchyDirty(m_owner);
+        }
+
+        public void AddRange(IEnumerable<VisualElement> children)
+        {
+            if (children == null) throw new ArgumentNullException(nameof(children));
+            foreach (var child in children)
+            {
+                Add(child);
+            }
         }
 
         public void Remove(VisualElement child)
@@ -56,6 +72,8 @@ namespace ImTK.UI
             {
                 child.hierarchy.parent = null;
             }
+
+            EventDispatcher.MarkHierarchyDirty(m_owner);
         }
 
         public void Clear()
@@ -67,6 +85,8 @@ namespace ImTK.UI
                 child.hierarchy.parent = null;
             }
             m_children.Clear();
+
+            EventDispatcher.MarkHierarchyDirty(m_owner);
         }
 
         public IEnumerable<VisualElement> Children()
