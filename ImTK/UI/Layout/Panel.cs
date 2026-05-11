@@ -57,13 +57,14 @@ namespace ImTK.UI
             ImGui.SetNextWindowSize(new Vector2(currentRect.max.X - currentRect.min.X, currentRect.max.Y - currentRect.min.Y));
             ImGui.SetNextWindowViewport(viewport.ID);
 
-            ImGuiWindowFlags windowFlags = ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground;
+            ImGuiWindowFlags windowFlags = ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
             ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0.0f);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
 
-            ImGui.Begin("MainDockSpaceWindow", windowFlags);
+            bool open = true;
+            ImGui.Begin("MainDockSpaceWindow", ref open, windowFlags);
 
             ImGui.PopStyleVar(3);
 
@@ -71,7 +72,7 @@ namespace ImTK.UI
             if ((io.ConfigFlags & ImGuiConfigFlags.DockingEnable) != 0)
             {
                 uint dockspaceId = ImGui.GetID("MainDockSpace");
-                ImGui.DockSpace(dockspaceId, new Vector2(0.0f, 0.0f), ImGuiDockNodeFlags.PassthruCentralNode);
+                ImGui.DockSpace(dockspaceId, new Vector2(0.0f, 0.0f), ImGuiDockNodeFlags.None);
             }
 
             ImGui.End();
