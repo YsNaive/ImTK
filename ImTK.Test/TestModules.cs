@@ -8,6 +8,8 @@ namespace ImTK.Test
 {
     public class TestMenuBarModule : ImTKModule
     {
+        private TestMenuBarModule() { }
+
         protected override void OnInitializeSelf()
         {
             var panel = ImTKApplication.GetModule<Panel>();
@@ -55,6 +57,8 @@ namespace ImTK.Test
     {
         private static readonly LogContext s_log = new LogContext("TestUIModule");
         private VisualElement m_root;
+
+        private TestUIModule() { }
 
         protected override void OnInitializeSelf()
         {

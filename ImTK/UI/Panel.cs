@@ -19,6 +19,8 @@ namespace ImTK.UI
         private static readonly LogContext s_log = new LogContext("Panel");
         private readonly List<(Func<ImRect, ImRect> func, int priority)> m_reservedAreas = new();
 
+        protected Panel() { }
+
         protected internal override void OnInitializeSelf()
         {
         }

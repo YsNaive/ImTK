@@ -4,6 +4,8 @@ namespace ImTK.UI
 {
     public class EventDispatcherModule : ImTKModule
     {
+        protected EventDispatcherModule() { }
+
         protected internal override void OnInitializeSelf()
         {
         }
