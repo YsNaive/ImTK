@@ -4,4 +4,6 @@
 
 ## 包含的文件：
 
-* **[`VisualTree.md`](VisualTree.md)**：詳述 `VisualElement` 的邏輯樹與物理樹分離架構 (`contentContainer`)，以及為避免「迭代中修改集合」而設計的延遲同步機制。
+* **[`VisualTree.md`](VisualTree.md)**：詳述 `VisualElement` 的邏輯樹與物理樹分離架構 (`contentContainer` 與 `IVisualElementHierarchy`)，以及避免 ID 衝突的自動 Hash ID 封裝。
+* **[`EventSystem.md`](EventSystem.md)**：說明事件解耦延遲派發、事件冒泡路由、Object Pool 設計，以及利用 ImGui 原生狀態推導滑鼠事件的混合架構。
+* **[`PanelLayout.md`](PanelLayout.md)**：記載全域佈局管理者 (`Panel`) 透過註冊 Rect 切割函式實作 MenuBar / StatusBar 等預留空間演算法的設計。
