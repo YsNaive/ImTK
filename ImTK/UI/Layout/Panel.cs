@@ -60,11 +60,19 @@ namespace ImTK.UI
             ImGuiWindowFlags windowFlags = ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground;
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
-            ImGui.Begin("MainDockSpaceWindow", windowFlags);
-            ImGui.PopStyleVar();
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0.0f);
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
 
-            uint dockspaceId = ImGui.GetID("MainDockSpace");
-            ImGui.DockSpace(dockspaceId, new Vector2(0.0f, 0.0f), ImGuiDockNodeFlags.None);
+            ImGui.Begin("MainDockSpaceWindow", windowFlags);
+
+            ImGui.PopStyleVar(3);
+
+            var io = ImGui.GetIO();
+            if ((io.ConfigFlags & ImGuiConfigFlags.DockingEnable) != 0)
+            {
+                uint dockspaceId = ImGui.GetID("MainDockSpace");
+                ImGui.DockSpace(dockspaceId, new Vector2(0.0f, 0.0f), ImGuiDockNodeFlags.PassthruCentralNode);
+            }
 
             ImGui.End();
         }
