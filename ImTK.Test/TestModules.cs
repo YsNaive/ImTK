@@ -53,21 +53,16 @@ namespace ImTK.Test
         }
     }
 
-    public class TestUIModule : ImTKModule
+    public class TestWindow : Window
     {
-        private static readonly LogContext s_log = new LogContext("TestUIModule");
-        private VisualElement m_root;
+        private static readonly LogContext s_log = new LogContext("TestWindow");
 
-        private TestUIModule() { }
-
-        protected internal override void OnInitializeSelf()
+        public TestWindow() : base("VisualElement Test Window")
         {
         }
 
-        protected internal override void OnInitializeDependencies()
+        protected override void OnEnable()
         {
-            m_root = new VisualElement();
-
             var composite = new TestCompositeContainer("Outer Composite");
             var button1 = new TestButtonElement("Button 1 (Inside Composite)");
             var button2 = new TestButtonElement("Button 2 (Directly on Root)");
@@ -83,15 +78,31 @@ namespace ImTK.Test
             });
 
             composite.Add(button1);
-            m_root.Add(composite);
-            m_root.Add(button2);
+            Add(composite);
+            Add(button2);
+        }
+
+        protected override void OnDisable()
+        {
+            Clear();
+        }
+    }
+
+    public class TestUIModule : ImTKModule
+    {
+        private TestUIModule() { }
+
+        protected internal override void OnInitializeSelf()
+        {
+        }
+
+        protected internal override void OnInitializeDependencies()
+        {
+            Window.Open<TestWindow>();
         }
 
         protected internal override void OnGuiRender()
         {
-            ImGui.Begin("VisualElement Test Window");
-            m_root.Render();
-            ImGui.End();
         }
 
         protected internal override void OnClose()

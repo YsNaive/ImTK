@@ -16,6 +16,7 @@ namespace ImTK.UI
 
         public PickingMode pickingMode { get; set; } = PickingMode.Position;
         protected bool m_wasHovered = false;
+        protected bool m_useAutoId = true;
 
         private Dictionary<Type, Delegate> m_callbacks;
 
@@ -23,6 +24,17 @@ namespace ImTK.UI
         {
             m_elementId = ++s_elementCounter;
             hierarchy = new VisualElementHierarchy(this);
+        }
+
+        public NodeType GetNodeType()
+        {
+            bool hasLogicalParent = this.parent != null;
+            bool hasPhysicalParent = this.hierarchy.parent != null;
+
+            if (!hasLogicalParent && !hasPhysicalParent) return NodeType.None;
+            if (hasLogicalParent && hasPhysicalParent) return NodeType.LogicNode;
+            if (!hasLogicalParent && hasPhysicalParent) return NodeType.PhysicsNode;
+            return NodeType.Invalid;
         }
 
         public int childCount => contentContainer == this ? hierarchy.childCount : contentContainer.childCount;
@@ -33,6 +45,16 @@ namespace ImTK.UI
         {
             if (child == null) throw new ArgumentNullException(nameof(child));
             if (!hierarchy.CheckSafeState()) return;
+
+            NodeType type = child.GetNodeType();
+            if (type == NodeType.LogicNode)
+            {
+                child.parent.Remove(child);
+            }
+            else if (type == NodeType.PhysicsNode)
+            {
+                child.hierarchy.parent.hierarchy.Remove(child);
+            }
 
             child.parent = this;
 
@@ -48,6 +70,17 @@ namespace ImTK.UI
                     targetContainer = targetContainer.contentContainer;
                 }
                 targetContainer.hierarchy.Add(child);
+            }
+
+            EventDispatcher.MarkHierarchyDirty(this);
+        }
+
+        public void AddRange(IEnumerable<VisualElement> children)
+        {
+            if (children == null) throw new ArgumentNullException(nameof(children));
+            foreach (var child in children)
+            {
+                Add(child);
             }
         }
 
@@ -74,13 +107,16 @@ namespace ImTK.UI
             {
                 child.parent = null;
             }
+
+            EventDispatcher.MarkHierarchyDirty(this);
         }
 
         public void Clear()
         {
             if (!hierarchy.CheckSafeState()) return;
 
-            var childrenToClear = contentContainer == this ? hierarchy.Children() : contentContainer.Children();
+            // Collect children to avoid modifying while iterating, just in case physical Clear has side effects
+            var childrenToClear = new List<VisualElement>(contentContainer == this ? hierarchy.Children() : contentContainer.Children());
             foreach(var child in childrenToClear)
             {
                 if (child.parent == this)
@@ -102,6 +138,8 @@ namespace ImTK.UI
                 }
                 targetContainer.hierarchy.Clear();
             }
+
+            EventDispatcher.MarkHierarchyDirty(this);
         }
 
         public IEnumerable<VisualElement> Children()
@@ -155,7 +193,10 @@ namespace ImTK.UI
         // Better to add InternalsVisibleTo to ImTK.csproj.
         internal void Render()
         {
-            ImGui.PushID(m_elementId);
+            if (m_useAutoId)
+            {
+                ImGui.PushID(m_elementId);
+            }
 
             if (pickingMode == PickingMode.Ignore)
             {
@@ -199,7 +240,10 @@ namespace ImTK.UI
 
             m_wasHovered = isEffectivelyHovered;
 
-            ImGui.PopID();
+            if (m_useAutoId)
+            {
+                ImGui.PopID();
+            }
         }
 
         protected virtual void OnRenderLayout()

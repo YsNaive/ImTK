@@ -16,6 +16,7 @@ namespace ImTK.UI
 
         protected internal override void OnLogicUpdate()
         {
+            EventDispatcher.ProcessDirtyElements();
             EventDispatcher.ProcessQueue();
         }
 
