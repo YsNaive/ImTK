@@ -27,6 +27,7 @@ namespace ImTK.UI
         {
             if (m_isOpen) return;
 
+            s_log.Trace($"Opening window: {imguiId}");
             Panel.RegisterWindow(this);
             m_isOpen = true;
             OnEnable();
@@ -36,6 +37,7 @@ namespace ImTK.UI
         {
             if (!m_isOpen) return;
 
+            s_log.Trace($"Closing window: {imguiId}");
             OnDisable();
             m_isOpen = false;
             Panel.UnregisterWindow(this);
@@ -47,10 +49,12 @@ namespace ImTK.UI
 
             if (Panel.TryGetWindow(key, out Window existingWindow))
             {
+                s_log.Trace($"Window '{key.WindowId}' of type {key.Type.Name} already open. Focusing.");
                 ImGui.SetWindowFocus(existingWindow.imguiId);
                 return (T)existingWindow;
             }
 
+            s_log.Debug($"Creating new window instance for type {typeof(T).Name} with ID '{windowId}'.");
             T newWindow = new T();
             if (!string.IsNullOrEmpty(windowId))
             {

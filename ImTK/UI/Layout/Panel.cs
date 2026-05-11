@@ -29,9 +29,11 @@ namespace ImTK.UI
             WindowKey key = new WindowKey(window.GetType(), window.windowId);
             if (s_windows.ContainsKey(key))
             {
+                s_log.Error($"Failed to register window. Type '{key.Type.Name}' with ID '{key.WindowId}' is already open.");
                 throw new InvalidOperationException($"A window of type '{key.Type}' with windowId '{key.WindowId}' is already open.");
             }
             s_windows[key] = window;
+            s_log.Trace($"Window registered in Panel: {window.imguiId}");
         }
 
         internal static void UnregisterWindow(Window window)
@@ -50,6 +52,7 @@ namespace ImTK.UI
             {
                 WindowKey key = new WindowKey(window.GetType(), window.windowId);
                 s_windows.Remove(key);
+                s_log.Trace($"Window unregistered from Panel: {window.imguiId}");
             }
             s_windowsToRemove.Clear();
 
