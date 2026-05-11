@@ -22,7 +22,7 @@ namespace ImTK.Test
             m_label = label;
         }
 
-        protected override void RenderVisualTree()
+        protected override void OnRenderSelf()
         {
             if (ImGui.Button(m_label))
             {
@@ -49,16 +49,13 @@ namespace ImTK.Test
             hierarchy.Add(m_innerContainer);
         }
 
-        protected override void RenderVisualTree()
+        protected override void OnRenderLayout()
         {
             ImGui.Text($"Composite Container: {m_name}");
             ImGui.Separator();
-        }
 
-        public override void InternalRender()
-        {
             ImGui.Indent();
-            base.InternalRender();
+            base.OnRenderLayout(); // Here the base logic renders the internal children
             ImGui.Unindent();
         }
     }

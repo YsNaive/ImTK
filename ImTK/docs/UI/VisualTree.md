@@ -30,34 +30,56 @@ ImTK 的 UI 系統目標是**「在 Immediate Mode (ImGui) 的底層上，搭建
    * 如果 `element.contentContainer == element`：代表已經到達真正的物理儲存層，此時執行 `element.hierarchy.Add(child)` (將其加入物理清單並設定物理父節點)。
    * 如果 `element.contentContainer != element`：代表內容必須放在內部的影子容器中，則呼叫 `element.contentContainer.Add(child)` 進行遞迴轉發。
 
-這種設計不僅符合 SRP (單一職責原則)，還能確保對外 API 的極度清晰，防止外部惡意修改物理結構。
+---
+
+## 3. 渲染管線與 API 權限 (The Render Pipeline)
+
+在 ImGui 的基礎上，`VisualElement` 的渲染流程採用了 **Template Method Pattern (樣板方法模式)**，將渲染過程拆分為三個層次，以確保排版彈性與底層狀態安全的平衡。
+
+### 3.1 三層渲染架構
+
+1. **`internal void Render()`** (防護罩層 / 入口)
+   * **職責**：框架內部調用的絕對入口，不可被子類別覆寫 (`non-virtual`)。
+   * **內容**：執行 `ImGui.PushID`、處理穿透 (`pickingMode`)、呼叫排版層 (`OnRenderLayout`)、計算並推導滑鼠 Hover 狀態、發送生命週期事件，最後 `ImGui.PopID`。
+
+2. **`protected virtual void OnRenderLayout()`** (排版與樹狀走訪層)
+   * **職責**：決定自身的視覺內容與子節點的渲染順序，負責 ImGui 範圍排版（如 `ImGui.BeginChild`, `ImGui.Indent`）。
+   * **子類別實作 (如 Composite Container)**：
+     ```csharp
+     protected override void OnRenderLayout() {
+         ImGui.Indent();
+         base.OnRenderLayout(); // base 會繪製本體並用 for 迴圈走訪 child.Render()
+         ImGui.Unindent();
+     }
+     ```
+
+3. **`protected virtual void OnRenderSelf()`** (本體渲染層)
+   * **職責**：僅用來使用 ImGui API 繪製元件自身的視覺內容（如 `ImGui.Button`），不需理會子節點。
+   * **子類別實作 (如 Button)**：這是 90% 以上普通 UI 元件唯一需要覆寫的方法。
 
 ---
 
-## 3. 根絕 ImGui ID 衝突 (Auto Hash ID)
+## 4. 根絕 ImGui ID 衝突 (Auto Hash ID)
 
 在 ImGui 中，頻繁動態生成的 UI 元件極易發生 ID 字串 Hash 衝突（例如 ListView 中的多個相同 Button）。為了提供 Retained Mode 的無憂體驗，我們將 ID 堆疊與視覺樹強制綁定。
 
 **實作機制：**
 1. **全域唯一實例 ID**：在 `VisualElement` 建構時，透過一個靜態計數器 (`s_elementCounter`) 賦予自身一個不重複的 `int m_elementId`。
-2. **自動包裹 Push/Pop**：在底層的渲染走訪函式 (`InternalRender`) 中，框架會自動呼叫：
+2. **自動包裹 Push/Pop**：在底層的 `Render()` 函式中，框架會自動呼叫：
    ```csharp
    ImGui.PushID(m_elementId);
-   RenderVisualTree(); // 開發者自定義的 ImGui API 呼叫
-   // ... 走訪子節點 ...
+   OnRenderLayout(); // 開發者自定義的渲染
+   // ...
    ImGui.PopID();
    ```
 
-**技術考量**：
-使用 `int` 進行 `PushID`，在 ImGui 底層僅是一次極快速的整數 Hash 運算與 Vector 推入，效能開銷在奈秒等級，不會產生字串插值的 GC 垃圾，是徹底解決 ID 衝突且效能最佳的方案。
-
 ---
 
-## 4. 渲染迴圈與結構修改的安全性 (Iteration Safety)
+## 5. 渲染迴圈與結構修改的安全性 (Iteration Safety)
 
 在 ImGui 的渲染階段 (GuiRender) 修改 UI 樹結構（如 Add/Remove）會導致走訪崩潰 (`Collection was modified`)。
-為了解決此問題，我們不採用傳統的「Pending Queue (待處理佇列)」或是「自製的迭代防護迴圈」，而是從根本上採用 **「防呆攔截」** 搭配 **「事件解耦 (Event Queuing)」** (詳見 EventSystem.md)。
+為了解決此問題，我們採用了 **「防呆攔截」** 搭配 **「事件解耦 (Event Queuing)」**。
 
 **安全防護規範：**
-* 所有的 `hierarchy.Add()`、`Remove()`、`Clear()` 都會**立即生效**修改底層 `List`。
-* 若在這些結構修改方法內部偵測到 `ImTKApplication.CurrentState == ApplicationState.GuiRender`，框架將直接攔截操作並印出 `ImTKLog.Error`，強制規定「禁止在渲染階段改變結構」。
+* 所有的 `hierarchy.Add()`、`Remove()`、`Clear()` 都會**立即生效**。
+* 若在這些方法內部偵測到 `ImTKApplication.CurrentState == ApplicationState.GuiRender`，框架將直接攔截操作並報錯，強制規定「禁止在渲染階段改變結構」。

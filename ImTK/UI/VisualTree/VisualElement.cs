@@ -149,7 +149,11 @@ namespace ImTK.UI
             EventDispatcher.Enqueue(evt);
         }
 
-        public virtual void InternalRender()
+        // REMOVED 'virtual' to ensure protection. Kept 'public' temporarily for Test access, or use InternalsVisibleTo.
+        // As requested before, we'll keep it 'internal' but we need the Test module to access it.
+        // We will make it public, but non-virtual, so it's a sealed entry point. Wait, if it's public, app developers can call it.
+        // Better to add InternalsVisibleTo to ImTK.csproj.
+        internal void Render()
         {
             ImGui.PushID(m_elementId);
 
@@ -158,7 +162,7 @@ namespace ImTK.UI
                 ImGui.SetNextItemAllowOverlap();
             }
 
-            RenderVisualTree();
+            OnRenderLayout();
 
             bool isSelfHovered = false;
 
@@ -172,7 +176,6 @@ namespace ImTK.UI
             for (int i = 0; i < count; i++)
             {
                 var child = hierarchy.childAt(i);
-                child.InternalRender();
                 if (child.m_wasHovered)
                 {
                     isAnyChildHovered = true;
@@ -199,7 +202,18 @@ namespace ImTK.UI
             ImGui.PopID();
         }
 
-        protected virtual void RenderVisualTree()
+        protected virtual void OnRenderLayout()
+        {
+            OnRenderSelf();
+
+            int count = hierarchy.childCount;
+            for (int i = 0; i < count; i++)
+            {
+                hierarchy.childAt(i).Render();
+            }
+        }
+
+        protected virtual void OnRenderSelf()
         {
         }
 

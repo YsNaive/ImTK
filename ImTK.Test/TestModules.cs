@@ -10,13 +10,13 @@ namespace ImTK.Test
     {
         private TestMenuBarModule() { }
 
-        protected override void OnInitializeSelf()
+        protected internal override void OnInitializeSelf()
         {
             var panel = ImTKApplication.GetModule<Panel>();
             panel.RequireArea(ReserveTopMenuBar, 100);
         }
 
-        protected override void OnInitializeDependencies()
+        protected internal override void OnInitializeDependencies()
         {
         }
 
@@ -28,7 +28,7 @@ namespace ImTK.Test
             return new ImRect(new Vector2(currentSpace.min.X, currentSpace.min.Y + height), currentSpace.max);
         }
 
-        protected override void OnGuiRender()
+        protected internal override void OnGuiRender()
         {
             ImGuiViewportPtr viewport = ImGui.GetMainViewport();
 
@@ -48,7 +48,7 @@ namespace ImTK.Test
             ImGui.PopStyleVar();
         }
 
-        protected override void OnClose()
+        protected internal override void OnClose()
         {
         }
     }
@@ -60,11 +60,11 @@ namespace ImTK.Test
 
         private TestUIModule() { }
 
-        protected override void OnInitializeSelf()
+        protected internal override void OnInitializeSelf()
         {
         }
 
-        protected override void OnInitializeDependencies()
+        protected internal override void OnInitializeDependencies()
         {
             m_root = new VisualElement();
 
@@ -87,14 +87,14 @@ namespace ImTK.Test
             m_root.Add(button2);
         }
 
-        protected override void OnGuiRender()
+        protected internal override void OnGuiRender()
         {
             ImGui.Begin("VisualElement Test Window");
-            m_root.InternalRender();
+            m_root.Render();
             ImGui.End();
         }
 
-        protected override void OnClose()
+        protected internal override void OnClose()
         {
         }
     }
