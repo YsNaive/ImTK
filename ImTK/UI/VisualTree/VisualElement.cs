@@ -16,6 +16,7 @@ namespace ImTK.UI
 
         public PickingMode pickingMode { get; set; } = PickingMode.Position;
         protected bool m_wasHovered = false;
+        protected bool m_useAutoId = true;
 
         private Dictionary<Type, Delegate> m_callbacks;
 
@@ -192,7 +193,10 @@ namespace ImTK.UI
         // Better to add InternalsVisibleTo to ImTK.csproj.
         internal void Render()
         {
-            ImGui.PushID(m_elementId);
+            if (m_useAutoId)
+            {
+                ImGui.PushID(m_elementId);
+            }
 
             if (pickingMode == PickingMode.Ignore)
             {
@@ -236,7 +240,10 @@ namespace ImTK.UI
 
             m_wasHovered = isEffectivelyHovered;
 
-            ImGui.PopID();
+            if (m_useAutoId)
+            {
+                ImGui.PopID();
+            }
         }
 
         protected virtual void OnRenderLayout()

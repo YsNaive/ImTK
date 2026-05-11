@@ -19,7 +19,52 @@ namespace ImTK.UI
         private static readonly LogContext s_log = new LogContext("Panel");
         private readonly List<(Func<ImRect, ImRect> func, int priority)> m_reservedAreas = new();
 
+        private static readonly Dictionary<WindowKey, Window> s_windows = new Dictionary<WindowKey, Window>();
+        private static readonly List<Window> s_windowsToRemove = new List<Window>();
+
         protected Panel() { }
+
+        internal static void RegisterWindow(Window window)
+        {
+            WindowKey key = new WindowKey(window.GetType(), window.windowId);
+            if (s_windows.ContainsKey(key))
+            {
+                throw new InvalidOperationException($"A window of type '{key.Type}' with windowId '{key.WindowId}' is already open.");
+            }
+            s_windows[key] = window;
+        }
+
+        internal static void UnregisterWindow(Window window)
+        {
+            s_windowsToRemove.Add(window);
+        }
+
+        internal static bool TryGetWindow(WindowKey key, out Window window)
+        {
+            return s_windows.TryGetValue(key, out window);
+        }
+
+        protected internal override void OnLogicUpdate()
+        {
+            foreach (var window in s_windowsToRemove)
+            {
+                WindowKey key = new WindowKey(window.GetType(), window.windowId);
+                s_windows.Remove(key);
+            }
+            s_windowsToRemove.Clear();
+
+            foreach (var window in s_windows.Values)
+            {
+                try
+                {
+                    window.Update();
+                }
+                catch (Exception ex)
+                {
+                    s_log.Error(ex, $"Exception in Update of window: {window.imguiId}");
+                }
+            }
+        }
 
         protected internal override void OnInitializeSelf()
         {
@@ -67,6 +112,18 @@ namespace ImTK.UI
             ImGui.DockSpace(dockspaceId, new Vector2(0.0f, 0.0f), ImGuiDockNodeFlags.None);
 
             ImGui.End();
+
+            foreach (var window in s_windows.Values)
+            {
+                try
+                {
+                    window.Render();
+                }
+                catch (Exception ex)
+                {
+                    s_log.Error(ex, $"Exception in Render of window: {window.imguiId}");
+                }
+            }
         }
 
         protected internal override void OnClose()
