@@ -80,7 +80,6 @@ namespace ImTK.UI
         {
             if (!hierarchy.CheckSafeState()) return;
 
-            // Before clearing physical children, we must clear their logical parent
             var childrenToClear = contentContainer == this ? hierarchy.Children() : contentContainer.Children();
             foreach(var child in childrenToClear)
             {
@@ -144,7 +143,13 @@ namespace ImTK.UI
             }
         }
 
-        internal virtual void InternalRender()
+        protected void SendEvent(UIEventBase evt)
+        {
+            evt.source = this;
+            EventDispatcher.Enqueue(evt);
+        }
+
+        public virtual void InternalRender()
         {
             ImGui.PushID(m_elementId);
 
