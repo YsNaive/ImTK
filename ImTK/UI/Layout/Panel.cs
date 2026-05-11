@@ -76,6 +76,22 @@ namespace ImTK.UI
             }
 
             ImGui.End();
+
+#if DEBUG
+            // Try to find the TestUIModule class by name for a quick test hack,
+            // since we're in the ImTK assembly we can't reference ImTK.Test directly easily.
+            // A better way is just to invoke an event or have a late render loop.
+            // We'll skip the hack here and use reflection if needed, but a cleaner way:
+            var type = Type.GetType("ImTK.Test.TestUIModule, ImTK.Test");
+            if (type != null)
+            {
+                var field = type.GetField("PanelRenderedThisFrame");
+                if (field != null)
+                {
+                    field.SetValue(null, true);
+                }
+            }
+#endif
         }
 
         protected internal override void OnClose()

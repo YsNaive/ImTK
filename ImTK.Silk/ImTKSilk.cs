@@ -17,6 +17,7 @@ namespace ImTK.Silk
         private static GL s_gl;
         private static ImGuiController s_imguiController;
         private static ImTKSilkConstant s_config;
+        private static IInputContext s_input;
 
         /// <summary>
         /// Initializes the Silk.NET window, ImGui context, and starts the ImTKApplication lifecycle loop.
@@ -49,26 +50,22 @@ namespace ImTK.Silk
         private static void OnLoad()
         {
             s_gl = s_window.CreateOpenGL();
+            s_input = s_window.CreateInput();
 
-            // Initialize ImGui Controller
-            // Important: We must use the 'onConfigureIO' callback parameter to configure ViewportsEnable.
-            // ImGuiController initializes fonts and might implicitly call NewFrame or build states early.
-            // If we set ConfigFlags AFTER the constructor finishes, ImGui will throw an assertion failure:
-            // "Please set ViewportsEnable before the first call to NewFrame()!"
+            // Initialize ImGui Controller without overriding the internal configuration logic, matching standard examples
             s_imguiController = new ImGuiController(
                 s_gl,
                 s_window,
-                s_window.CreateInput(),
-                () =>
-                {
-                    var io = ImGui.GetIO();
-                    io.ConfigFlags |= ImGuiConfigFlags.DockingEnable; // Always enable Docking for ImTK UI Architecture
-                    if (s_config.enableViewports)
-                    {
-                        io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
-                    }
-                }
+                s_input
             );
+
+            // Configure ImGui IO after initialization
+            var io = ImGui.GetIO();
+            io.ConfigFlags |= ImGuiConfigFlags.DockingEnable; // Always enable Docking for ImTK UI Architecture
+            if (s_config.enableViewports)
+            {
+                io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+            }
 
             // Phase 3: Setup graphics resources for ImTK modules
             ImTKApplication.Lifecycle.GraphicsSetup();
@@ -83,6 +80,7 @@ namespace ImTK.Silk
         private static void OnRender(double deltaTime)
         {
             // Clear screen
+            s_gl.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             s_gl.Clear((uint)ClearBufferMask.ColorBufferBit);
 
             // Start ImGui frame
@@ -99,8 +97,20 @@ namespace ImTK.Silk
 
             // Process end-of-frame updates and pending queues
             ImTKApplication.Lifecycle.LateUpdate();
-        }
 
+#if DEBUG
+            // Reset the render tracker for next frame
+            var type = Type.GetType("ImTK.Test.TestUIModule, ImTK.Test");
+            if (type != null)
+            {
+                var field = type.GetField("PanelRenderedThisFrame");
+                if (field != null)
+                {
+                    field.SetValue(null, false);
+                }
+            }
+#endif
+        }
 
         private static void OnFramebufferResize(global::Silk.NET.Maths.Vector2D<int> size)
         {
@@ -114,6 +124,7 @@ namespace ImTK.Silk
 
             // Dispose ImGui controller and window
             s_imguiController?.Dispose();
+            s_input?.Dispose();
             s_window?.Dispose();
         }
     }

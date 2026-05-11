@@ -57,6 +57,7 @@ namespace ImTK.Test
     {
         private static readonly LogContext s_log = new LogContext("TestUIModule");
         private VisualElement m_root;
+        public static bool PanelRenderedThisFrame = false;
 
         private TestUIModule() { }
 
@@ -89,6 +90,14 @@ namespace ImTK.Test
 
         protected internal override void OnGuiRender()
         {
+            // Only render if we are absolutely sure the Panel (DockSpace) has already been submitted this frame
+            // This bypasses the dictionary unordered iteration problem temporarily
+            if (!PanelRenderedThisFrame)
+            {
+                // Force a delay to next frame or rely on LateUpdate if we had one
+                return;
+            }
+
             ImGui.Begin("VisualElement Test Window");
             m_root.Render();
             ImGui.End();
