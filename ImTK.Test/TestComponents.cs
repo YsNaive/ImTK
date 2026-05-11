@@ -26,10 +26,6 @@ namespace ImTK.Test
         {
             if (ImGui.Button(m_label))
             {
-                // UIEventBase.source is internal set. We can't set it from ImTK.Test easily unless ImTK exposes it or InternalsVisibleTo
-                // To keep it clean, let's add a public SetSource method on UIEventBase or make it public setter,
-                // but user said internal set.
-                // Let's create an event from VisualElement itself using a protected method to send events
                 SendEvent(EventPool<ClickEvent>.Get());
             }
         }
@@ -57,6 +53,13 @@ namespace ImTK.Test
         {
             ImGui.Text($"Composite Container: {m_name}");
             ImGui.Separator();
+        }
+
+        public override void InternalRender()
+        {
+            ImGui.Indent();
+            base.InternalRender();
+            ImGui.Unindent();
         }
     }
 }

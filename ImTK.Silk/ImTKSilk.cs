@@ -36,6 +36,7 @@ namespace ImTK.Silk
             s_window.Load += OnLoad;
             s_window.Update += OnUpdate;
             s_window.Render += OnRender;
+            s_window.FramebufferResize += OnFramebufferResize;
             s_window.Closing += OnClosing;
 
             // Start the internal ImTK module scanning (Phase 1 & 2)
@@ -61,6 +62,7 @@ namespace ImTK.Silk
                 () =>
                 {
                     var io = ImGui.GetIO();
+                    io.ConfigFlags |= ImGuiConfigFlags.DockingEnable; // Always enable Docking for ImTK UI Architecture
                     if (s_config.enableViewports)
                     {
                         io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
@@ -97,6 +99,12 @@ namespace ImTK.Silk
 
             // Process end-of-frame updates and pending queues
             ImTKApplication.Lifecycle.LateUpdate();
+        }
+
+
+        private static void OnFramebufferResize(global::Silk.NET.Maths.Vector2D<int> size)
+        {
+            s_gl.Viewport(size);
         }
 
         private static void OnClosing()
