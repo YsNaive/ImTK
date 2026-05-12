@@ -7,6 +7,8 @@ namespace ImTK.Database
     /// </summary>
     internal class DatabaseModule : ImTKModule
     {
+        private DatabaseModule() { }
+
         protected internal override void OnInitializeSelf()
         {
             Resource.Initialize();
