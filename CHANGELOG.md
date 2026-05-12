@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 ### Added (新增)
+- 實作了標準化且輕量的測試框架 (`ImTK.Test`)，區分 `IHeadlessTest` 與 `IIntegrationTest`。
+- 實作了可於 UI 顯示 Headless 與 Integration 測試報表的 `TestRunnerModule` 儀表板，並引入輕量斷言庫 `ImTKAssert`。
+- 實作了標準化範例框架 (`ImTK.Sample`)，引入 `ISampleScenario` 以支援自動註冊與展示。
+- 新增 `SampleOverviewModule`，自動生成範例總覽面板與文檔連結。
 - 實作了強大且安全的雙軌資源系統 (`Asset System`)，將唯讀的全域資源存取 (`ImTK.Database.Resource`) 與可讀寫的本地資料庫 (`ImTK.Database.ImTKDatabase`) 完全分離，避免了路徑與權限錯誤。
 - 引入了 `ImTKEnvironment` 靜態環境管理器，自動處理跨平台的資源根目錄 (`GlobalAssetPath` 與 `LocalDataPath`) 解析。
 - 實作了泛型導向的資源反序列化架構 (`ImTKAsset` 與 `ImTKSaveableAsset`)，取代傳統龐大的 Loader 系統。
@@ -32,7 +36,9 @@
 - 新增嚴格的 `NamingConventions.md` 命名規範，確立大小寫、前綴以及元件後綴的規則。
 
 ### Changed (變更)
+- 重構了現有 Database 相關測試，將其整合至新的 `IHeadlessTest` 框架中。
+- 於 `AGENT.md` 補齊 `ImTKModule` 必須擁有「單一、無參數、非公開」建構函式的限制規範。
 - 修正 `EventDispatcher` 的事件氣泡 (Bubbling) 路徑。事件現在嚴格沿著物理樹 (`hierarchy.parent`) 向上傳遞，修復了封裝內部元件 (Shadow DOM) 時事件斷層的問題。
 - 將原有的 `Architecture/` 目錄下的架構設計文件重組並移至對應的子系統資料夾。
 - 將 `AGENT.md` 移至專案根目錄，並擴充了 AI 代理的條列式探勘與開發指引。
-- 修改 `DevelopmentWrapUp.md`，制定了合併程式碼前必須遵守的五步驟最終檢查清單 (SOP)。
+- 修改 `DevelopmentWrapUp.md`，新增了「回歸測試與維護檢查 (Regression Testing & Maintenance)」SOP。

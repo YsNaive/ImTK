@@ -7,29 +7,23 @@ namespace ImTK.Test
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Starting ImTK Integration Test...");
+            var log = new ImTK.Log.LogContext("TestProgram");
+            log.Info("Starting ImTK Integration Test...");
 
-            // Run Unit / Logic Tests
-            try
-            {
-                Database.EnvironmentTests.RunTests();
-                Database.AssetManagerTests.RunTests();
-                Database.DatabaseIntegrationTests.RunTests();
-                Database.JsonAssetTests.RunTests();
-            }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"\n[ERROR] Test Failed: {ex.Message}");
-                Console.ResetColor();
-                return;
-            }
+            bool headlessPassed = Framework.HeadlessRunner.RunAllHeadlessTests();
 
-            Console.WriteLine("\nAll headless tests passed. Launching UI...");
+            if (!headlessPassed)
+            {
+                log.Warning("Some Headless tests failed, but launching UI to show report...");
+            }
+            else
+            {
+                log.Info("All headless tests passed. Launching UI...");
+            }
 
             var config = new ImTKSilkConstant
             {
-                windowTitle = "ImTK Architecture Test",
+                windowTitle = "ImTK Integration Test",
                 windowWidth = 1024,
                 windowHeight = 768
             };
@@ -37,7 +31,7 @@ namespace ImTK.Test
             // Drive the entire ImTK application using the Silk.NET entry point
             ImTKSilk.Run(config);
 
-            Console.WriteLine("Application Closed gracefully.");
+            log.Info("Application Closed gracefully.");
         }
     }
 }

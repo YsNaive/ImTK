@@ -1,12 +1,13 @@
 using System;
 using System.IO;
 using ImTK.Database;
+using ImTK.Test.Framework;
 
 namespace ImTK.Test.Database
 {
-    public static class JsonAssetTests
+    public class JsonAssetTests : IHeadlessTest
     {
-        private static string s_testRoot;
+        private string s_testRoot;
 
         // 一個簡單的測試資料類別
         public class DummyConfig
@@ -16,10 +17,8 @@ namespace ImTK.Test.Database
             public string Title { get; set; } = "Default";
         }
 
-        public static void RunTests()
+        public void Run()
         {
-            Console.WriteLine("--- Running JsonAssetTests ---");
-
             s_testRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestAssets_Json_" + Guid.NewGuid().ToString());
             Directory.CreateDirectory(s_testRoot);
 
@@ -28,8 +27,6 @@ namespace ImTK.Test.Database
                 TestCreateAndSaveJson();
                 TestLoadExistingJson();
                 TestHandleMalformedJson();
-
-                Console.WriteLine("JsonAssetTests: All passed.");
             }
             finally
             {
@@ -40,19 +37,14 @@ namespace ImTK.Test.Database
             }
         }
 
-        private static void Assert(bool condition, string message)
-        {
-            if (!condition) throw new Exception($"Test failed: {message}");
-        }
-
-        private static void TestCreateAndSaveJson()
+        private void TestCreateAndSaveJson()
         {
             var manager = new AssetManager(s_testRoot, false);
 
             // 測試創建新的 JSON
             var asset = manager.CreateAsset<JsonAsset<DummyConfig>>("config.json");
-            Assert(asset.Data != null, "Data should not be null after creation.");
-            Assert(asset.Data.Width == 800, "Should have default values.");
+            ImTKAssert.NotNull(asset.Data, "Data should not be null after creation.");
+            ImTKAssert.AreEqual(800, asset.Data.Width, "Should have default values.");
 
             // 修改並存檔
             asset.Data.Width = 1920;
@@ -62,12 +54,12 @@ namespace ImTK.Test.Database
 
             // 驗證檔案確實寫入且包含正確格式
             string filePath = Path.Combine(s_testRoot, "config.json");
-            Assert(File.Exists(filePath), "JSON file should exist on disk.");
+            ImTKAssert.IsTrue(File.Exists(filePath), "JSON file should exist on disk.");
             string fileContent = File.ReadAllText(filePath);
-            Assert(fileContent.Contains("\"Width\": 1920"), "JSON content should reflect changes.");
+            ImTKAssert.IsTrue(fileContent.Contains("\"Width\": 1920"), "JSON content should reflect changes.");
         }
 
-        private static void TestLoadExistingJson()
+        private void TestLoadExistingJson()
         {
             // 在磁碟上手動準備一份 JSON 檔案
             string jsonString = "{ \"Width\": 1280, \"Height\": 720, \"Title\": \"Loaded\" }";
@@ -77,11 +69,11 @@ namespace ImTK.Test.Database
             var asset = manager.GetAsset<JsonAsset<DummyConfig>>("load_test.json");
 
             // 驗證資料是否正確反序列化
-            Assert(asset.Data.Width == 1280, "Loaded width mismatch.");
-            Assert(asset.Data.Title == "Loaded", "Loaded title mismatch.");
+            ImTKAssert.AreEqual(1280, asset.Data.Width, "Loaded width mismatch.");
+            ImTKAssert.AreEqual("Loaded", asset.Data.Title, "Loaded title mismatch.");
         }
 
-        private static void TestHandleMalformedJson()
+        private void TestHandleMalformedJson()
         {
             // 準備一份壞掉的 JSON 檔案
             string badJson = "{ \"Width\": 1280, oops this is not json }";
@@ -92,8 +84,8 @@ namespace ImTK.Test.Database
             // OnLoad 應該攔截例外並返回一個擁有預設值的 Data，不應直接 Crash
             var asset = manager.GetAsset<JsonAsset<DummyConfig>>("bad.json");
 
-            Assert(asset.Data != null, "Fallback data should not be null.");
-            Assert(asset.Data.Width == 800, "Should fallback to default values on parse error.");
+            ImTKAssert.NotNull(asset.Data, "Fallback data should not be null.");
+            ImTKAssert.AreEqual(800, asset.Data.Width, "Should fallback to default values on parse error.");
         }
     }
 }
