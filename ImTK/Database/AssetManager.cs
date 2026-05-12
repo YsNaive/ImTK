@@ -43,12 +43,15 @@ namespace ImTK.Database
                 throw new AssetPathInvalidException(relativePath, "Path cannot be null or empty.");
             }
 
-            if (Path.IsPathRooted(relativePath))
+            string normalized = relativePath.Replace('\\', '/');
+
+            // On Linux, absolute paths start with '/' and IsPathRooted catches it.
+            // On Windows, absolute paths start with 'C:\' or '\' and IsPathRooted catches it.
+            if (Path.IsPathRooted(relativePath) || normalized.StartsWith("/"))
             {
                 throw new AssetPathInvalidException(relativePath, "Absolute paths are not allowed. Please use relative paths.");
             }
 
-            string normalized = relativePath.Replace('\\', '/');
             if (normalized.StartsWith("./"))
             {
                 normalized = normalized.Substring(2);
@@ -58,20 +61,21 @@ namespace ImTK.Database
                 normalized = normalized.Substring(1);
             }
 
+            // Path traversal defense check
+            // We check this here before it hits the cache or file system.
+            string absolutePath = Path.GetFullPath(Path.Combine(m_rootPath, normalized));
+            if (!absolutePath.StartsWith(m_rootPath, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new AssetPathInvalidException(normalized, "Path traversal is not allowed. Asset must be within the root directory.");
+            }
+
             return normalized;
         }
 
         private string GetAbsolutePath(string normalizedPath)
         {
-            string absolutePath = Path.GetFullPath(Path.Combine(m_rootPath, normalizedPath));
-
-            // 安全性檢查：防禦 Directory Traversal (目錄穿越) 漏洞 (例如傳入 "../../secret.txt")
-            if (!absolutePath.StartsWith(m_rootPath, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new AssetPathInvalidException(normalizedPath, "Path traversal is not allowed. Asset must be within the root directory.");
-            }
-
-            return absolutePath;
+            // NormalizePath already performs the security check against m_rootPath
+            return Path.GetFullPath(Path.Combine(m_rootPath, normalizedPath));
         }
 
         public T GetAsset<T>(string relativePath) where T : class, IAsset, new()
