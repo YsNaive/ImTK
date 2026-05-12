@@ -119,9 +119,15 @@ namespace ImTK.UI
 
         protected internal override void OnGuiRender()
         {
-            // 在保留的區域上開啟無邊框視窗
-            ImGui.SetNextWindowPos(m_reservedRect.min);
-            ImGui.SetNextWindowSize(new Vector2(m_reservedRect.max.X - m_reservedRect.min.X, m_reservedRect.max.Y - m_reservedRect.min.Y));
+            // 由於 m_reservedRect 的高度為 FrameHeight * 1.25f (包含 padding)
+            // 若視窗高度也設為 1.25f，多出的 0.25f 透明區域會阻擋滑鼠點擊下方的 Docking 標題列。
+            // 因此，視窗本身的高度只設為 MenuBar 需要的標準 FrameHeight，並根據 padding 調整位置。
+            float frameHeight = ImGui.GetFrameHeight();
+            float padding = frameHeight * 0.125f;
+
+            // 在保留的區域內開啟無邊框視窗，位置往下推 padding，高度只取 frameHeight
+            ImGui.SetNextWindowPos(new Vector2(m_reservedRect.min.X, m_reservedRect.min.Y + padding));
+            ImGui.SetNextWindowSize(new Vector2(m_reservedRect.max.X - m_reservedRect.min.X, frameHeight));
 
             ImGuiWindowFlags windowFlags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoBackground;
 
