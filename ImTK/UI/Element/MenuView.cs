@@ -159,5 +159,63 @@ namespace ImTK.UI
             currentView.Add(newItem);
             return newItem;
         }
+
+        /// <summary>
+        /// 提供將動態 MenuView 實例掛載到指定路徑下的語法糖。
+        /// 路徑為要掛載的父節點路徑 (例如 "Window/Layouts")。
+        /// </summary>
+        public void AddMenu(string parentPath, MenuView view, int priority = 0)
+        {
+            if (view == null) return;
+            view.priority = priority;
+
+            if (string.IsNullOrEmpty(parentPath))
+            {
+                // 若路徑為空，則直接加到自己底下
+                var existingRootNode = this.hierarchy.Children().FirstOrDefault(c => (c as IMenuElement)?.name == view.name);
+                if (existingRootNode != null)
+                {
+                    s_log.Error($"Cannot add menu '{view.name}' at root because an element with the same name already exists.");
+                    return;
+                }
+                this.Add(view);
+                return;
+            }
+
+            string[] parts = parentPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            MenuView currentView = this;
+
+            // 確保 parentPath 上的所有節點都存在且為 MenuView
+            foreach (var partName in parts)
+            {
+                var existingNode = currentView.hierarchy.Children().FirstOrDefault(c => (c as IMenuElement)?.name == partName);
+
+                if (existingNode == null)
+                {
+                    var newView = new MenuView(partName);
+                    currentView.Add(newView);
+                    currentView = newView;
+                }
+                else if (existingNode is MenuView existingView)
+                {
+                    currentView = existingView;
+                }
+                else
+                {
+                    s_log.Error($"Path conflict at '{partName}': Expected a MenuView, but found {(existingNode is MenuItem ? "MenuItem" : "unknown type")}. Cannot attach menu '{view.name}'.");
+                    return;
+                }
+            }
+
+            // 檢查最終父節點下是否已有同名節點
+            var existingFinalNode = currentView.hierarchy.Children().FirstOrDefault(c => (c as IMenuElement)?.name == view.name);
+            if (existingFinalNode != null)
+            {
+                s_log.Error($"Cannot add menu '{view.name}' at path '{parentPath}' because an element with the same name already exists.");
+                return;
+            }
+
+            currentView.Add(view);
+        }
     }
 }
