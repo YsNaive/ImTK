@@ -134,10 +134,12 @@ namespace ImTK.UI
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0.0f);
+            // 覆寫 ImGui 預設的 WindowMinSize，避免因預設值大於 frameHeight 而強行擴張高度，導致 Hit-box 擋住下方物件。
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, new Vector2(0.0f, 0.0f));
 
             bool isOpen = ImGui.Begin("##MainMenuBarContainer", windowFlags);
 
-            ImGui.PopStyleVar(3);
+            ImGui.PopStyleVar(4);
 
             if (isOpen)
             {
