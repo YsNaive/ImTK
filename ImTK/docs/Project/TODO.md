@@ -9,7 +9,6 @@
 * （無）
 
 ## 🔵 待處理 (To Do)
-* 實作 `ImTKDatabase` 執行期資源快取管理器與 `IAsset` 介面。
 * 實作 `ImTKLog` 日誌系統（包含 `LogContext`, `ILogSink` 介面與 `MemoryRingBufferSink`）。
 * 實作 `ImTKDispatcher` 執行緒調度與 `ImTKEventBus` 隱式生命週期解綁事件系統。
 * 實作 `VisualElement` 的邏輯/物理樹雙軌指標 (`parent` vs `physicalParent`)，與事件冒泡機制 (`UIEventBase`, `RegisterCallback`)。

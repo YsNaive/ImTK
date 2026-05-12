@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 ### Added (新增)
+- 實作了強大且安全的雙軌資源系統 (`Asset System`)，將唯讀的全域資源存取 (`ImTK.Database.Resource`) 與可讀寫的本地資料庫 (`ImTK.Database.ImTKDatabase`) 完全分離，避免了路徑與權限錯誤。
+- 引入了 `ImTKEnvironment` 靜態環境管理器，自動處理跨平台的資源根目錄 (`GlobalAssetPath` 與 `LocalDataPath`) 解析。
+- 實作了泛型導向的資源反序列化架構 (`ImTKAsset` 與 `ImTKSaveableAsset`)，取代傳統龐大的 Loader 系統。
+- 實作了防禦性的 `AssetManager`，並針對路徑穿越 (Directory Traversal) 漏洞進行了深度防禦。
+- 內建提供 `JsonAsset<T>`，簡化了基於 `System.Text.Json` 的 POCO 設定檔存取與存檔開發流程。
 - 實作 `Window` 視窗系統，作為 `VisualElement` 的根節點。支援單例 (`Window.Open<T>()`) 與多實例，並整合至 `Panel` 的全域生命週期 (`OnEnable`, `OnDisable`, `Update`) 進行集中控管。
 - 實作了雙層視覺樹 (Logical vs Physical) 的自動同步 (Auto-Sync) 機制。當節點被移動時，會根據其 `NodeType` 自動從舊的邏輯或物理父節點乾淨脫離，徹底解決幽靈節點問題。
 - 新增了延遲且整併 (Deferred & Debounced) 的 `HierarchyChangedEvent`，利用 `EventDispatcher` 與 `HashSet` 在 `OnLogicUpdate` 統一派發，消除了修改 UI 時的 `Collection was modified` 例外。
