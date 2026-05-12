@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 ### Added (新增)
+- `ImTK.UI.Button` 元件，提供基本的按鈕渲染能力與建構子語法糖 (`text`, `onClicked`)。
+- `ImTK.UI.ClickEvent` 延遲事件，允許按鈕點擊事件透過 `EventDispatcher` 推遲至安全的 `LogicUpdate` 階段執行。
+- `ImTK/docs/UI/Element/` 文檔目錄，用於收納未來新增的各類 UI 元件規格。
+
+### Fixed (修復)
+- 修正 `TestRunnerModule` 內的 `TestReportWindow` 統計狀態異常問題（修正 Pending 顯示判斷與顏色標示）。
+- 修正 `EventBubbleTest` 測試失敗問題：將原有的 `ImGui.Button` 替換為 `ImTK.UI.Button` 以解決在 `GuiRender` 階段因直接修改視覺樹而觸發的生命週期保護機制 (CheckSafeState)。
+
+
+### Added (新增)
 - 實作了標準化且輕量的測試框架 (`ImTK.Test`)，區分 `IHeadlessTest` 與 `IIntegrationTest`。
 - 實作了可於 UI 顯示 Headless 與 Integration 測試報表的 `TestRunnerModule` 儀表板，並引入輕量斷言庫 `ImTKAssert`。
 - 實作了標準化範例框架 (`ImTK.Sample`)，引入 `ISampleScenario` 以支援自動註冊與展示。
