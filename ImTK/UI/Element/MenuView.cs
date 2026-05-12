@@ -16,9 +16,6 @@ namespace ImTK.UI
         private static readonly LogContext s_log = new LogContext("MenuView");
         private const int SEPARATOR_THRESHOLD = 50;
 
-        // 靜態快取 Render 方法以避免每幀的反射負擔
-        private static readonly System.Reflection.MethodInfo s_renderMethod = typeof(VisualElement).GetMethod("Render", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-
         public MenuView(string name, int priority = 0)
         {
             this.name = name;
@@ -87,10 +84,7 @@ namespace ImTK.UI
                     if (menuElement is VisualElement visualChild)
                     {
                         // 呼叫內部防護層 Render，包含 PushID, PopID
-                        if (s_renderMethod != null)
-                        {
-                            s_renderMethod.Invoke(visualChild, null);
-                        }
+                        visualChild.Render();
                     }
 
                     previousPriority = menuElement.priority;

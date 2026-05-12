@@ -12,7 +12,6 @@ namespace ImTK.UI
     {
         private MenuView m_rootMenu;
         private ImRect m_reservedRect;
-        private static readonly System.Reflection.MethodInfo s_renderMethod = typeof(VisualElement).GetMethod("Render", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
         private static readonly LogContext s_log = new LogContext("MainMenuModule");
 
         protected MainMenuModule()
@@ -146,10 +145,7 @@ namespace ImTK.UI
                 // 因為是 MenuBar，ImGui 要求在 BeginMenuBar 之前必須處於支援 MenuBar 的 Window 中
                 // 我們在上面已經加上了 ImGuiWindowFlags.MenuBar。
                 // 呼叫 MenuView 進行內部渲染。
-                if (s_renderMethod != null)
-                {
-                    s_renderMethod.Invoke(m_rootMenu, null);
-                }
+                m_rootMenu.Render();
                 ImGui.End();
             }
         }

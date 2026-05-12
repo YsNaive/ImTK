@@ -46,10 +46,16 @@ ImTK 選單系統旨在封裝 ImGui 的 `BeginMenuBar`、`BeginMenu` 與 `MenuIt
 
 ---
 
-## 5. MainMenuModule 與 PanelLayout 整合
+## 5. MainMenuAttribute 自動掛載
 
-全域的主選單列由 `MainMenuModule` 管理。它遵循 `Panel Layout` 規範：
-1.  在初始化階段 (`OnInitializeSelf`) 呼叫 `Panel.RequireArea`，切出 `ImGui.GetFrameHeight() * 1.25f` 的頂部預留區域。
-2.  在渲染階段 (`OnGuiRender`)，於該區域使用無邊框的 `ImGui.Begin` 視窗。
-3.  內部持有一個根層級的 `MenuView`（`isMenuBar = true`），並對其發起渲染呼叫。
-4.  提供全域捷徑 API（如 `MainMenuModule.AddItem`），讓其他模組可以極度便捷地掛載工具列按鈕。
+為了提升開發體驗，系統提供了 `[MainMenu(string path, int priority)]` 屬性。
+`MainMenuModule` 會在初始化依賴階段 (`OnInitializeDependencies`) 掃描全域的組件：
+*   標註在 **靜態無參數 (或單一 ClickEvent 參數) 方法** 上：框架會自動將其轉為委派，並透過 `MainMenuModule.AddItem` 掛載為 `MenuItem`。
+*   標註在 **靜態 MenuView 欄位/屬性** 上：框架會提取該實例，並透過 `AddMenu` API 將其掛載到指定的父節點下，這對於開發動態生成的下拉選單非常方便。
+
+---
+
+## 6. 渲染入口與架構設計微調
+
+*   **`VisualElement.Render()` 存取修飾詞**：為了避免在使用 C# Reflection 時產生的高昂效能開銷與迂迴設計，`VisualElement.Render()` 已被提升為 `public` 方法。它現在正式作為驅動視覺樹渲染的公開鎖定入口（處理 `PushID`, `PopID`, 事件派發等防護層），而子類別應實作受保護的 `OnRenderLayout()` 或 `OnRenderSelf()`。
+*   **與 PanelLayout 整合**：全域主選單列由 `MainMenuModule` 管理。為了避免 ImGui `WindowMinSize` 的限制導致無邊框容器的 hit-box 往下覆蓋並阻擋 DockSpace 的標題列拖曳，`MainMenuModule` 會在渲染容器視窗前，推送 `ImGuiStyleVar.WindowMinSize` 設為 `0,0`。它精準佔據了 `RequireMenuArea` 所切出的空間，不干擾下方佈局。
