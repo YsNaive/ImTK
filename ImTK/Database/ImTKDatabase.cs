@@ -24,7 +24,7 @@ namespace ImTK.Database
         /// <summary>
         /// 取得本地資源。若檔案不存在則拋出 AssetNotFoundException。
         /// </summary>
-        public static T GetAsset<T>(string relativePath) where T : class, IAsset, new()
+        public static T GetAsset<T>(string relativePath) where T : ImTKAsset, new()
         {
             if (s_manager == null) Initialize();
             return s_manager.GetAsset<T>(relativePath);
@@ -33,7 +33,7 @@ namespace ImTK.Database
         /// <summary>
         /// 建立並寫入一個全新的本地資源。若檔案或快取已存在則拋出 AssetAlreadyExistsException。
         /// </summary>
-        public static T CreateAsset<T>(string relativePath) where T : class, ISaveableAsset, new()
+        public static T CreateAsset<T>(string relativePath) where T : ImTKSaveableAsset, new()
         {
             if (s_manager == null) Initialize();
             return s_manager.CreateAsset<T>(relativePath);
@@ -42,7 +42,7 @@ namespace ImTK.Database
         /// <summary>
         /// 安全地獲取本地資源。如果檔案存在則載入，否則建立並寫入新的預設資源檔案。
         /// </summary>
-        public static T GetOrCreateAsset<T>(string relativePath) where T : class, ISaveableAsset, new()
+        public static T GetOrCreateAsset<T>(string relativePath) where T : ImTKSaveableAsset, new()
         {
             if (s_manager == null) Initialize();
             return s_manager.GetOrCreateAsset<T>(relativePath);

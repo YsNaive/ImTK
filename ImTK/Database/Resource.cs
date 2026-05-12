@@ -24,10 +24,10 @@ namespace ImTK.Database
         /// <summary>
         /// 取得唯讀的全域資源。若檔案不存在則拋出 AssetNotFoundException。
         /// </summary>
-        /// <typeparam name="T">實作 IAsset 與無參數建構子的資源型別</typeparam>
+        /// <typeparam name="T">繼承 ImTKAsset 的資源型別</typeparam>
         /// <param name="relativePath">資源的相對路徑</param>
         /// <returns>回傳快取中的資源實例</returns>
-        public static T GetAsset<T>(string relativePath) where T : class, IAsset, new()
+        public static T GetAsset<T>(string relativePath) where T : ImTKAsset, new()
         {
             if (s_manager == null) Initialize();
             return s_manager.GetAsset<T>(relativePath);

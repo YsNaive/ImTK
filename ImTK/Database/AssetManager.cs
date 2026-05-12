@@ -20,6 +20,14 @@ namespace ImTK.Database
         public AssetManager(string rootPath, bool isReadOnly)
         {
             m_rootPath = Path.GetFullPath(rootPath);
+
+            // 確保路徑以分隔符號結尾，以防範目錄穿越攻擊時的子字串前綴繞過
+            if (!m_rootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) &&
+                !m_rootPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
+            {
+                m_rootPath += Path.DirectorySeparatorChar;
+            }
+
             m_isReadOnly = isReadOnly;
 
             if (!Directory.Exists(m_rootPath))
@@ -78,7 +86,7 @@ namespace ImTK.Database
             return Path.GetFullPath(Path.Combine(m_rootPath, normalizedPath));
         }
 
-        public T GetAsset<T>(string relativePath) where T : class, IAsset, new()
+        public T GetAsset<T>(string relativePath) where T : ImTKAsset, new()
         {
             string normalizedPath = NormalizePath(relativePath);
 
@@ -98,21 +106,19 @@ namespace ImTK.Database
             }
 
             T newAsset = new T();
-            if (newAsset is ImTKAsset impl)
-            {
-                impl.Path = normalizedPath;
-                impl.Version = 1;
-                impl.IsDisposed = false;
 
-                try
-                {
-                    impl.OnLoad(absolutePath);
-                }
-                catch (Exception ex)
-                {
-                    s_log.Error(ex, $"Failed to execute OnLoad for asset {normalizedPath}");
-                    throw;
-                }
+            newAsset.Path = normalizedPath;
+            newAsset.Version = 1;
+            newAsset.IsDisposed = false;
+
+            try
+            {
+                newAsset.OnLoad(absolutePath);
+            }
+            catch (Exception ex)
+            {
+                s_log.Error(ex, $"Failed to execute OnLoad for asset {normalizedPath}");
+                throw;
             }
 
             m_cache[normalizedPath] = newAsset;
@@ -120,7 +126,7 @@ namespace ImTK.Database
             return newAsset;
         }
 
-        public T CreateAsset<T>(string relativePath) where T : class, ISaveableAsset, new()
+        public T CreateAsset<T>(string relativePath) where T : ImTKSaveableAsset, new()
         {
             if (m_isReadOnly)
             {
@@ -136,30 +142,28 @@ namespace ImTK.Database
             }
 
             T newAsset = new T();
-            if (newAsset is ImTKSaveableAsset impl)
+
+            newAsset.Path = normalizedPath;
+            newAsset.Version = 1;
+            newAsset.IsDisposed = false;
+            newAsset.IsDirty = true;
+
+            // 確保目錄存在
+            string dir = Path.GetDirectoryName(absolutePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
             {
-                impl.Path = normalizedPath;
-                impl.Version = 1;
-                impl.IsDisposed = false;
-                impl.IsDirty = true;
+                Directory.CreateDirectory(dir);
+            }
 
-                // 確保目錄存在
-                string dir = Path.GetDirectoryName(absolutePath);
-                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-                {
-                    Directory.CreateDirectory(dir);
-                }
-
-                try
-                {
-                    impl.OnSave(absolutePath);
-                    impl.IsDirty = false;
-                }
-                catch (Exception ex)
-                {
-                    s_log.Error(ex, $"Failed to execute OnSave for newly created asset {normalizedPath}");
-                    throw;
-                }
+            try
+            {
+                newAsset.OnSave(absolutePath);
+                newAsset.IsDirty = false;
+            }
+            catch (Exception ex)
+            {
+                s_log.Error(ex, $"Failed to execute OnSave for newly created asset {normalizedPath}");
+                throw;
             }
 
             m_cache[normalizedPath] = newAsset;
@@ -167,7 +171,7 @@ namespace ImTK.Database
             return newAsset;
         }
 
-        public T GetOrCreateAsset<T>(string relativePath) where T : class, ISaveableAsset, new()
+        public T GetOrCreateAsset<T>(string relativePath) where T : ImTKSaveableAsset, new()
         {
             if (m_isReadOnly)
             {

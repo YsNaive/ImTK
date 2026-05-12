@@ -15,6 +15,7 @@ namespace ImTK.Test
                 Database.EnvironmentTests.RunTests();
                 Database.AssetManagerTests.RunTests();
                 Database.DatabaseIntegrationTests.RunTests();
+                Database.JsonAssetTests.RunTests();
             }
             catch (Exception ex)
             {

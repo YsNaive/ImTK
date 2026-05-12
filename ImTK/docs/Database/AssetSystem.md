@@ -57,6 +57,30 @@ var myIcon = Resource.GetAsset<Texture2D>("assets/icon.png");
     *   可寫回磁碟的資源。
     *   需額外覆寫 `protected abstract void OnSave(string absolutePath);`。
 
+### 3.3 預設實作：JsonAsset&lt;T&gt;
+
+ImTK 內建提供了 `JsonAsset<T>` 來簡化純資料物件 (POCO) 的存檔需求。它使用 `System.Text.Json` 進行序列化，並將資料封裝在 `Data` 屬性中。
+
+```csharp
+// 1. 定義你的資料類別 (必須有 public 無參數建構子)
+public class AppConfig
+{
+    public int WindowWidth { get; set; } = 1024;
+    public string Theme { get; set; } = "Dark";
+}
+
+// 2. 獲取或建立資源
+var configAsset = ImTKDatabase.GetOrCreateAsset<JsonAsset<AppConfig>>("config.json");
+
+// 3. 讀寫資料
+Console.WriteLine(configAsset.Data.Theme);
+configAsset.Data.WindowWidth = 1920;
+
+// 4. 標記修改並存檔
+configAsset.MarkDirty();
+ImTKDatabase.SaveAssets(); // 或交由系統關閉時自動儲存
+```
+
 ---
 
 ## 4. 記憶體管理與安全防護 (Memory & Safety)
