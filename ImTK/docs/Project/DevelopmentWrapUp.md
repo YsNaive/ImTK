@@ -12,7 +12,10 @@
    - 確認核心邏輯、模組生命週期、全域管理系統等皆已加入適當的日誌追蹤 (`s_log.Trace`/`Debug`)。
    - 確認高頻率呼叫的底層機制避免加入過量日誌以免影響效能。
    - 確認例外與錯誤邊界皆有 `Error` 或 `Warning` 日誌紀錄。
-5. **文檔同步更新 (Documentation Sync)**
+5. **回歸測試與維護檢查 (Regression Testing & Maintenance)**
+   - 確保執行 `dotnet run --project ImTK.Test`，所有既有的自動測試 (Headless & Integration) 都能順利通過（終端機與日誌中不可出現 Error）。
+   - **檢查本次更動範圍，若牽涉到既存的 Test 與 Sample，需同步檢查相關內容是否需要同步更新**。
+6. **文檔同步更新 (Documentation Sync)**
    - 如果有修改現有架構或新增功能，確認已同步更新對應子模組（如 `Core/`, `UI/` 等）的 `README.md` 或 Markdown 技術文檔。
-6. **更新 Changelog (Update Changelog)**
+7. **更新 Changelog (Update Changelog)**
    - 確保本次提交的新功能、修復或架構變更，已經如實且精簡地記錄到根目錄 `CHANGELOG.md` 的 `[Unreleased]` 區塊中。

@@ -3,15 +3,14 @@ using System.IO;
 using ImTK.Core;
 using ImTK.Database;
 using ImTK.Test.Database.Mocks;
+using ImTK.Test.Framework;
 
 namespace ImTK.Test.Database
 {
-    public static class DatabaseIntegrationTests
+    public class DatabaseIntegrationTests : IHeadlessTest
     {
-        public static void RunTests()
+        public void Run()
         {
-            Console.WriteLine("--- Running DatabaseIntegrationTests ---");
-
             // Setup dummy environment
             ImTKEnvironment.OrganizationName = "ImTK_Test";
             ImTKEnvironment.ApplicationName = "IntegrationTestApp";
@@ -25,8 +24,6 @@ namespace ImTK.Test.Database
                 TestResourceAPI();
                 TestDatabaseAPI();
                 TestUnloadAll();
-
-                Console.WriteLine("DatabaseIntegrationTests: All passed.");
             }
             finally
             {
@@ -41,24 +38,19 @@ namespace ImTK.Test.Database
             }
         }
 
-        private static void Assert(bool condition, string message)
-        {
-            if (!condition) throw new Exception($"Test failed: {message}");
-        }
-
-        private static void TestResourceAPI()
+        private void TestResourceAPI()
         {
             // Global should be read only
             string testFile = Path.Combine(ImTKEnvironment.GlobalAssetPath, "test_resource.txt");
             File.WriteAllText(testFile, "Global Data");
 
             var asset = Resource.GetAsset<MockReadOnlyAsset>("test_resource.txt");
-            Assert(asset.Content == "Global Data", "Resource failed to load global data.");
+            ImTKAssert.AreEqual("Global Data", asset.Content, "Resource failed to load global data.");
 
             File.Delete(testFile);
         }
 
-        private static void TestDatabaseAPI()
+        private void TestDatabaseAPI()
         {
             var asset = ImTKDatabase.CreateAsset<MockSaveableAsset>("prefs.json");
             asset.Content = "User Prefs";
@@ -69,17 +61,17 @@ namespace ImTK.Test.Database
             ImTKDatabase.SaveAssets();
 
             string fullPath = Path.Combine(ImTKEnvironment.LocalDataPath, "prefs.json");
-            Assert(File.ReadAllText(fullPath) == "User Prefs", "Database failed to save local data.");
+            ImTKAssert.AreEqual("User Prefs", File.ReadAllText(fullPath), "Database failed to save local data.");
         }
 
-        private static void TestUnloadAll()
+        private void TestUnloadAll()
         {
             var asset = ImTKDatabase.GetAsset<MockSaveableAsset>("prefs.json");
-            Assert(!asset.IsDisposed, "Asset should be active.");
+            ImTKAssert.IsFalse(asset.IsDisposed, "Asset should be active.");
 
             ImTKDatabase.UnloadAll();
 
-            Assert(asset.IsDisposed, "Asset should be disposed after UnloadAll.");
+            ImTKAssert.IsTrue(asset.IsDisposed, "Asset should be disposed after UnloadAll.");
         }
     }
 }
