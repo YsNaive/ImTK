@@ -21,6 +21,7 @@ namespace ImTK.Test.Framework
             public bool HasRun;
             public bool Passed;
             public string ErrorMessage;
+            public ImTK.UI.Button runButton;
         }
 
         private List<TestRecord> m_tests = new List<TestRecord>();
@@ -37,13 +38,16 @@ namespace ImTK.Test.Framework
             foreach (var type in testTypes)
             {
                 var instance = (IIntegrationTest)Activator.CreateInstance(type);
-                m_tests.Add(new TestRecord
+
+                var record = new TestRecord
                 {
                     Instance = instance,
                     HasRun = false,
                     Passed = false,
                     ErrorMessage = ""
-                });
+                };
+                record.runButton = new ImTK.UI.Button($"Run##{instance.TestName}", evt => RunTest(record.Instance));
+                m_tests.Add(record);
             }
 
             // Auto run non-manual tests
@@ -175,7 +179,7 @@ namespace ImTK.Test.Framework
                     ImGui.TableNextColumn();
                     if (!record.HasRun)
                     {
-                        ImGui.TextColored(new System.Numerics.Vector4(0.7f, 0.7f, 0.7f, 1.0f), "Pending");
+                        ImGui.TextColored(new System.Numerics.Vector4(1.0f, 1.0f, 0.0f, 1.0f), "Pending");
                     }
                     else if (record.Passed)
                     {
@@ -187,10 +191,7 @@ namespace ImTK.Test.Framework
                     }
 
                     ImGui.TableNextColumn();
-                    if (ImGui.Button($"Run##{record.Instance.TestName}"))
-                    {
-                        m_runner.RunTest(record.Instance);
-                    }
+                    record.runButton.Render();
 
                     ImGui.TableNextColumn();
                     if (!string.IsNullOrEmpty(record.ErrorMessage))
