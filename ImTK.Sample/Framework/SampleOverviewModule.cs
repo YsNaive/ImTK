@@ -14,6 +14,8 @@ namespace ImTK.Sample.Framework
         private OverviewWindow m_overviewWindow;
         private List<ISampleScenario> m_scenarios = new List<ISampleScenario>();
 
+        private SampleOverviewModule() { }
+
         protected override void OnInitializeSelf()
         {
             // Scan and register all ISampleScenario implementations

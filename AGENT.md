@@ -30,6 +30,10 @@
 * **Property Over Field**：影響功能狀態的變數（如 `enableXXX`、`isResizable`），必須實作為 C# Property，以便未來攔截 getter/setter 或綁定事件。
 * **ImGui Flags 封裝**：不要讓最終開發者直接操作 `ImGuiWindowFlags` 等底層位元遮罩。應將其封裝為直覺的布林屬性 (如 `enableDocking`)，並在內部自動進行位元運算映射。
 
+### 1.5 模組 (ImTKModule) 建構規範
+* 所有的 `ImTKModule` 都是透過反射機制作全局單例初始化。
+* **規範**：任何實作 `ImTKModule` 的類別，**必須擁有「唯一一個、無參數、且為非公開 (private/protected)」的建構函式**。若違反此規範，`ImTKApplication` 會在啟動時拋出 `InvalidOperationException` 並中斷程式。
+
 ---
 
 ## 2. 專案子模組導覽

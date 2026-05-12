@@ -13,6 +13,8 @@ namespace ImTK.Test.Framework
     {
         private static readonly LogContext s_log = new LogContext("TestRunnerModule");
 
+        private TestRunnerModule() { }
+
         public class TestRecord
         {
             public IIntegrationTest Instance;
