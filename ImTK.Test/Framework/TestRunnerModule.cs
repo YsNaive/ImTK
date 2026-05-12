@@ -91,7 +91,7 @@ namespace ImTK.Test.Framework
         private List<TestRunnerModule.TestRecord> m_tests;
         private TestRunnerModule m_runner;
 
-        public TestReportWindow() : base("Integration Test Report")
+        public TestReportWindow() : base("Test Report")
         {
         }
 
@@ -105,25 +105,63 @@ namespace ImTK.Test.Framework
         {
             if (m_tests == null) return;
 
-            int total = m_tests.Count;
-            int passed = m_tests.Count(t => t.HasRun && t.Passed);
-            int failed = m_tests.Count(t => t.HasRun && !t.Passed);
+            var headlessResults = HeadlessRunner.LastResults;
+
+            int total = m_tests.Count + headlessResults.Count;
+            int passed = m_tests.Count(t => t.HasRun && t.Passed) + headlessResults.Count(t => t.Passed);
+            int failed = m_tests.Count(t => t.HasRun && !t.Passed) + headlessResults.Count(t => !t.Passed);
             int pending = m_tests.Count(t => !t.HasRun);
 
             ImGui.Text($"Total: {total} | Passed: {passed} | Failed: {failed} | Pending: {pending}");
             ImGui.Separator();
 
-            if (ImGui.BeginTable("Tests", 4, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))
+            if (ImGui.BeginTable("Tests", 5, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))
             {
+                ImGui.TableSetupColumn("Type");
                 ImGui.TableSetupColumn("Name");
                 ImGui.TableSetupColumn("Status");
                 ImGui.TableSetupColumn("Action");
                 ImGui.TableSetupColumn("Message");
                 ImGui.TableHeadersRow();
 
+                // Render Headless Tests First
+                foreach (var result in headlessResults)
+                {
+                    ImGui.TableNextRow();
+
+                    ImGui.TableNextColumn();
+                    ImGui.TextDisabled("Headless");
+
+                    ImGui.TableNextColumn();
+                    ImGui.Text(result.TestName);
+
+                    ImGui.TableNextColumn();
+                    if (result.Passed)
+                    {
+                        ImGui.TextColored(new System.Numerics.Vector4(0.0f, 1.0f, 0.0f, 1.0f), "Passed");
+                    }
+                    else
+                    {
+                        ImGui.TextColored(new System.Numerics.Vector4(1.0f, 0.0f, 0.0f, 1.0f), "Failed");
+                    }
+
+                    ImGui.TableNextColumn();
+                    ImGui.TextDisabled("-");
+
+                    ImGui.TableNextColumn();
+                    if (!string.IsNullOrEmpty(result.ErrorMessage))
+                    {
+                        ImGui.TextWrapped(result.ErrorMessage);
+                    }
+                }
+
+                // Render Integration Tests
                 foreach (var record in m_tests)
                 {
                     ImGui.TableNextRow();
+
+                    ImGui.TableNextColumn();
+                    ImGui.TextDisabled("Integration");
 
                     ImGui.TableNextColumn();
                     ImGui.Text(record.Instance.TestName);
