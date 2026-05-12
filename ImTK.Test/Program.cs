@@ -14,11 +14,12 @@ namespace ImTK.Test
 
             if (!headlessPassed)
             {
-                log.Error("Headless tests failed. Aborting UI launch.");
-                return;
+                log.Warning("Some Headless tests failed, but launching UI to show report...");
             }
-
-            log.Info("All headless tests passed. Launching UI...");
+            else
+            {
+                log.Info("All headless tests passed. Launching UI...");
+            }
 
             var config = new ImTKSilkConstant
             {
