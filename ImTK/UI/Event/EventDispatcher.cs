@@ -93,5 +93,18 @@ namespace ImTK.UI
                 }
             }
         }
+
+        /// <summary>
+        /// Clears all pending events in the queue safely. Useful for resetting state between isolated tests.
+        /// </summary>
+        public static void ClearQueue()
+        {
+            while (s_eventQueue.Count > 0)
+            {
+                var evt = s_eventQueue.Dequeue();
+                evt.Dispose();
+            }
+            s_hierarchyDirtyElements.Clear();
+        }
     }
 }
