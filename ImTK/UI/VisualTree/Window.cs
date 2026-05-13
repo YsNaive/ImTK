@@ -51,6 +51,15 @@ namespace ImTK.UI
             this.windowId = windowId;
         }
 
+        protected override void ApplyTheme(ImTKTheme theme)
+        {
+            base.ApplyTheme(theme);
+            style.ApplyThemeColor(ImGuiCol.WindowBg, theme.Background1);
+            style.ApplyThemeColor(ImGuiCol.TitleBg, theme.Background2);
+            style.ApplyThemeColor(ImGuiCol.TitleBgActive, theme.Background2);
+            style.ApplyThemeColor(ImGuiCol.TitleBgCollapsed, theme.Background2);
+        }
+
         public void Open()
         {
             if (m_isOpen) return;
