@@ -10,4 +10,6 @@
 * **[`MenuSystem.md`](MenuSystem.md)**：選單系統設計，包含 `MenuView` 與 `MenuItem` 職責拆分、Priority 自動排序與分隔線，以及路徑衝突處理機制。
 
 * [**Element/**](Element/)
-  存放並記錄各種內建的高階 UI 元件 (如 `Button`) 規格與事件綁定模式。
+  存放並記錄各種內建的高階 UI 元件規格與事件綁定模式：
+  * [`Button.md`](Element/Button.md)
+  * [`FieldDrawer.md`](Element/FieldDrawer.md) - 自動化欄位渲染、註冊與綁定系統
