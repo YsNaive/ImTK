@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 ### Added (新增)
+- 實作 `ImTK.Color` 結構，支援 RGBA/HSV 色彩轉換，以及與 `Vector4` 和 `uint` (ImGui 原生格式) 的隱式/顯式轉換。
+- 實作了記憶體最佳化的 `VisualElementStyle` (Style 系統)。透過 C# Union 結構 (`StyleEntry`) 與延遲初始化陣列，達成修改樣式時的零裝箱 (Zero Boxing) 與極低記憶體開銷。
+- 實作了基於層疊與 Fallback 機制的 `ImTKTheme` (Theme 系統)。允許透過 `parent` 指標輕鬆建立繼承變體，並在 `Render()` 管線中自動處理 Override 與 Theme 之間的優先級競爭。
+- 實作了 `ElementFlags<T>` 泛型位元運算基底，讓特定 UI 元件 (如 `Window`) 可以使用直覺的布林屬性語法糖 (`window.flags.noTitleBar`) 來封裝 ImGui 底層繁瑣的 Enum 操作。
+- 為 `VisualElement`, `Window`, `Button` 實作了 `ApplyTheme` 虛擬方法，實現組件的預設主題映射。
+- 於 `ImTK.Test` 專案中補齊了 `ColorTests`, `ElementFlagsTests`, `StyleThemeTests` 全面測試，並在報表視窗新增了即時切換明暗主題預覽的功能。
+- 更新 `ImTK/docs/UI/VisualTree.md` 文件，詳述 Style Table 的記憶體模型、Theme 繼承系統以及 Flag 封裝架構。
 - 實作了 ImGui 選單系統 (`MenuView`, `MenuItem`)，支援容器與可點擊末端節點的職責分離。
 - `MenuView` 支援基於 `priority` 的自動排序機制，以及對於跨度大於 50 的項目自動插入 `ImGui.Separator()`。
 - 提供路徑式 (Path-based) 選單建立語法糖 `AddItem` 與 `AddMenu`，並具備節點衝突的型別防護。

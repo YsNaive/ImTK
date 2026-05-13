@@ -4,6 +4,30 @@ using ImTK.Log;
 
 namespace ImTK.UI
 {
+    public class WindowFlags : ElementFlags<ImGuiWindowFlags>
+    {
+        public bool noTitleBar { get => GetFlag(ImGuiWindowFlags.NoTitleBar); set => SetFlag(ImGuiWindowFlags.NoTitleBar, value); }
+        public bool noResize { get => GetFlag(ImGuiWindowFlags.NoResize); set => SetFlag(ImGuiWindowFlags.NoResize, value); }
+        public bool noMove { get => GetFlag(ImGuiWindowFlags.NoMove); set => SetFlag(ImGuiWindowFlags.NoMove, value); }
+        public bool noScrollbar { get => GetFlag(ImGuiWindowFlags.NoScrollbar); set => SetFlag(ImGuiWindowFlags.NoScrollbar, value); }
+        public bool noScrollWithMouse { get => GetFlag(ImGuiWindowFlags.NoScrollWithMouse); set => SetFlag(ImGuiWindowFlags.NoScrollWithMouse, value); }
+        public bool noCollapse { get => GetFlag(ImGuiWindowFlags.NoCollapse); set => SetFlag(ImGuiWindowFlags.NoCollapse, value); }
+        public bool alwaysAutoResize { get => GetFlag(ImGuiWindowFlags.AlwaysAutoResize); set => SetFlag(ImGuiWindowFlags.AlwaysAutoResize, value); }
+        public bool noBackground { get => GetFlag(ImGuiWindowFlags.NoBackground); set => SetFlag(ImGuiWindowFlags.NoBackground, value); }
+        public bool noSavedSettings { get => GetFlag(ImGuiWindowFlags.NoSavedSettings); set => SetFlag(ImGuiWindowFlags.NoSavedSettings, value); }
+        public bool noMouseInputs { get => GetFlag(ImGuiWindowFlags.NoMouseInputs); set => SetFlag(ImGuiWindowFlags.NoMouseInputs, value); }
+        public bool menuBar { get => GetFlag(ImGuiWindowFlags.MenuBar); set => SetFlag(ImGuiWindowFlags.MenuBar, value); }
+        public bool horizontalScrollbar { get => GetFlag(ImGuiWindowFlags.HorizontalScrollbar); set => SetFlag(ImGuiWindowFlags.HorizontalScrollbar, value); }
+        public bool noFocusOnAppearing { get => GetFlag(ImGuiWindowFlags.NoFocusOnAppearing); set => SetFlag(ImGuiWindowFlags.NoFocusOnAppearing, value); }
+        public bool noBringToFrontOnFocus { get => GetFlag(ImGuiWindowFlags.NoBringToFrontOnFocus); set => SetFlag(ImGuiWindowFlags.NoBringToFrontOnFocus, value); }
+        public bool alwaysVerticalScrollbar { get => GetFlag(ImGuiWindowFlags.AlwaysVerticalScrollbar); set => SetFlag(ImGuiWindowFlags.AlwaysVerticalScrollbar, value); }
+        public bool alwaysHorizontalScrollbar { get => GetFlag(ImGuiWindowFlags.AlwaysHorizontalScrollbar); set => SetFlag(ImGuiWindowFlags.AlwaysHorizontalScrollbar, value); }
+        public bool noNavInputs { get => GetFlag(ImGuiWindowFlags.NoNavInputs); set => SetFlag(ImGuiWindowFlags.NoNavInputs, value); }
+        public bool noNavFocus { get => GetFlag(ImGuiWindowFlags.NoNavFocus); set => SetFlag(ImGuiWindowFlags.NoNavFocus, value); }
+        public bool unsavedDocument { get => GetFlag(ImGuiWindowFlags.UnsavedDocument); set => SetFlag(ImGuiWindowFlags.UnsavedDocument, value); }
+        public bool noDocking { get => GetFlag(ImGuiWindowFlags.NoDocking); set => SetFlag(ImGuiWindowFlags.NoDocking, value); }
+    }
+
     public abstract class Window : VisualElement
     {
         private static readonly LogContext s_log = new LogContext("Window");
@@ -14,13 +38,26 @@ namespace ImTK.UI
         internal string imguiId => string.IsNullOrEmpty(windowId) ? displayName : $"{displayName}###{windowId}";
 
         protected bool m_isOpen = false;
-        public ImGuiWindowFlags windowFlags { get; set; } = ImGuiWindowFlags.None;
+
+        [Obsolete("Please use the 'flags' property syntax sugar instead.")]
+        public ImGuiWindowFlags windowFlags { get => flags.Value; set => flags.Value = value; }
+
+        public WindowFlags flags { get; } = new WindowFlags();
 
         protected Window(string displayName, string windowId = "")
         {
             m_useAutoId = false;
             this.displayName = displayName;
             this.windowId = windowId;
+        }
+
+        protected override void ApplyTheme(ImTKTheme theme)
+        {
+            base.ApplyTheme(theme);
+            style.ApplyThemeColor(ImGuiCol.WindowBg, theme.Background1);
+            style.ApplyThemeColor(ImGuiCol.TitleBg, theme.Background2);
+            style.ApplyThemeColor(ImGuiCol.TitleBgActive, theme.Background2);
+            style.ApplyThemeColor(ImGuiCol.TitleBgCollapsed, theme.Background2);
         }
 
         public void Open()
@@ -67,7 +104,7 @@ namespace ImTK.UI
 
         protected override void OnRenderLayout()
         {
-            bool isExpanded = ImGui.Begin(imguiId, ref m_isOpen, windowFlags);
+            bool isExpanded = ImGui.Begin(imguiId, ref m_isOpen, flags.Value);
 
             if (isExpanded)
             {
