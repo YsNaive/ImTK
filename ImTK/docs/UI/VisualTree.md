@@ -83,3 +83,39 @@ ImTK 的 UI 系統目標是**「在 Immediate Mode (ImGui) 的底層上，搭建
 **安全防護規範：**
 * 所有的 `hierarchy.Add()`、`Remove()`、`Clear()` 都會**立即生效**。
 * 若在這些方法內部偵測到 `ImTKApplication.CurrentState == ApplicationState.GuiRender`，框架將直接攔截操作並報錯，強制規定「禁止在渲染階段改變結構」。
+
+---
+
+## 6. Style 系統與 Theme 系統 (Style & Theme Architecture)
+
+為了讓開發者能以類似 CSS 或 Unity UITK 的語法糖修改元件外觀，ImTK 實作了專屬的 `VisualElement.style` 與 `ImTKTheme` 系統。
+
+### 6.1 記憶體最佳化的 Style Table
+ImGui 底層 API (`PushStyleColor` / `PushStyleVar`) 接受 `uint`, `float`, `Vector2` 等型別。為了避免頻繁修改樣式時發生 Boxing 或過多的記憶體分配，`VisualElementStyle` 採用了特殊的 Union Struct (`StyleEntry`) 搭配延遲初始化 (Lazy Init) 的陣列。
+
+* **`StyleEntry`**: 利用 C# 的 `[StructLayout(LayoutKind.Explicit)]`，讓 Color、Float、Vector2 共用同一塊最大 8 bytes 的記憶體。
+* **零成本預設**: 預設情況下，`VisualElement` 不會分配任何 Style List 的記憶體，直到被顯式賦值或套用 Theme。
+
+### 6.2 Override 與 Theme 的層級 (Cascading)
+`style` 內部維護兩個 List：
+1. **`m_themeStyles`**: 透過 `element.SetTheme(theme)` 或 `ApplyTheme()` 寫入，代表當前主題的設定。
+2. **`m_overrideStyles`**: 透過開發者手動調用屬性糖 (如 `element.style.textColor = ...`) 寫入，代表強制覆寫。
+
+在 `Render()` 時，管線會確保 **Override 的權重高於 Theme**。這意味著切換全域主題時，開發者的手動覆寫 (如特定變紅的警告字) 不會被洗掉。
+
+### 6.3 Theme 的 Fallback 機制 (變體繼承)
+`ImTKTheme` 支援層疊式 Fallback 機制。透過設定 `theme.parent` 指標：
+1. 取值時若本體沒有值 (Nullable 狀態為 null)，會自動向上詢問 `parent`。
+2. **極度容易擴展**: 若想建立一個 Error 變體，只需 `new ImTKTheme() { parent = currentTheme }` 然後修改 `TextPrimary`，其他所有屬性都會自動繼承，並隨 Parent 動態更新。
+
+---
+
+## 7. Flags 封裝語法糖 (`element.flags.*`)
+
+ImGui 的元件常需要傳入不同的 Flags (如 `ImGuiWindowFlags`, `ImGuiChildFlags`)。
+為了避免屬性污染基底的 `VisualElement`，並解決 ImGui Enum 開發體驗不佳的問題，框架提供了 `ElementFlags<TEnum>` 泛型基底。
+
+**實作範例 (`WindowFlags`)**:
+* 子類別只要實作對應 Enum 的 Flags 類別 (例如繼承 `ElementFlags<ImGuiWindowFlags>`)。
+* 將該 Flags 物件掛載為特定元件 (如 `Window.flags`) 的唯讀屬性。
+* 元件在 `Render` 底層直接調用 `ImGui.Begin("ID", ref open, flags.Value)`。這保證了極快的位元運算速度與完美的 C# IntelliSense 開發體驗，絕無冗餘的 Boolean 狀態同步問題。
