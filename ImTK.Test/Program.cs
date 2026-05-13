@@ -12,6 +12,11 @@ namespace ImTK.Test
 
             bool headlessPassed = Framework.HeadlessRunner.RunAllHeadlessTests();
 
+            if (args.Length > 0 && args[0] == "--headless-only")
+            {
+                Environment.Exit(headlessPassed ? 0 : 1);
+            }
+
             if (!headlessPassed)
             {
                 log.Warning("Some Headless tests failed, but launching UI to show report...");
