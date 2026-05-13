@@ -189,9 +189,12 @@ namespace ImTK.UI
 
         // REMOVED 'virtual' to ensure protection. Kept 'public' temporarily for Test access, or use InternalsVisibleTo.
         // As requested before, we'll keep it 'internal' but we need the Test module to access it.
-        // We will make it public, but non-virtual, so it's a sealed entry point. Wait, if it's public, app developers can call it.
-        // Better to add InternalsVisibleTo to ImTK.csproj.
-        internal void Render()
+        /// <summary>
+        /// 觸發元件渲染的公開入口點。
+        /// 負責處理防護層邏輯 (PushID/PopID、MouseHover推導、事件分派)，並呼叫 OnRenderLayout。
+        /// 不可被覆寫，子類別應實作 OnRenderLayout 或 OnRenderSelf。
+        /// </summary>
+        public void Render()
         {
             if (m_useAutoId)
             {

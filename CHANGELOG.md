@@ -7,11 +7,17 @@
 
 ## [Unreleased]
 ### Added (新增)
+- 實作了 ImGui 選單系統 (`MenuView`, `MenuItem`)，支援容器與可點擊末端節點的職責分離。
+- `MenuView` 支援基於 `priority` 的自動排序機制，以及對於跨度大於 50 的項目自動插入 `ImGui.Separator()`。
+- 提供路徑式 (Path-based) 選單建立語法糖 `AddItem` 與 `AddMenu`，並具備節點衝突的型別防護。
+- 新增 `MainMenuModule`，透過 `Panel.RequireArea` 配置保留頂層選單空間，實現全域 `MenuBar`。
+- 新增 `[MainMenu(string path, int priority)]` 屬性標籤，支援對靜態方法、欄位與屬性進行全域 Assembly 掃描與自動選單掛載。
 - `ImTK.UI.Button` 元件，提供基本的按鈕渲染能力與建構子語法糖 (`text`, `onClicked`)。
 - `ImTK.UI.ClickEvent` 延遲事件，允許按鈕點擊事件透過 `EventDispatcher` 推遲至安全的 `LogicUpdate` 階段執行。
 - `ImTK/docs/UI/Element/` 文檔目錄，用於收納未來新增的各類 UI 元件規格。
 
 ### Fixed (修復)
+- 修正 `MainMenuModule` 在繪製 MenuBar 容器時，由於 ImGui 預設 `WindowMinSize` 大於我們給定的高度，導致產生透明 Hit-box 擋住下方 Docking 標題列滑鼠拖曳事件的問題（透過推送 `ImGuiStyleVar.WindowMinSize` 至 `0,0` 解決）。
 - 修正 `TestRunnerModule` 內的 `TestReportWindow` 統計狀態異常問題（修正 Pending 顯示判斷與顏色標示）。
 - 修正 `EventBubbleTest` 測試失敗問題：將原有的 `ImGui.Button` 替換為 `ImTK.UI.Button` 以解決在 `GuiRender` 階段因直接修改視覺樹而觸發的生命週期保護機制 (CheckSafeState)。
 
@@ -46,6 +52,7 @@
 - 新增嚴格的 `NamingConventions.md` 命名規範，確立大小寫、前綴以及元件後綴的規則。
 
 ### Changed (變更)
+- 將 `VisualElement.Render()` 由 `internal` 修改為 `public`，確立其為驅動視覺樹渲染的公開鎖定入口，並徹底移除了內部為了規避權限而使用的 C# Reflection 渲染呼叫，大幅提升效能。
 - 重構了現有 Database 相關測試，將其整合至新的 `IHeadlessTest` 框架中。
 - 於 `AGENT.md` 補齊 `ImTKModule` 必須擁有「單一、無參數、非公開」建構函式的限制規範。
 - 修正 `EventDispatcher` 的事件氣泡 (Bubbling) 路徑。事件現在嚴格沿著物理樹 (`hierarchy.parent`) 向上傳遞，修復了封裝內部元件 (Shadow DOM) 時事件斷層的問題。
