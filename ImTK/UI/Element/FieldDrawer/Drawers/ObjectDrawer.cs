@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace ImTK.UI
 {
@@ -7,6 +8,12 @@ namespace ImTK.UI
     public class ObjectDrawer : FieldDrawer<object>
     {
         private bool m_initialized = false;
+        private Dictionary<VisualElement, MemberInfo> m_memberMap = new Dictionary<VisualElement, MemberInfo>();
+
+        public ObjectDrawer()
+        {
+            layoutMode = DrawerLayoutMode.Expand;
+        }
 
         public override void SetValueWithoutNotify(object newValue)
         {
@@ -27,6 +34,7 @@ namespace ImTK.UI
         private void RebuildChildren()
         {
             Clear(); // clear visual children
+            m_memberMap.Clear();
             m_initialized = false;
 
             if (m_value == null) return;
@@ -49,6 +57,7 @@ namespace ImTK.UI
 
                     if (drawer is VisualElement ve)
                     {
+                        m_memberMap[ve] = field;
                         ve.RegisterCallback<ValueChangedEvent>(OnChildValueChanged);
                         Add(ve);
                     }
@@ -71,6 +80,7 @@ namespace ImTK.UI
 
                     if (drawer is VisualElement ve)
                     {
+                        m_memberMap[ve] = prop;
                         ve.RegisterCallback<ValueChangedEvent>(OnChildValueChanged);
                         Add(ve);
                     }
@@ -82,11 +92,20 @@ namespace ImTK.UI
 
         private void OnChildValueChanged(ValueChangedEvent evt)
         {
-            if (m_value == null) return;
+            if (m_value == null || evt.source == null) return;
 
-            // Optional: update the actual field/property if we cache member info,
-            // but for simplicity, we assume the compound drawer just signals that "some child changed".
-            // A more advanced binder would sync back the value.
+            if (m_memberMap.TryGetValue(evt.source, out var memberInfo))
+            {
+                if (memberInfo is FieldInfo field)
+                {
+                    field.SetValue(m_value, evt.newValueObj);
+                }
+                else if (memberInfo is PropertyInfo prop)
+                {
+                    prop.SetValue(m_value, evt.newValueObj);
+                }
+            }
+
             NotifyValueChanged();
         }
 

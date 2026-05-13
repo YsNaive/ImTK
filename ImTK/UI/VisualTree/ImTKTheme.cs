@@ -12,6 +12,7 @@ namespace ImTK.UI
         private Color? m_background2;
         private Color? m_textPrimary;
         private Color? m_primaryColor;
+        private float? m_drawerLabelWidth;
 
         public Color Background1
         {
@@ -57,6 +58,17 @@ namespace ImTK.UI
             set => m_primaryColor = value;
         }
 
+        public float DrawerLabelWidth
+        {
+            get
+            {
+                if (m_drawerLabelWidth.HasValue) return m_drawerLabelWidth.Value;
+                if (parent != null) return parent.DrawerLabelWidth;
+                return 150.0f; // Absolute fallback
+            }
+            set => m_drawerLabelWidth = value;
+        }
+
         // --- Default Themes ---
 
         private static ImTKTheme s_defaultDark;
@@ -72,6 +84,7 @@ namespace ImTK.UI
                         m_background2 = new Color(0.11f, 0.11f, 0.11f, 1.0f),
                         m_textPrimary = new Color(1.0f, 1.0f, 1.0f, 1.0f),
                         m_primaryColor = new Color(0.15f, 0.35f, 0.65f, 1.0f),
+                        m_drawerLabelWidth = 150.0f
                     };
                 }
                 return s_defaultDark;
@@ -91,6 +104,7 @@ namespace ImTK.UI
                         m_background2 = new Color(0.8f, 0.8f, 0.8f, 1.0f),
                         m_textPrimary = new Color(0.0f, 0.0f, 0.0f, 1.0f),
                         m_primaryColor = new Color(0.4f, 0.6f, 0.9f, 1.0f),
+                        m_drawerLabelWidth = 150.0f
                     };
                 }
                 return s_defaultLight;
