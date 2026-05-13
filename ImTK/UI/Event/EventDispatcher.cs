@@ -59,6 +59,13 @@ namespace ImTK.UI
             {
                 UIEventBase evt = s_eventQueue.Dequeue();
 
+                // Check if this event type does not bubble
+                bool bubbles = true;
+                if (evt is ValueChangedEvent valEvt)
+                {
+                    bubbles = valEvt.bubbles;
+                }
+
                 try
                 {
                     VisualElement currentElement = evt.source;
@@ -68,7 +75,7 @@ namespace ImTK.UI
                         evt.current = currentElement;
                         currentElement.HandleEvent(evt);
 
-                        if (evt.IsPropagationStopped)
+                        if (evt.IsPropagationStopped || !bubbles)
                         {
                             break;
                         }
