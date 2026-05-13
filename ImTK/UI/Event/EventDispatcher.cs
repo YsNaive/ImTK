@@ -59,9 +59,9 @@ namespace ImTK.UI
             {
                 UIEventBase evt = s_eventQueue.Dequeue();
 
-                // Check if this event type does not bubble
+                // Check if this event type does not bubble via IValueChangedEvent interface
                 bool bubbles = true;
-                if (evt is ValueChangedEvent valEvt)
+                if (evt is IValueChangedEvent valEvt)
                 {
                     bubbles = valEvt.bubbles;
                 }

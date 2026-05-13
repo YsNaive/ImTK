@@ -2,34 +2,23 @@ using System;
 
 namespace ImTK.UI
 {
-    public abstract class ValueChangedEvent : UIEventBase
-    {
-        public abstract object previousValueObj { get; }
-        public abstract object newValueObj { get; }
-        public bool isInternalChange { get; protected internal set; }
-        public bool bubbles { get; internal set; } = false;
-
-        protected internal override void Init()
-        {
-            base.Init();
-            isInternalChange = false;
-            bubbles = false;
-        }
-    }
-
-    public class ValueChangedEvent<T> : ValueChangedEvent
+    public class ValueChangedEvent<T> : UIEventBase, IValueChangedEvent
     {
         public T previousValue { get; private set; }
         public T newValue { get; private set; }
+        public bool isInternalChange { get; private set; }
+        public bool bubbles { get; internal set; } = false;
 
-        public override object previousValueObj => previousValue;
-        public override object newValueObj => newValue;
+        public object previousValueObj => previousValue;
+        public object newValueObj => newValue;
 
         protected internal override void Init()
         {
             base.Init();
             previousValue = default;
             newValue = default;
+            isInternalChange = false;
+            bubbles = false;
         }
 
         public override void Dispose()

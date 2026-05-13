@@ -58,7 +58,7 @@ namespace ImTK.UI
                     if (drawer is VisualElement ve)
                     {
                         m_memberMap[ve] = field;
-                        ve.RegisterCallback<ValueChangedEvent>(OnChildValueChanged);
+                        RegisterGenericCallback(ve, field.FieldType);
                         Add(ve);
                     }
                 }
@@ -81,7 +81,7 @@ namespace ImTK.UI
                     if (drawer is VisualElement ve)
                     {
                         m_memberMap[ve] = prop;
-                        ve.RegisterCallback<ValueChangedEvent>(OnChildValueChanged);
+                        RegisterGenericCallback(ve, prop.PropertyType);
                         Add(ve);
                     }
                 }
@@ -90,11 +90,30 @@ namespace ImTK.UI
             m_initialized = true;
         }
 
-        private void OnChildValueChanged(ValueChangedEvent evt)
+        private void RegisterGenericCallback(VisualElement element, Type valueType)
         {
-            if (m_value == null || evt.source == null) return;
+            var method = GetType().GetMethod(nameof(RegisterGenericCallbackInternal), BindingFlags.NonPublic | BindingFlags.Instance);
+            var genericMethod = method.MakeGenericMethod(valueType);
+            genericMethod.Invoke(this, new object[] { element });
+        }
 
-            if (m_memberMap.TryGetValue(evt.source, out var memberInfo))
+        private void RegisterGenericCallbackInternal<T>(VisualElement element)
+        {
+            element.RegisterCallback<ValueChangedEvent<T>>(OnChildValueChangedGeneric<T>);
+        }
+
+        private void OnChildValueChangedGeneric<T>(ValueChangedEvent<T> evt)
+        {
+            OnChildValueChanged(evt);
+        }
+
+        private void OnChildValueChanged(IValueChangedEvent evt)
+        {
+            if (m_value == null || ((UIEventBase)evt).source == null) return;
+
+            var sourceElement = ((UIEventBase)evt).source;
+
+            if (m_memberMap.TryGetValue(sourceElement, out var memberInfo))
             {
                 if (memberInfo is FieldInfo field)
                 {
