@@ -18,18 +18,15 @@ namespace ImTK.Test.UI
 
         private void TestValueChangedEvent()
         {
-            // Value Type
             var intEvt = ValueChangedEvent<int>.GetPooled(5, 10);
             ImTKAssert.IsFalse(intEvt.isInternalChange, "Int change should not be internal change.");
             intEvt.Dispose();
 
-            // Ref Type - Same Reference
             var obj = new object();
             var refEvt = ValueChangedEvent<object>.GetPooled(obj, obj);
             ImTKAssert.IsTrue(refEvt.isInternalChange, "Same reference should be marked as internal change.");
             refEvt.Dispose();
 
-            // Ref Type - Different Reference
             var obj2 = new object();
             var diffRefEvt = ValueChangedEvent<object>.GetPooled(obj, obj2);
             ImTKAssert.IsFalse(diffRefEvt.isInternalChange, "Different reference should not be internal change.");
@@ -40,10 +37,13 @@ namespace ImTK.Test.UI
         {
             var drawer = new IntField();
             drawer.value = 5;
+            EventDispatcher.ProcessQueue(); // Clear queue
+
             bool eventFired = false;
             drawer.RegisterCallback<ValueChangedEvent<int>>(evt => eventFired = true);
 
             drawer.SetValueWithoutNotify(10);
+            EventDispatcher.ProcessQueue();
 
             ImTKAssert.IsFalse(eventFired, "SetValueWithoutNotify should not fire event.");
             ImTKAssert.AreEqual(10, drawer.value, "Value should be updated.");
@@ -53,16 +53,18 @@ namespace ImTK.Test.UI
         {
             var drawer = new IntField();
             drawer.value = 5;
+            EventDispatcher.ProcessQueue(); // Ensure initial set event is cleared
+
             bool eventFired = false;
             drawer.RegisterCallback<ValueChangedEvent<int>>(evt =>
             {
                 eventFired = true;
                 ImTKAssert.AreEqual(5, evt.previousValue);
-                ImTKAssert.AreEqual(5, evt.newValue); // Since we pass 5
+                ImTKAssert.AreEqual(5, evt.newValue);
             });
 
-            // Even if same value, SetValueWithChanged ignores equality check
             drawer.SetValueWithChanged(5);
+            EventDispatcher.ProcessQueue(); // Dispatch the event synchronously for test
 
             ImTKAssert.IsTrue(eventFired, "SetValueWithChanged should fire event even if value is the same.");
         }
@@ -72,6 +74,7 @@ namespace ImTK.Test.UI
             var drawer = new ObjectDrawer();
             var dummy = new object();
             drawer.value = dummy;
+            EventDispatcher.ProcessQueue();
 
             bool eventFired = false;
             drawer.RegisterCallback<ValueChangedEvent<object>>(evt =>
@@ -82,6 +85,7 @@ namespace ImTK.Test.UI
             });
 
             drawer.NotifyValueChanged();
+            EventDispatcher.ProcessQueue();
 
             ImTKAssert.IsTrue(eventFired, "NotifyValueChanged should fire event.");
         }
