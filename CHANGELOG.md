@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 ### Added (新增)
+- 實作了 `FieldDrawer` 系統，支援動態綁定資料型別至 UI 元件 (類似 Unity PropertyDrawer)。
+- 實作了雙向資料流與安全攔截機制 (`SetValueWithoutNotify`, `SetValueWithChanged`)，避免 DataBinding 循環。
+- 新增了 `ValueChangedEvent<T>` (繼承自輕量級 `IValueChangedEvent`)，支援 `isInternalChange` 判斷，且預設不冒泡。
+- 實作了 `FieldDrawerRegistry`，支援基於 `[CustomFieldDrawer]` 的型別映射、繼承遞迴回退與 `requiredModifier` 修飾器過濾。
+- 實作了 `FieldDrawerFactory` 提供 Fluent API 動態建置 Drawer 與注入修飾器屬性。
+- 實作了 `ObjectDrawer`，利用反射與 `IValueChangedEvent` 將 UI 的複雜嵌套修改雙向寫回原始物件。
+- 在 `ImTKTheme` 引入 `DrawerLabelWidth`，並在 `FieldDrawer` 中實作 `Inline` / `Expand` 自動對齊排版。
 - 實作 `ImTK.Color` 結構，支援 RGBA/HSV 色彩轉換，以及與 `Vector4` 和 `uint` (ImGui 原生格式) 的隱式/顯式轉換。
 - 實作了記憶體最佳化的 `VisualElementStyle` (Style 系統)。透過 C# Union 結構 (`StyleEntry`) 與延遲初始化陣列，達成修改樣式時的零裝箱 (Zero Boxing) 與極低記憶體開銷。
 - 實作了基於層疊與 Fallback 機制的 `ImTKTheme` (Theme 系統)。允許透過 `parent` 指標輕鬆建立繼承變體，並在 `Render()` 管線中自動處理 Override 與 Theme 之間的優先級競爭。
@@ -24,6 +31,7 @@
 - `ImTK/docs/UI/Element/` 文檔目錄，用於收納未來新增的各類 UI 元件規格。
 
 ### Fixed (修復)
+- 修復了無頭測試中全域 `EventDispatcher` 駐列污染的架構漏洞，實作 `ClearQueue` 強制在每次測試前後隔離環境。
 - 修正 `MainMenuModule` 在繪製 MenuBar 容器時，由於 ImGui 預設 `WindowMinSize` 大於我們給定的高度，導致產生透明 Hit-box 擋住下方 Docking 標題列滑鼠拖曳事件的問題（透過推送 `ImGuiStyleVar.WindowMinSize` 至 `0,0` 解決）。
 - 修正 `TestRunnerModule` 內的 `TestReportWindow` 統計狀態異常問題（修正 Pending 顯示判斷與顏色標示）。
 - 修正 `EventBubbleTest` 測試失敗問題：將原有的 `ImGui.Button` 替換為 `ImTK.UI.Button` 以解決在 `GuiRender` 階段因直接修改視覺樹而觸發的生命週期保護機制 (CheckSafeState)。

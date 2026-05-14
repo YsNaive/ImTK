@@ -10,6 +10,7 @@ namespace ImTK.Test.UI.Event
 
         private class DummyEvent : UIEventBase
         {
+            public bool bubbles = true;
             public override void Dispose() { }
         }
 

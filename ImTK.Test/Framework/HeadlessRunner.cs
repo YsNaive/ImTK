@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using ImTK.Log;
+using ImTK.UI;
 
 namespace ImTK.Test.Framework
 {
@@ -44,15 +45,25 @@ namespace ImTK.Test.Framework
 
                 try
                 {
+                    // Ensure the environment is perfectly clean before test
+                    EventDispatcher.ClearQueue();
+
                     var testInstance = (IHeadlessTest)Activator.CreateInstance(type);
                     s_log.Info($"Running {type.Name}...");
                     testInstance.Run();
+
+                    // Cleanup after test in case it left dangling events
+                    EventDispatcher.ClearQueue();
+
                     passed++;
                     result.Passed = true;
                     s_log.Info($"[PASS] {type.Name}");
                 }
                 catch (Exception ex)
                 {
+                    // Cleanup even if failed
+                    EventDispatcher.ClearQueue();
+
                     failed++;
                     result.Passed = false;
                     result.ErrorMessage = ex.Message;

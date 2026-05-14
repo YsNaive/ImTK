@@ -59,6 +59,13 @@ namespace ImTK.UI
             {
                 UIEventBase evt = s_eventQueue.Dequeue();
 
+                // Check if this event type does not bubble via IValueChangedEvent interface
+                bool bubbles = true;
+                if (evt is IValueChangedEvent valEvt)
+                {
+                    bubbles = valEvt.bubbles;
+                }
+
                 try
                 {
                     VisualElement currentElement = evt.source;
@@ -68,7 +75,7 @@ namespace ImTK.UI
                         evt.current = currentElement;
                         currentElement.HandleEvent(evt);
 
-                        if (evt.IsPropagationStopped)
+                        if (evt.IsPropagationStopped || !bubbles)
                         {
                             break;
                         }
@@ -85,6 +92,19 @@ namespace ImTK.UI
                     evt.Dispose();
                 }
             }
+        }
+
+        /// <summary>
+        /// Clears all pending events in the queue safely. Useful for resetting state between isolated tests.
+        /// </summary>
+        public static void ClearQueue()
+        {
+            while (s_eventQueue.Count > 0)
+            {
+                var evt = s_eventQueue.Dequeue();
+                evt.Dispose();
+            }
+            s_hierarchyDirtyElements.Clear();
         }
     }
 }
