@@ -20,7 +20,7 @@
 - 實作了 `ElementFlags<T>` 泛型位元運算基底，讓特定 UI 元件 (如 `Window`) 可以使用直覺的布林屬性語法糖 (`window.flags.noTitleBar`) 來封裝 ImGui 底層繁瑣的 Enum 操作。
 - 為 `VisualElement`, `Window`, `Button` 實作了 `ApplyTheme` 虛擬方法，實現組件的預設主題映射。
 - 於 `ImTK.Test` 專案中補齊了 `ColorTests`, `ElementFlagsTests`, `StyleThemeTests` 全面測試，並在報表視窗新增了即時切換明暗主題預覽的功能。
-- 更新 `ImTK/docs/UI/VisualTree.md` 文件，詳述 Style Table 的記憶體模型、Theme 繼承系統以及 Flag 封裝架構。
+- 更新 `ImTK/docs/UI/VisualTree.md` 文件，將 Style 系統與 Theme 系統詳述整合其中。
 - 實作了 ImGui 選單系統 (`MenuView`, `MenuItem`)，支援容器與可點擊末端節點的職責分離。
 - `MenuView` 支援基於 `priority` 的自動排序機制，以及對於跨度大於 50 的項目自動插入 `ImGui.Separator()`。
 - 提供路徑式 (Path-based) 選單建立語法糖 `AddItem` 與 `AddMenu`，並具備節點衝突的型別防護。
@@ -64,7 +64,7 @@
 - 新增 `ImTKSilk.Run()` 驅動程式，用於初始化 Silk.NET 並將 ImGui 控制器與 ImTK 生命週期完美整合。
 - 透過 `ImTKSilkConstant` 啟用 ImGui Viewports，原生支援多視窗佈局。
 - 於 `docs/` 目錄下建立基礎文檔結構，依子系統劃分 (`Core`, `UI`, `Database`, `Log`, `Event`, `Project`)。
-- 新增嚴格的 `NamingConventions.md` 命名規範，確立大小寫、前綴以及元件後綴的規則。
+- 新增嚴格的 `Project/NamingConventions.md` 命名規範，確立大小寫、前綴以及元件後綴的規則。
 
 ### Changed (變更)
 - 將 `VisualElement.Render()` 由 `internal` 修改為 `public`，確立其為驅動視覺樹渲染的公開鎖定入口，並徹底移除了內部為了規避權限而使用的 C# Reflection 渲染呼叫，大幅提升效能。
