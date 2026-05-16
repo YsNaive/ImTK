@@ -20,22 +20,7 @@ namespace ImTK.UI
             {
                 this.onClicked += onClicked;
             }
-        }
-
-        protected override void ApplyTheme(ImTKTheme theme)
-        {
-            base.ApplyTheme(theme);
-            style.ApplyThemeColor(ImGuiCol.Button, theme.PrimaryColor);
-
-            Color primary = theme.PrimaryColor;
-            Color hover = primary;
-            hover.v = Math.Min(1.0f, primary.v + 0.1f); // Brighten slightly for hover
-
-            Color active = primary;
-            active.v = Math.Max(0.0f, primary.v - 0.1f); // Darken slightly for active
-
-            style.ApplyThemeColor(ImGuiCol.ButtonHovered, hover);
-            style.ApplyThemeColor(ImGuiCol.ButtonActive, active);
+            classList.Add("Button");
         }
 
         protected override void OnRenderSelf()

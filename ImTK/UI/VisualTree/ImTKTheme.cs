@@ -6,67 +6,57 @@ namespace ImTK.UI
 {
     public class ImTKTheme
     {
+        public static readonly int DrawerLabelWidthToken = new ImTK.Core.HashedString("--drawer-label-width").Hash;
+
         public ImTKTheme parent { get; set; }
 
-        private Color? m_background1;
-        private Color? m_background2;
-        private Color? m_textPrimary;
-        private Color? m_primaryColor;
-        private float? m_drawerLabelWidth;
+        private System.Collections.Generic.Dictionary<int, Color> m_colorTokens = new System.Collections.Generic.Dictionary<int, Color>();
+        private System.Collections.Generic.Dictionary<int, float> m_floatTokens = new System.Collections.Generic.Dictionary<int, float>();
+        private System.Collections.Generic.Dictionary<int, Vector2> m_vector2Tokens = new System.Collections.Generic.Dictionary<int, Vector2>();
 
-        public Color Background1
+        public void SetColorToken(ImTK.Core.HashedString token, Color color)
         {
-            get
-            {
-                if (m_background1.HasValue) return m_background1.Value;
-                if (parent != null) return parent.Background1;
-                return new Color(0.1f, 0.1f, 0.1f, 1f); // Absolute fallback
-            }
-            set => m_background1 = value;
+            m_colorTokens[token.Hash] = color;
         }
 
-        public Color Background2
+        public void SetFloatToken(ImTK.Core.HashedString token, float value)
         {
-            get
-            {
-                if (m_background2.HasValue) return m_background2.Value;
-                if (parent != null) return parent.Background2;
-                return new Color(0.15f, 0.15f, 0.15f, 1f); // Absolute fallback
-            }
-            set => m_background2 = value;
+            m_floatTokens[token.Hash] = value;
         }
 
-        public Color TextPrimary
+        public void SetVector2Token(ImTK.Core.HashedString token, Vector2 value)
         {
-            get
-            {
-                if (m_textPrimary.HasValue) return m_textPrimary.Value;
-                if (parent != null) return parent.TextPrimary;
-                return Color.White; // Absolute fallback
-            }
-            set => m_textPrimary = value;
+            m_vector2Tokens[token.Hash] = value;
         }
 
-        public Color PrimaryColor
+        public bool TryGetColorToken(int tokenHash, out Color color)
         {
-            get
-            {
-                if (m_primaryColor.HasValue) return m_primaryColor.Value;
-                if (parent != null) return parent.PrimaryColor;
-                return new Color(0.2f, 0.5f, 0.8f, 1f); // Absolute fallback
-            }
-            set => m_primaryColor = value;
+            if (m_colorTokens.TryGetValue(tokenHash, out color))
+                return true;
+            if (parent != null)
+                return parent.TryGetColorToken(tokenHash, out color);
+            color = default;
+            return false;
         }
 
-        public float DrawerLabelWidth
+        public bool TryGetFloatToken(int tokenHash, out float value)
         {
-            get
-            {
-                if (m_drawerLabelWidth.HasValue) return m_drawerLabelWidth.Value;
-                if (parent != null) return parent.DrawerLabelWidth;
-                return 150.0f; // Absolute fallback
-            }
-            set => m_drawerLabelWidth = value;
+            if (m_floatTokens.TryGetValue(tokenHash, out value))
+                return true;
+            if (parent != null)
+                return parent.TryGetFloatToken(tokenHash, out value);
+            value = default;
+            return false;
+        }
+
+        public bool TryGetVector2Token(int tokenHash, out Vector2 value)
+        {
+            if (m_vector2Tokens.TryGetValue(tokenHash, out value))
+                return true;
+            if (parent != null)
+                return parent.TryGetVector2Token(tokenHash, out value);
+            value = default;
+            return false;
         }
 
         // --- Default Themes ---
@@ -78,14 +68,21 @@ namespace ImTK.UI
             {
                 if (s_defaultDark == null)
                 {
-                    s_defaultDark = new ImTKTheme()
-                    {
-                        m_background1 = new Color(0.06f, 0.06f, 0.06f, 1.0f),
-                        m_background2 = new Color(0.11f, 0.11f, 0.11f, 1.0f),
-                        m_textPrimary = new Color(1.0f, 1.0f, 1.0f, 1.0f),
-                        m_primaryColor = new Color(0.15f, 0.35f, 0.65f, 1.0f),
-                        m_drawerLabelWidth = 150.0f
-                    };
+                    s_defaultDark = new ImTKTheme();
+                    s_defaultDark.SetColorToken("--background-1", new Color(0.06f, 0.06f, 0.06f, 1.0f));
+                    s_defaultDark.SetColorToken("--background-2", new Color(0.11f, 0.11f, 0.11f, 1.0f));
+                    s_defaultDark.SetColorToken("--text-primary", new Color(1.0f, 1.0f, 1.0f, 1.0f));
+                    s_defaultDark.SetColorToken("--primary-color", new Color(0.15f, 0.35f, 0.65f, 1.0f));
+
+                    Color hover = new Color(0.15f, 0.35f, 0.65f, 1.0f);
+                    hover.v = Math.Min(1.0f, hover.v + 0.1f);
+                    s_defaultDark.SetColorToken("--button-hovered", hover);
+
+                    Color active = new Color(0.15f, 0.35f, 0.65f, 1.0f);
+                    active.v = Math.Max(0.0f, active.v - 0.1f);
+                    s_defaultDark.SetColorToken("--button-active", active);
+
+                    s_defaultDark.SetFloatToken("--drawer-label-width", 150.0f);
                 }
                 return s_defaultDark;
             }
@@ -98,14 +95,21 @@ namespace ImTK.UI
             {
                 if (s_defaultLight == null)
                 {
-                    s_defaultLight = new ImTKTheme()
-                    {
-                        m_background1 = new Color(0.9f, 0.9f, 0.9f, 1.0f),
-                        m_background2 = new Color(0.8f, 0.8f, 0.8f, 1.0f),
-                        m_textPrimary = new Color(0.0f, 0.0f, 0.0f, 1.0f),
-                        m_primaryColor = new Color(0.4f, 0.6f, 0.9f, 1.0f),
-                        m_drawerLabelWidth = 150.0f
-                    };
+                    s_defaultLight = new ImTKTheme();
+                    s_defaultLight.SetColorToken("--background-1", new Color(0.9f, 0.9f, 0.9f, 1.0f));
+                    s_defaultLight.SetColorToken("--background-2", new Color(0.8f, 0.8f, 0.8f, 1.0f));
+                    s_defaultLight.SetColorToken("--text-primary", new Color(0.0f, 0.0f, 0.0f, 1.0f));
+                    s_defaultLight.SetColorToken("--primary-color", new Color(0.4f, 0.6f, 0.9f, 1.0f));
+
+                    Color hover = new Color(0.4f, 0.6f, 0.9f, 1.0f);
+                    hover.v = Math.Min(1.0f, hover.v + 0.1f);
+                    s_defaultLight.SetColorToken("--button-hovered", hover);
+
+                    Color active = new Color(0.4f, 0.6f, 0.9f, 1.0f);
+                    active.v = Math.Max(0.0f, active.v - 0.1f);
+                    s_defaultLight.SetColorToken("--button-active", active);
+
+                    s_defaultLight.SetFloatToken("--drawer-label-width", 150.0f);
                 }
                 return s_defaultLight;
             }

@@ -22,28 +22,54 @@ namespace ImTK.UI
 
         public VisualElementStyle style { get; } = new VisualElementStyle();
 
+        public StyleClass classList { get; private set; }
+
+        public StyleSheet localStyleSheet { get; set; }
+
+        internal bool m_isStyleDirty = true;
+        internal List<StyleProperty> m_computedStyles;
+
         public VisualElement()
         {
             m_elementId = ++s_elementCounter;
             hierarchy = new VisualElementHierarchy(this);
+
+            classList = new StyleClass();
+            classList.OnClassChanged = MarkStyleDirty;
         }
 
-        public void SetTheme(ImTKTheme theme)
+        public void MarkStyleDirty()
         {
-            ApplyTheme(theme);
-            for (int i = 0; i < hierarchy.childCount; i++)
+            m_isStyleDirty = true;
+            // Children's cascaded styles might need update
+            int count = hierarchy.childCount;
+            for (int i = 0; i < count; i++)
             {
-                hierarchy.childAt(i).SetTheme(theme);
+                hierarchy.childAt(i).MarkStyleDirty();
             }
         }
 
-        protected virtual void ApplyTheme(ImTKTheme theme)
+        private ImTKTheme m_theme;
+
+        public ImTKTheme theme
         {
-            style.ClearThemeStyles();
-            style.ApplyThemeColor(ImGuiCol.Text, theme.TextPrimary);
-            // Default background mapping could be to Background2 for normal elements
-            // Let derived classes like Window handle their own specific backgrounds if needed
+            get
+            {
+                if (m_theme != null) return m_theme;
+                if (parent != null) return parent.theme;
+                return ImTKTheme.DefaultDark; // Root fallback
+            }
+            set
+            {
+                if (m_theme != value)
+                {
+                    m_theme = value;
+                    MarkStyleDirty();
+                }
+            }
         }
+
+        // ApplyTheme is removed as Theme token resolution is now dynamically handled in ComputeStyle
 
         public NodeType GetNodeType()
         {
@@ -215,6 +241,12 @@ namespace ImTK.UI
         /// </summary>
         public void Render()
         {
+            if (m_isStyleDirty)
+            {
+                m_computedStyles = ComputeStyle.Overlay(this);
+                m_isStyleDirty = false;
+            }
+
             if (m_useAutoId)
             {
                 ImGui.PushID(m_elementId);
@@ -225,64 +257,7 @@ namespace ImTK.UI
                 ImGui.SetNextItemAllowOverlap();
             }
 
-            int pushedColors = 0;
-            int pushedVars = 0;
-
-            // Helper to push a style entry
-            void PushStyleEntry(StyleEntry entry)
-            {
-                if (entry.Type == StyleVarType.Color)
-                {
-                    ImGui.PushStyleColor((ImGuiCol)entry.Key, entry.ColorValue);
-                    pushedColors++;
-                }
-                else if (entry.Type == StyleVarType.Float)
-                {
-                    ImGui.PushStyleVar((ImGuiStyleVar)entry.Key, entry.FloatValue);
-                    pushedVars++;
-                }
-                else if (entry.Type == StyleVarType.Vector2)
-                {
-                    ImGui.PushStyleVar((ImGuiStyleVar)entry.Key, entry.Vector2Value);
-                    pushedVars++;
-                }
-            }
-
-            // 1. Push Theme styles
-            if (style.m_themeStyles != null)
-            {
-                for (int i = 0; i < style.m_themeStyles.Count; i++)
-                {
-                    var themeEntry = style.m_themeStyles[i];
-                    // Only push if it is NOT overridden
-                    bool isOverridden = false;
-                    if (style.m_overrideStyles != null)
-                    {
-                        for (int j = 0; j < style.m_overrideStyles.Count; j++)
-                        {
-                            if (style.m_overrideStyles[j].Type == themeEntry.Type && style.m_overrideStyles[j].Key == themeEntry.Key)
-                            {
-                                isOverridden = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!isOverridden)
-                    {
-                        PushStyleEntry(themeEntry);
-                    }
-                }
-            }
-
-            // 2. Push Override styles
-            if (style.m_overrideStyles != null)
-            {
-                for (int i = 0; i < style.m_overrideStyles.Count; i++)
-                {
-                    PushStyleEntry(style.m_overrideStyles[i]);
-                }
-            }
+            ComputeStyle.Push(m_computedStyles, out int pushedColors, out int pushedVars);
 
             OnRenderLayout();
 
@@ -321,15 +296,7 @@ namespace ImTK.UI
 
             m_wasHovered = isEffectivelyHovered;
 
-            if (pushedColors > 0)
-            {
-                ImGui.PopStyleColor(pushedColors);
-            }
-
-            if (pushedVars > 0)
-            {
-                ImGui.PopStyleVar(pushedVars);
-            }
+            ComputeStyle.Pop(pushedColors, pushedVars);
 
             if (m_useAutoId)
             {
