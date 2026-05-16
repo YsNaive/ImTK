@@ -6,6 +6,7 @@ namespace ImTK.Test.UI
 {
     public class FieldDrawerTest : IHeadlessTest
     {
+
         public void Run()
         {
             TestValueChangedEvent();
@@ -14,7 +15,83 @@ namespace ImTK.Test.UI
             TestNotifyValueChanged();
             TestRegistryInheritance();
             TestFactoryModifiers();
+            TestObjectDrawerDeepNesting();
+            TestFactoryFallback();
+            TestCircularUpdateProtection();
+            TestLayoutMode();
         }
+
+        private class NestedClass
+        {
+            public int InnerVal = 42;
+        }
+
+        private class ParentClass
+        {
+            public string Name = "Parent";
+            public NestedClass Child = new NestedClass();
+        }
+
+        private void TestObjectDrawerDeepNesting()
+        {
+            var drawer = new ObjectDrawer();
+            var data = new ParentClass();
+            drawer.value = data;
+
+            // Rebuild happens inside Render or manually if we force it.
+            // Since we're headless, we can mock the render or rely on value setter
+            // the setter calls RebuildChildren in ObjectDrawer.
+
+            // Check if children are created
+            int childCount = 0;
+            foreach (var child in drawer.hierarchy.Children())
+            {
+                childCount++;
+            }
+            ImTKAssert.IsTrue(childCount > 0, "ObjectDrawer should generate child elements for properties.");
+        }
+
+        private class UnknownType { }
+
+        private void TestFactoryFallback()
+        {
+            // Factory should fallback to ObjectDrawer or return null when allowInheritType allows object
+            // object is the root, ObjectDrawer is registered with allowInheritType = true
+            var drawer = FieldDrawerFactory.Create().FromType(typeof(UnknownType)).Build();
+            ImTKAssert.NotNull(drawer, "Factory should fallback and return a drawer (likely ObjectDrawer) for unknown types due to inherit object.");
+            ImTKAssert.IsTrue(drawer is ObjectDrawer, "Fallback drawer should be ObjectDrawer.");
+        }
+
+        private void TestCircularUpdateProtection()
+        {
+            var drawer = new IntField();
+            drawer.value = 10;
+            EventDispatcher.ProcessQueue();
+
+            int eventCount = 0;
+            drawer.RegisterCallback<ValueChangedEvent<int>>(evt =>
+            {
+                eventCount++;
+                // Simulate data binding triggering a set without notify
+                drawer.SetValueWithoutNotify(evt.newValue);
+            });
+
+            drawer.value = 20; // Trigger once
+            EventDispatcher.ProcessQueue();
+
+            ImTKAssert.AreEqual(1, eventCount, "Event should only fire once, preventing circular loop.");
+        }
+
+        private void TestLayoutMode()
+        {
+            var drawer = new IntField();
+            drawer.layoutMode = DrawerLayoutMode.Expand;
+            ImTKAssert.AreEqual(DrawerLayoutMode.Expand, drawer.layoutMode, "LayoutMode should be modifiable.");
+
+            var objDrawer = new ObjectDrawer();
+            ImTKAssert.AreEqual(DrawerLayoutMode.Expand, objDrawer.layoutMode, "ObjectDrawer should default to Expand mode.");
+        }
+
 
         private void TestValueChangedEvent()
         {
