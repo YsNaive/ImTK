@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using ImGuiNET;
+using System.Numerics;
 using ImTK.Core;
 
-namespace ImTK.UI
+namespace ImTK.UI.Style
 {
     public class StyleBlock
     {
@@ -14,13 +14,15 @@ namespace ImTK.UI
             ClassName = className;
         }
 
-        public StyleBlock SetColor(ImGuiCol col, StyleValue<Color> value)
+        // --- Core Setters ---
+
+        public StyleBlock SetColor(ImTKStyleKey key, StyleValue<Color> value)
         {
-            RemoveProperty(StyleVarType.Color, (int)col);
+            RemoveProperty(StyleVarType.Color, (int)key);
 
             var prop = new StyleProperty
             {
-                Key = (int)col,
+                Key = (int)key,
                 Type = StyleVarType.Color,
                 Keyword = value.Keyword
             };
@@ -38,13 +40,13 @@ namespace ImTK.UI
             return this;
         }
 
-        public StyleBlock SetVar(ImGuiStyleVar styleVar, StyleValue<float> value)
+        public StyleBlock SetFloat(ImTKStyleKey key, StyleValue<float> value)
         {
-            RemoveProperty(StyleVarType.Float, (int)styleVar);
+            RemoveProperty(StyleVarType.Float, (int)key);
 
             var prop = new StyleProperty
             {
-                Key = (int)styleVar,
+                Key = (int)key,
                 Type = StyleVarType.Float,
                 Keyword = value.Keyword
             };
@@ -62,13 +64,13 @@ namespace ImTK.UI
             return this;
         }
 
-        public StyleBlock SetVar(ImGuiStyleVar styleVar, StyleValue<System.Numerics.Vector2> value)
+        public StyleBlock SetVector2(ImTKStyleKey key, StyleValue<Vector2> value)
         {
-            RemoveProperty(StyleVarType.Vector2, (int)styleVar);
+            RemoveProperty(StyleVarType.Vector2, (int)key);
 
             var prop = new StyleProperty
             {
-                Key = (int)styleVar,
+                Key = (int)key,
                 Type = StyleVarType.Vector2,
                 Keyword = value.Keyword
             };
@@ -97,5 +99,15 @@ namespace ImTK.UI
                 }
             }
         }
+
+        // --- Fluent Syntax Sugar ---
+
+        public StyleBlock BackgroundColor(StyleValue<Color> value) => SetColor(ImTKStyleKey.BackgroundColor, value);
+        public StyleBlock TextColor(StyleValue<Color> value) => SetColor(ImTKStyleKey.TextColor, value);
+        public StyleBlock HoverColor(StyleValue<Color> value) => SetColor(ImTKStyleKey.HoverColor, value);
+        public StyleBlock ActiveColor(StyleValue<Color> value) => SetColor(ImTKStyleKey.ActiveColor, value);
+        public StyleBlock BorderColor(StyleValue<Color> value) => SetColor(ImTKStyleKey.BorderColor, value);
+
+        public StyleBlock BorderRadius(StyleValue<float> value) => SetFloat(ImTKStyleKey.BorderRadius, value);
     }
 }

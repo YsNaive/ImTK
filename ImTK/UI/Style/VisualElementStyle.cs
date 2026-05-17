@@ -1,10 +1,8 @@
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Numerics;
-using ImGuiNET;
 using ImTK.Core;
 
-namespace ImTK.UI
+namespace ImTK.UI.Style
 {
     public class VisualElementStyle
     {
@@ -14,42 +12,42 @@ namespace ImTK.UI
 
         // --- Low-level Override Setters ---
 
-        public void SetColor(ImGuiCol col, StyleValue<Color> value)
+        public void SetColor(ImTKStyleKey key, StyleValue<Color> value)
         {
             EnsureOverrideStyles();
-            RemoveEntry(StyleVarType.Color, (int)col);
+            RemoveEntry(StyleVarType.Color, (int)key);
 
             if (value.IsNull) return;
 
-            var prop = new StyleProperty { Type = StyleVarType.Color, Key = (int)col };
+            var prop = new StyleProperty { Type = StyleVarType.Color, Key = (int)key };
             if (value.IsToken) prop.TokenHash = value.Token.Hash;
             else prop.ColorValue = value.Value.u32;
 
             m_overrideStyles.Add(prop);
         }
 
-        public void SetVar(ImGuiStyleVar styleVar, StyleValue<float> value)
+        public void SetFloat(ImTKStyleKey key, StyleValue<float> value)
         {
             EnsureOverrideStyles();
-            RemoveEntry(StyleVarType.Float, (int)styleVar);
+            RemoveEntry(StyleVarType.Float, (int)key);
 
             if (value.IsNull) return;
 
-            var prop = new StyleProperty { Type = StyleVarType.Float, Key = (int)styleVar };
+            var prop = new StyleProperty { Type = StyleVarType.Float, Key = (int)key };
             if (value.IsToken) prop.TokenHash = value.Token.Hash;
             else prop.FloatValue = value.Value;
 
             m_overrideStyles.Add(prop);
         }
 
-        public void SetVar(ImGuiStyleVar styleVar, StyleValue<Vector2> value)
+        public void SetVector2(ImTKStyleKey key, StyleValue<Vector2> value)
         {
             EnsureOverrideStyles();
-            RemoveEntry(StyleVarType.Vector2, (int)styleVar);
+            RemoveEntry(StyleVarType.Vector2, (int)key);
 
             if (value.IsNull) return;
 
-            var prop = new StyleProperty { Type = StyleVarType.Vector2, Key = (int)styleVar };
+            var prop = new StyleProperty { Type = StyleVarType.Vector2, Key = (int)key };
             if (value.IsToken) prop.TokenHash = value.Token.Hash;
             else prop.Vector2Value = value.Value;
 
@@ -58,36 +56,70 @@ namespace ImTK.UI
 
         // --- Low-level Override Clearers ---
 
-        public void ClearColor(ImGuiCol col)
+        public void Clear(StyleVarType type, ImTKStyleKey key)
         {
-            RemoveEntry(StyleVarType.Color, (int)col);
-        }
-
-        public void ClearVar(ImGuiStyleVar styleVar)
-        {
-            RemoveEntry(StyleVarType.Float, (int)styleVar);
-            RemoveEntry(StyleVarType.Vector2, (int)styleVar);
+            RemoveEntry(type, (int)key);
         }
 
         // --- High-level Property Syntax Sugar ---
 
-        public StyleValue<Color>? textColor
+        public StyleValue<Color>? backgroundColor
         {
-            get => GetOverrideColor(ImGuiCol.Text);
+            get => GetOverrideColor(ImTKStyleKey.BackgroundColor);
             set
             {
-                if (value.HasValue) SetColor(ImGuiCol.Text, value.Value);
-                else ClearColor(ImGuiCol.Text);
+                if (value.HasValue) SetColor(ImTKStyleKey.BackgroundColor, value.Value);
+                else Clear(StyleVarType.Color, ImTKStyleKey.BackgroundColor);
             }
         }
 
-        public StyleValue<Color>? backgroundColor
+        public StyleValue<Color>? textColor
         {
-            get => GetOverrideColor(ImGuiCol.WindowBg);
+            get => GetOverrideColor(ImTKStyleKey.TextColor);
             set
             {
-                if (value.HasValue) SetColor(ImGuiCol.WindowBg, value.Value);
-                else ClearColor(ImGuiCol.WindowBg);
+                if (value.HasValue) SetColor(ImTKStyleKey.TextColor, value.Value);
+                else Clear(StyleVarType.Color, ImTKStyleKey.TextColor);
+            }
+        }
+
+        public StyleValue<Color>? hoverColor
+        {
+            get => GetOverrideColor(ImTKStyleKey.HoverColor);
+            set
+            {
+                if (value.HasValue) SetColor(ImTKStyleKey.HoverColor, value.Value);
+                else Clear(StyleVarType.Color, ImTKStyleKey.HoverColor);
+            }
+        }
+
+        public StyleValue<Color>? activeColor
+        {
+            get => GetOverrideColor(ImTKStyleKey.ActiveColor);
+            set
+            {
+                if (value.HasValue) SetColor(ImTKStyleKey.ActiveColor, value.Value);
+                else Clear(StyleVarType.Color, ImTKStyleKey.ActiveColor);
+            }
+        }
+
+        public StyleValue<Color>? borderColor
+        {
+            get => GetOverrideColor(ImTKStyleKey.BorderColor);
+            set
+            {
+                if (value.HasValue) SetColor(ImTKStyleKey.BorderColor, value.Value);
+                else Clear(StyleVarType.Color, ImTKStyleKey.BorderColor);
+            }
+        }
+
+        public StyleValue<float>? borderRadius
+        {
+            get => GetOverrideFloat(ImTKStyleKey.BorderRadius);
+            set
+            {
+                if (value.HasValue) SetFloat(ImTKStyleKey.BorderRadius, value.Value);
+                else Clear(StyleVarType.Float, ImTKStyleKey.BorderRadius);
             }
         }
 
@@ -111,34 +143,27 @@ namespace ImTK.UI
             }
         }
 
-        private StyleValue<Color>? GetOverrideColor(ImGuiCol col)
+        private StyleValue<Color>? GetOverrideColor(ImTKStyleKey key)
         {
             if (m_overrideStyles == null) return null;
             for (int i = 0; i < m_overrideStyles.Count; i++)
             {
-                if (m_overrideStyles[i].Type == StyleVarType.Color && m_overrideStyles[i].Key == (int)col)
+                if (m_overrideStyles[i].Type == StyleVarType.Color && m_overrideStyles[i].Key == (int)key)
                 {
                     if (m_overrideStyles[i].IsToken)
-                    {
-                        // We can't recover the original string from hash, but we shouldn't re-hash the ToString()
-                        var token = new HashedString(null);
-                        // A more proper way would be adding a private constructor to HashedString to allow setting Hash directly,
-                        // but since HashedString is readonly and uses string.GetHashCode, returning a pseudo token might be enough for current test usage,
-                        // or we just return an empty token since getter for override styles is rarely used compared to computed styles.
                         return new StyleValue<Color> { Keyword = StyleKeyword.Undefined };
-                    }
                     return new StyleValue<Color> { Value = (Color)m_overrideStyles[i].ColorValue };
                 }
             }
             return null;
         }
 
-        private StyleValue<float>? GetOverrideVarFloat(ImGuiStyleVar styleVar)
+        private StyleValue<float>? GetOverrideFloat(ImTKStyleKey key)
         {
             if (m_overrideStyles == null) return null;
             for (int i = 0; i < m_overrideStyles.Count; i++)
             {
-                if (m_overrideStyles[i].Type == StyleVarType.Float && m_overrideStyles[i].Key == (int)styleVar)
+                if (m_overrideStyles[i].Type == StyleVarType.Float && m_overrideStyles[i].Key == (int)key)
                 {
                     if (m_overrideStyles[i].IsToken)
                         return new StyleValue<float> { Keyword = StyleKeyword.Undefined };
@@ -148,12 +173,12 @@ namespace ImTK.UI
             return null;
         }
 
-        private StyleValue<Vector2>? GetOverrideVarVector2(ImGuiStyleVar styleVar)
+        private StyleValue<Vector2>? GetOverrideVector2(ImTKStyleKey key)
         {
             if (m_overrideStyles == null) return null;
             for (int i = 0; i < m_overrideStyles.Count; i++)
             {
-                if (m_overrideStyles[i].Type == StyleVarType.Vector2 && m_overrideStyles[i].Key == (int)styleVar)
+                if (m_overrideStyles[i].Type == StyleVarType.Vector2 && m_overrideStyles[i].Key == (int)key)
                 {
                     if (m_overrideStyles[i].IsToken)
                         return new StyleValue<Vector2> { Keyword = StyleKeyword.Undefined };

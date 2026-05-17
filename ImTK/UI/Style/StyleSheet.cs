@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using ImTK.Core;
 
-namespace ImTK.UI
+namespace ImTK.UI.Style
 {
     public class StyleSheet
     {

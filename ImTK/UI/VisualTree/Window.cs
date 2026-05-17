@@ -1,6 +1,7 @@
 using System;
 using ImGuiNET;
 using ImTK.Log;
+using ImTK.UI.Style;
 
 namespace ImTK.UI
 {
@@ -30,6 +31,16 @@ namespace ImTK.UI
 
     public abstract class Window : VisualElement
     {
+        public class Mapping : StyleMapping
+        {
+            public Mapping()
+            {
+                colorTargets[(int)ImTKStyleKey.BackgroundColor] = (int)ImGuiCol.WindowBg;
+                colorTargets[(int)ImTKStyleKey.HoverColor] = (int)ImGuiCol.TitleBg; // Mapping logic from before roughly
+                // ImGui window specific colors
+            }
+        }
+
         private static readonly LogContext s_log = new LogContext("Window");
 
         public string displayName { get; protected set; }
@@ -49,8 +60,6 @@ namespace ImTK.UI
             m_useAutoId = false;
             this.displayName = displayName;
             this.windowId = windowId;
-
-            // Apply default theme classes for Window
             classList.Add("Window");
         }
 

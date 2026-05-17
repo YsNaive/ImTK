@@ -1,6 +1,6 @@
 using ImTK.Core;
 
-namespace ImTK.UI
+namespace ImTK.UI.Style
 {
     public struct StyleValue<T> where T : struct
     {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ImGuiNET;
+using ImTK.UI.Style;
 
 namespace ImTK.UI
 {
@@ -24,10 +25,24 @@ namespace ImTK.UI
 
         public StyleClass classList { get; private set; }
 
-        public StyleSheet localStyleSheet { get; set; }
+        private StyleSheet m_localStyleSheet;
+        public StyleSheet localStyleSheet
+        {
+            get => m_localStyleSheet;
+            set
+            {
+                if (m_localStyleSheet != value)
+                {
+                    m_localStyleSheet = value;
+                    MarkStyleDirty();
+                }
+            }
+        }
 
         internal bool m_isStyleDirty = true;
         internal List<StyleProperty> m_computedStyles;
+
+        internal StyleMapping styleMapping { get; }
 
         public VisualElement()
         {
@@ -36,6 +51,8 @@ namespace ImTK.UI
 
             classList = new StyleClass();
             classList.OnClassChanged = MarkStyleDirty;
+
+            styleMapping = StyleMappingRegistry.GetMappingFor(this.GetType());
         }
 
         public void MarkStyleDirty()
@@ -257,7 +274,7 @@ namespace ImTK.UI
                 ImGui.SetNextItemAllowOverlap();
             }
 
-            ComputeStyle.Push(m_computedStyles, out int pushedColors, out int pushedVars);
+            ComputeStyle.Push(m_computedStyles, styleMapping, out int pushedColors, out int pushedVars);
 
             OnRenderLayout();
 

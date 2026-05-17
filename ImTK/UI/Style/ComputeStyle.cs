@@ -3,7 +3,7 @@ using ImGuiNET;
 using ImTK.Core;
 using ImTK.Log;
 
-namespace ImTK.UI
+namespace ImTK.UI.Style
 {
     public static class ComputeStyle
     {
@@ -127,7 +127,7 @@ namespace ImTK.UI
             return computed;
         }
 
-        public static void Push(List<StyleProperty> computedStyles, out int pushedColors, out int pushedVars)
+        public static void Push(List<StyleProperty> computedStyles, ImTK.UI.Style.StyleMapping mapping, out int pushedColors, out int pushedVars)
         {
             pushedColors = 0;
             pushedVars = 0;
@@ -139,18 +139,30 @@ namespace ImTK.UI
                 var prop = computedStyles[i];
                 if (prop.Type == StyleVarType.Color)
                 {
-                    ImGui.PushStyleColor((ImGuiCol)prop.Key, prop.ColorValue);
-                    pushedColors++;
+                    int imguiTarget = mapping.colorTargets[prop.Key];
+                    if (imguiTarget != -1)
+                    {
+                        ImGui.PushStyleColor((ImGuiCol)imguiTarget, prop.ColorValue);
+                        pushedColors++;
+                    }
                 }
                 else if (prop.Type == StyleVarType.Float)
                 {
-                    ImGui.PushStyleVar((ImGuiStyleVar)prop.Key, prop.FloatValue);
-                    pushedVars++;
+                    int imguiTarget = mapping.floatTargets[prop.Key];
+                    if (imguiTarget != -1)
+                    {
+                        ImGui.PushStyleVar((ImGuiStyleVar)imguiTarget, prop.FloatValue);
+                        pushedVars++;
+                    }
                 }
                 else if (prop.Type == StyleVarType.Vector2)
                 {
-                    ImGui.PushStyleVar((ImGuiStyleVar)prop.Key, prop.Vector2Value);
-                    pushedVars++;
+                    int imguiTarget = mapping.vector2Targets[prop.Key];
+                    if (imguiTarget != -1)
+                    {
+                        ImGui.PushStyleVar((ImGuiStyleVar)imguiTarget, prop.Vector2Value);
+                        pushedVars++;
+                    }
                 }
             }
         }

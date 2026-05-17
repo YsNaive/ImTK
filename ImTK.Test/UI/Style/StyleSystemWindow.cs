@@ -1,5 +1,6 @@
 using ImGuiNET;
 using ImTK.UI;
+using ImTK.UI.Style;
 using ImTK.Test.Framework;
 
 namespace ImTK.Test.UI.Style
@@ -19,7 +20,7 @@ namespace ImTK.Test.UI.Style
             // Setup a local stylesheet
             m_localSheet = new StyleSheet();
             var localBtn = m_localSheet.AddBlock("local-btn");
-            localBtn.SetColor(ImGuiCol.Button, Color.Magenta);
+            localBtn.BackgroundColor(Color.Magenta);
 
             // Create a button using global style
             var globalBtn = new Button("Global Style Button");

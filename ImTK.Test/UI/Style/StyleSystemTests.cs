@@ -3,6 +3,7 @@ using ImGuiNET;
 using ImTK.Core;
 using ImTK.UI;
 using ImTK.Test.Framework;
+using ImTK.UI.Style;
 
 namespace ImTK.Test.UI.Style
 {
@@ -67,14 +68,14 @@ namespace ImTK.Test.UI.Style
             // Setup Global
             var globalSheet = StyleSheet.Global;
             var globalBlock = globalSheet.AddBlock("test-btn");
-            globalBlock.SetColor(ImGuiCol.Button, Color.Red);
-            globalBlock.SetVar(ImGuiStyleVar.Alpha, 0.5f);
+            globalBlock.BackgroundColor(Color.Red);
+            globalBlock.SetFloat(ImTKStyleKey.Width, 0.5f);
 
             // Setup Local
             var parent = new VisualElement();
             var localSheet = new StyleSheet();
             var localBlock = localSheet.AddBlock("test-btn");
-            localBlock.SetColor(ImGuiCol.Button, Color.Green); // Overrides Global
+            localBlock.BackgroundColor(Color.Green); // Overrides Global
             parent.localStyleSheet = localSheet;
 
             // Setup Element
@@ -83,7 +84,7 @@ namespace ImTK.Test.UI.Style
             parent.Add(element);
 
             // Setup Inline
-            element.style.SetVar(ImGuiStyleVar.Alpha, 0.8f); // Overrides Global
+            element.style.SetFloat(ImTKStyleKey.Width, 0.8f); // Overrides Global
 
             // Compute
             var computed = ComputeStyle.Overlay(element);
@@ -93,12 +94,12 @@ namespace ImTK.Test.UI.Style
 
             foreach (var prop in computed)
             {
-                if (prop.Type == StyleVarType.Color && prop.Key == (int)ImGuiCol.Button)
+                if (prop.Type == StyleVarType.Color && prop.Key == (int)ImTKStyleKey.BackgroundColor)
                 {
                     ImTKAssert.AreEqual(Color.Green.u32, prop.ColorValue, "Local style should override global style.");
                     foundColor = true;
                 }
-                else if (prop.Type == StyleVarType.Float && prop.Key == (int)ImGuiStyleVar.Alpha)
+                else if (prop.Type == StyleVarType.Float && prop.Key == (int)ImTKStyleKey.Width)
                 {
                     ImTKAssert.AreEqual(0.8f, prop.FloatValue, "Inline style should override global style.");
                     foundAlpha = true;
