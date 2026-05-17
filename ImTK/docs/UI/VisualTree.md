@@ -86,27 +86,28 @@ ImTK 的 UI 系統目標是**「在 Immediate Mode (ImGui) 的底層上，搭建
 
 ---
 
-## 6. Style 系統與 Theme 系統 (Style & Theme Architecture)
+## 6. 高效 CSS 子集樣式系統 (StyleSystem & Design Tokens)
 
 為了讓開發者能以類似 CSS 或 Unity UITK 的語法糖修改元件外觀，ImTK 實作了專屬的 `VisualElement.style` 與 `ImTKTheme` 系統。
 
-### 6.1 記憶體最佳化的 Style Table
-ImGui 底層 API (`PushStyleColor` / `PushStyleVar`) 接受 `uint`, `float`, `Vector2` 等型別。為了避免頻繁修改樣式時發生 Boxing 或過多的記憶體分配，`VisualElementStyle` 採用了特殊的 Union Struct (`StyleEntry`) 搭配延遲初始化 (Lazy Init) 的陣列。
+### 6.1 HashedString 與 ImTKStyleKey (核心解耦)
+為了將 UI 元件的樣式語義 (如 BackgroundColor) 與 ImGui 底層具體的 ImGuiCol (如 WindowBg, Button 等) 徹底解耦，我們引進了 `ImTKStyleKey` 統一列舉。並且透過 `HashedString` 實作 Token (如 "--primary") 和 class 名字的 O(1) 查表。
 
-* **`StyleEntry`**: 利用 C# 的 `[StructLayout(LayoutKind.Explicit)]`，讓 Color、Float、Vector2 共用同一塊最大 8 bytes 的記憶體。
+* **`StyleProperty`**: 利用 C# 的 `[StructLayout(LayoutKind.Explicit)]`，讓 Color、Float、Vector2 和 TokenHash 共用記憶體，實現零裝箱。
 * **零成本預設**: 預設情況下，`VisualElement` 不會分配任何 Style List 的記憶體，直到被顯式賦值或套用 Theme。
 
-### 6.2 Override 與 Theme 的層級 (Cascading)
-`style` 內部維護兩個 List：
-1. **`m_themeStyles`**: 透過 `element.SetTheme(theme)` 或 `ApplyTheme()` 寫入，代表當前主題的設定。
-2. **`m_overrideStyles`**: 透過開發者手動調用屬性糖 (如 `element.style.textColor = ...`) 寫入，代表強制覆寫。
+### 6.2 層疊樣式表 (Cascading Style Sheets) 與 ComputedStyle
+ImTK 的樣式遵循完整的 CSS 層疊優先級 (Inline > Local Ancestor > Global)：
+1. **`StyleSheet.Global`**: 全域註冊的 `StyleBlock` (透過 class 綁定)。
+2. **`localStyleSheet`**: 掛載於祖先節點的樣式表 (向父節點遞迴層疊)。
+3. **`Inline Style`**: 元件自身的 `style` 覆寫，優先級最高。
 
-在 `Render()` 時，管線會確保 **Override 的權重高於 Theme**。這意味著切換全域主題時，開發者的手動覆寫 (如特定變紅的警告字) 不會被洗掉。
+當元素的 `classList` 修改時，會觸發 Dirty 標記，並在 `Render()` 階段由 `ComputeStyle.Overlay` 快取出一份合併好的 `m_computedStyles`，然後利用 `StyleMapping` 查表自動將 `ImTKStyleKey` 注入為 `ImGuiCol`，保證每幀渲染效能。
 
-### 6.3 Theme 的 Fallback 機制 (變體繼承)
-`ImTKTheme` 支援層疊式 Fallback 機制。透過設定 `theme.parent` 指標：
-1. 取值時若本體沒有值 (Nullable 狀態為 null)，會自動向上詢問 `parent`。
-2. **極度容易擴展**: 若想建立一個 Error 變體，只需 `new ImTKTheme() { parent = currentTheme }` 然後修改 `TextPrimary`，其他所有屬性都會自動繼承，並隨 Parent 動態更新。
+### 6.3 Design Tokens 與自動 Fallback
+Theme 從死板的屬性轉型為 `Dictionary<int, Color>` 等 Token 儲存器：
+1. 透過字串 Token (如 `style.backgroundColor = "--bg"`) 設定屬性。
+2. **安全偵錯**: 在 `ComputeStyle` 解析時若找不到 Token，系統會觸發 `ImTKLog.Warning` 並 Fallback 至極度鮮豔的顏色 (如 `Color.Magenta`)，以防視覺污染。
 
 ---
 

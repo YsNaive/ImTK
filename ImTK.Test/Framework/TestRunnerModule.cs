@@ -113,12 +113,12 @@ namespace ImTK.Test.Framework
             ImGui.SameLine();
             if (ImGui.Button("Dark Theme"))
             {
-                this.SetTheme(ImTKTheme.DefaultDark);
+                this.theme = ImTKTheme.DefaultDark;
             }
             ImGui.SameLine();
             if (ImGui.Button("Light Theme"))
             {
-                this.SetTheme(ImTKTheme.DefaultLight);
+                this.theme = ImTKTheme.DefaultLight;
             }
 
             ImGui.Separator();
