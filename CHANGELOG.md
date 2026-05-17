@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 ### Added (新增)
+- 實作了高效的 CSS 子集樣式系統 (`StyleSystem`)，具備 Inline > Local > Global 的優先級層疊機制。
+
+- 導入了 `HashedString` 與 `ImTKStyleKey` 高階列舉，徹底解耦樣式語義與底層 ImGui 變數，達成 O(1) 極速查表與零記憶體分配 (Zero GC Allocation)。
+
+- 實作了 `StyleMappingRegistry`，透過雙重反射與快取技術，自動將元件專屬的 `Mapping` 內部類別注入渲染管線，實現資料驅動 (Data-Driven) 的轉換，無需污染泛型。
+
+- 實作了基於字串 Token 的全新 `ImTKTheme` 設計系統，移除舊有死板的屬性，提供極大擴展性與 fallback 偵錯警告 (如遇到找不到的 Token 會回報警告並使用 Color.Magenta)。
+
+- 引進 `StyleKeyword.Null` 搭配泛型 `StyleValue<T>` 結合隱式轉換，提供開發者流暢且兼具強型別安全與 CSS 習性的語法糖體驗。
+
+- 實作 `StyleClass` 管理 `VisualElement` 的 `classList` (Add/Remove/Toggle)，並結合 `ComputeStyle.Overlay` 延遲快取，徹底解放每幀重新計算的效能負擔。
 - 實作了 `FieldDrawer` 系統，支援動態綁定資料型別至 UI 元件 (類似 Unity PropertyDrawer)。
 - 實作了雙向資料流與安全攔截機制 (`SetValueWithoutNotify`, `SetValueWithChanged`)，避免 DataBinding 循環。
 - 新增了 `ValueChangedEvent<T>` (繼承自輕量級 `IValueChangedEvent`)，支援 `isInternalChange` 判斷，且預設不冒泡。
@@ -38,6 +49,17 @@
 
 
 ### Added (新增)
+- 實作了高效的 CSS 子集樣式系統 (`StyleSystem`)，具備 Inline > Local > Global 的優先級層疊機制。
+
+- 導入了 `HashedString` 與 `ImTKStyleKey` 高階列舉，徹底解耦樣式語義與底層 ImGui 變數，達成 O(1) 極速查表與零記憶體分配 (Zero GC Allocation)。
+
+- 實作了 `StyleMappingRegistry`，透過雙重反射與快取技術，自動將元件專屬的 `Mapping` 內部類別注入渲染管線，實現資料驅動 (Data-Driven) 的轉換，無需污染泛型。
+
+- 實作了基於字串 Token 的全新 `ImTKTheme` 設計系統，移除舊有死板的屬性，提供極大擴展性與 fallback 偵錯警告 (如遇到找不到的 Token 會回報警告並使用 Color.Magenta)。
+
+- 引進 `StyleKeyword.Null` 搭配泛型 `StyleValue<T>` 結合隱式轉換，提供開發者流暢且兼具強型別安全與 CSS 習性的語法糖體驗。
+
+- 實作 `StyleClass` 管理 `VisualElement` 的 `classList` (Add/Remove/Toggle)，並結合 `ComputeStyle.Overlay` 延遲快取，徹底解放每幀重新計算的效能負擔。
 - 實作了標準化且輕量的測試框架 (`ImTK.Test`)，區分 `IHeadlessTest` 與 `IIntegrationTest`。
 - 實作了可於 UI 顯示 Headless 與 Integration 測試報表的 `TestRunnerModule` 儀表板，並引入輕量斷言庫 `ImTKAssert`。
 - 實作了標準化範例框架 (`ImTK.Sample`)，引入 `ISampleScenario` 以支援自動註冊與展示。
