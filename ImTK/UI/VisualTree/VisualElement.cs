@@ -40,13 +40,14 @@ namespace ImTK.UI
         }
 
         internal bool m_isStyleDirty = true;
-        internal List<StyleProperty> m_computedStyles;
+        public ResolvedStyle resolvedStyle { get; }
 
         internal StyleMapping styleMapping { get; }
 
         public VisualElement()
         {
             m_elementId = ++s_elementCounter;
+            resolvedStyle = new ResolvedStyle(this);
             hierarchy = new VisualElementHierarchy(this);
 
             classList = new StyleClass();
@@ -260,7 +261,7 @@ namespace ImTK.UI
         {
             if (m_isStyleDirty)
             {
-                m_computedStyles = ComputeStyle.Overlay(this);
+                resolvedStyle.Compute();
                 m_isStyleDirty = false;
             }
 
@@ -274,7 +275,7 @@ namespace ImTK.UI
                 ImGui.SetNextItemAllowOverlap();
             }
 
-            ComputeStyle.Push(m_computedStyles, styleMapping, out int pushedColors, out int pushedVars);
+            resolvedStyle.PushToImGui();
 
             OnRenderLayout();
 
@@ -313,7 +314,7 @@ namespace ImTK.UI
 
             m_wasHovered = isEffectivelyHovered;
 
-            ComputeStyle.Pop(pushedColors, pushedVars);
+            resolvedStyle.PopFromImGui();
 
             if (m_useAutoId)
             {

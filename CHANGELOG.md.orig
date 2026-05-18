@@ -7,11 +7,6 @@
 
 ## [Unreleased]
 ### Added (新增)
-- 將 `ComputeStyle` 的靜態計算重構為每個元素實例持有的 `ResolvedStyle`。
-- 實作了由上而下 (Top-Down) 的樣式繼承機制與 `ImGui` 推送防污染邏輯。
-- 將 `StyleProperty` 結構體壓縮至完美的 16 Bytes 並統整 `StyleVarType` 與 `StyleKeyword` 為 `StylePropertyType`。
-- 修正 `NamingConventions.md` 中對於 Instance Properties 和 Static Fields 的混淆規則。
-
 - 實作了基礎 UI 元件 (`TextElement`, `CheckBox`, `TextField`)，封裝 ImGui 基礎操作並支援安全的值綁定與狀態事件。
 - 重構了 `ImTKTheme` 主題系統，導入基於 `ColorFamily` 的高階語義群組 (如 `normalColor`, `successColor`)。
 - 擴充並標準化了 `ImTKStyleKey`，移除不適用於 ImGui 的 CSS 屬性，新增支援 Layout (`Padding`, `ItemSpacing`) 與透明度 (`DisabledAlpha`) 的物理對應。

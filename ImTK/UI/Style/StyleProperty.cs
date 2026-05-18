@@ -1,30 +1,29 @@
 using System.Runtime.InteropServices;
 using System.Numerics;
-using ImTK.Core;
 
 namespace ImTK.UI.Style
 {
-    public enum StyleVarType
+    public enum StylePropertyType : byte
     {
-        Color,
-        Float,
-        Vector2
+        Null = 0,
+        Token = 1,
+        ColorValue = 2,
+        FloatValue = 3,
+        Vector2Value = 4
     }
 
-    [StructLayout(LayoutKind.Explicit)]
+    [StructLayout(LayoutKind.Explicit, Size = 16)]
     public struct StyleProperty
     {
-        [FieldOffset(0)] public int Key; // ImGuiCol or ImGuiStyleVar
-        [FieldOffset(4)] public StyleVarType Type;
-        [FieldOffset(8)] public StyleKeyword Keyword;
+        [FieldOffset(0)] public int key;
+        [FieldOffset(4)] public StylePropertyType type;
 
-        [FieldOffset(12)] public uint ColorValue; // Store Color as uint (ABGR)
-        [FieldOffset(12)] public float FloatValue;
-        [FieldOffset(12)] public Vector2 Vector2Value;
+        [FieldOffset(8)] public uint colorValue;
+        [FieldOffset(8)] public float floatValue;
+        [FieldOffset(8)] public Vector2 vector2Value;
+        [FieldOffset(8)] public int tokenHash;
 
-        [FieldOffset(20)] public int TokenHash; // Store Hash of HashedString
-
-        public bool IsToken => TokenHash != 0;
-        public bool IsNull => Keyword == StyleKeyword.Null;
+        public bool isNull => type == StylePropertyType.Null;
+        public bool isToken => type == StylePropertyType.Token;
     }
 }

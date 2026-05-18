@@ -87,24 +87,13 @@ namespace ImTK.Test.UI.Style
             element.style.SetFloat(ImTKStyleKey.BorderRadius, 0.8f); // Overrides Global
 
             // Compute
-            var computed = ComputeStyle.Overlay(element);
+            element.resolvedStyle.Compute();
 
-            bool foundColor = false;
-            bool foundAlpha = false;
+            bool foundColor = true;
+            bool foundAlpha = true;
 
-            foreach (var prop in computed)
-            {
-                if (prop.Type == StyleVarType.Color && prop.Key == (int)ImTKStyleKey.BackgroundColor)
-                {
-                    ImTKAssert.AreEqual(Color.Green.u32, prop.ColorValue, "Local style should override global style.");
-                    foundColor = true;
-                }
-                else if (prop.Type == StyleVarType.Float && prop.Key == (int)ImTKStyleKey.BorderRadius)
-                {
-                    ImTKAssert.AreEqual(0.8f, prop.FloatValue, "Inline style should override global style.");
-                    foundAlpha = true;
-                }
-            }
+            ImTKAssert.AreEqual(Color.Green.u32, element.resolvedStyle[ImTKStyleKey.BackgroundColor].colorValue, "Local style should override global style.");
+            ImTKAssert.AreEqual(0.8f, element.resolvedStyle[ImTKStyleKey.BorderRadius].floatValue, "Inline style should override global style.");
 
             ImTKAssert.IsTrue(foundColor, "Button color should be computed.");
             ImTKAssert.IsTrue(foundAlpha, "Alpha should be computed.");

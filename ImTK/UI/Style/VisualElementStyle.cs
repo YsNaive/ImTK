@@ -15,13 +15,13 @@ namespace ImTK.UI.Style
         public void SetColor(ImTKStyleKey key, StyleValue<Color> value)
         {
             EnsureOverrideStyles();
-            RemoveEntry(StyleVarType.Color, (int)key);
+            RemoveEntry((int)key);
 
             if (value.IsNull) return;
 
-            var prop = new StyleProperty { Type = StyleVarType.Color, Key = (int)key };
-            if (value.IsToken) prop.TokenHash = value.Token.Hash;
-            else prop.ColorValue = value.Value.u32;
+            var prop = new StyleProperty { key = (int)key, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.ColorValue };
+            if (value.IsToken) prop.tokenHash = value.Token.Hash;
+            else prop.colorValue = value.Value.u32;
 
             m_overrideStyles.Add(prop);
         }
@@ -29,13 +29,13 @@ namespace ImTK.UI.Style
         public void SetFloat(ImTKStyleKey key, StyleValue<float> value)
         {
             EnsureOverrideStyles();
-            RemoveEntry(StyleVarType.Float, (int)key);
+            RemoveEntry((int)key);
 
             if (value.IsNull) return;
 
-            var prop = new StyleProperty { Type = StyleVarType.Float, Key = (int)key };
-            if (value.IsToken) prop.TokenHash = value.Token.Hash;
-            else prop.FloatValue = value.Value;
+            var prop = new StyleProperty { key = (int)key, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.FloatValue };
+            if (value.IsToken) prop.tokenHash = value.Token.Hash;
+            else prop.floatValue = value.Value;
 
             m_overrideStyles.Add(prop);
         }
@@ -43,22 +43,22 @@ namespace ImTK.UI.Style
         public void SetVector2(ImTKStyleKey key, StyleValue<Vector2> value)
         {
             EnsureOverrideStyles();
-            RemoveEntry(StyleVarType.Vector2, (int)key);
+            RemoveEntry((int)key);
 
             if (value.IsNull) return;
 
-            var prop = new StyleProperty { Type = StyleVarType.Vector2, Key = (int)key };
-            if (value.IsToken) prop.TokenHash = value.Token.Hash;
-            else prop.Vector2Value = value.Value;
+            var prop = new StyleProperty { key = (int)key, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.Vector2Value };
+            if (value.IsToken) prop.tokenHash = value.Token.Hash;
+            else prop.vector2Value = value.Value;
 
             m_overrideStyles.Add(prop);
         }
 
         // --- Low-level Override Clearers ---
 
-        public void Clear(StyleVarType type, ImTKStyleKey key)
+        public void Clear(ImTKStyleKey key)
         {
-            RemoveEntry(type, (int)key);
+            RemoveEntry((int)key);
         }
 
         // --- High-level Property Syntax Sugar ---
@@ -69,7 +69,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetColor(ImTKStyleKey.BackgroundColor, value.Value);
-                else Clear(StyleVarType.Color, ImTKStyleKey.BackgroundColor);
+                else Clear(ImTKStyleKey.BackgroundColor);
             }
         }
 
@@ -79,7 +79,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetColor(ImTKStyleKey.TextColor, value.Value);
-                else Clear(StyleVarType.Color, ImTKStyleKey.TextColor);
+                else Clear(ImTKStyleKey.TextColor);
             }
         }
 
@@ -89,7 +89,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetColor(ImTKStyleKey.DisabledTextColor, value.Value);
-                else Clear(StyleVarType.Color, ImTKStyleKey.DisabledTextColor);
+                else Clear(ImTKStyleKey.DisabledTextColor);
             }
         }
 
@@ -99,7 +99,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetColor(ImTKStyleKey.HoverColor, value.Value);
-                else Clear(StyleVarType.Color, ImTKStyleKey.HoverColor);
+                else Clear(ImTKStyleKey.HoverColor);
             }
         }
 
@@ -109,7 +109,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetColor(ImTKStyleKey.ActiveColor, value.Value);
-                else Clear(StyleVarType.Color, ImTKStyleKey.ActiveColor);
+                else Clear(ImTKStyleKey.ActiveColor);
             }
         }
 
@@ -119,7 +119,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetColor(ImTKStyleKey.BorderColor, value.Value);
-                else Clear(StyleVarType.Color, ImTKStyleKey.BorderColor);
+                else Clear(ImTKStyleKey.BorderColor);
             }
         }
 
@@ -129,7 +129,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetColor(ImTKStyleKey.CheckMarkColor, value.Value);
-                else Clear(StyleVarType.Color, ImTKStyleKey.CheckMarkColor);
+                else Clear(ImTKStyleKey.CheckMarkColor);
             }
         }
 
@@ -139,7 +139,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetVector2(ImTKStyleKey.Padding, value.Value);
-                else Clear(StyleVarType.Vector2, ImTKStyleKey.Padding);
+                else Clear(ImTKStyleKey.Padding);
             }
         }
 
@@ -149,7 +149,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetVector2(ImTKStyleKey.ItemSpacing, value.Value);
-                else Clear(StyleVarType.Vector2, ImTKStyleKey.ItemSpacing);
+                else Clear(ImTKStyleKey.ItemSpacing);
             }
         }
 
@@ -159,7 +159,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetVector2(ImTKStyleKey.ItemInnerSpacing, value.Value);
-                else Clear(StyleVarType.Vector2, ImTKStyleKey.ItemInnerSpacing);
+                else Clear(ImTKStyleKey.ItemInnerSpacing);
             }
         }
 
@@ -169,7 +169,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetFloat(ImTKStyleKey.BorderWidth, value.Value);
-                else Clear(StyleVarType.Float, ImTKStyleKey.BorderWidth);
+                else Clear(ImTKStyleKey.BorderWidth);
             }
         }
 
@@ -179,7 +179,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetFloat(ImTKStyleKey.BorderRadius, value.Value);
-                else Clear(StyleVarType.Float, ImTKStyleKey.BorderRadius);
+                else Clear(ImTKStyleKey.BorderRadius);
             }
         }
 
@@ -189,7 +189,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetFloat(ImTKStyleKey.Alpha, value.Value);
-                else Clear(StyleVarType.Float, ImTKStyleKey.Alpha);
+                else Clear(ImTKStyleKey.Alpha);
             }
         }
 
@@ -199,7 +199,7 @@ namespace ImTK.UI.Style
             set
             {
                 if (value.HasValue) SetFloat(ImTKStyleKey.DisabledAlpha, value.Value);
-                else Clear(StyleVarType.Float, ImTKStyleKey.DisabledAlpha);
+                else Clear(ImTKStyleKey.DisabledAlpha);
             }
         }
 
@@ -210,12 +210,12 @@ namespace ImTK.UI.Style
             if (m_overrideStyles == null) m_overrideStyles = new List<StyleProperty>();
         }
 
-        private void RemoveEntry(StyleVarType type, int key)
+        private void RemoveEntry(int key)
         {
             if (m_overrideStyles == null) return;
             for (int i = 0; i < m_overrideStyles.Count; i++)
             {
-                if (m_overrideStyles[i].Type == type && m_overrideStyles[i].Key == key)
+                if (m_overrideStyles[i].key == key)
                 {
                     m_overrideStyles.RemoveAt(i);
                     return;
@@ -228,11 +228,11 @@ namespace ImTK.UI.Style
             if (m_overrideStyles == null) return null;
             for (int i = 0; i < m_overrideStyles.Count; i++)
             {
-                if (m_overrideStyles[i].Type == StyleVarType.Color && m_overrideStyles[i].Key == (int)key)
+                if (m_overrideStyles[i].key == (int)key)
                 {
-                    if (m_overrideStyles[i].IsToken)
+                    if (m_overrideStyles[i].isToken)
                         return new StyleValue<Color> { Keyword = StyleKeyword.Undefined };
-                    return new StyleValue<Color> { Value = (Color)m_overrideStyles[i].ColorValue };
+                    return new StyleValue<Color> { Value = (Color)m_overrideStyles[i].colorValue };
                 }
             }
             return null;
@@ -243,11 +243,11 @@ namespace ImTK.UI.Style
             if (m_overrideStyles == null) return null;
             for (int i = 0; i < m_overrideStyles.Count; i++)
             {
-                if (m_overrideStyles[i].Type == StyleVarType.Float && m_overrideStyles[i].Key == (int)key)
+                if (m_overrideStyles[i].key == (int)key)
                 {
-                    if (m_overrideStyles[i].IsToken)
+                    if (m_overrideStyles[i].isToken)
                         return new StyleValue<float> { Keyword = StyleKeyword.Undefined };
-                    return new StyleValue<float> { Value = m_overrideStyles[i].FloatValue };
+                    return new StyleValue<float> { Value = m_overrideStyles[i].floatValue };
                 }
             }
             return null;
@@ -258,11 +258,11 @@ namespace ImTK.UI.Style
             if (m_overrideStyles == null) return null;
             for (int i = 0; i < m_overrideStyles.Count; i++)
             {
-                if (m_overrideStyles[i].Type == StyleVarType.Vector2 && m_overrideStyles[i].Key == (int)key)
+                if (m_overrideStyles[i].key == (int)key)
                 {
-                    if (m_overrideStyles[i].IsToken)
+                    if (m_overrideStyles[i].isToken)
                         return new StyleValue<Vector2> { Keyword = StyleKeyword.Undefined };
-                    return new StyleValue<Vector2> { Value = m_overrideStyles[i].Vector2Value };
+                    return new StyleValue<Vector2> { Value = m_overrideStyles[i].vector2Value };
                 }
             }
             return null;
