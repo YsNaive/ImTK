@@ -31,15 +31,6 @@ namespace ImTK.UI
 
     public abstract class Window : VisualElement
     {
-        public class Mapping : StyleMapping
-        {
-            public Mapping()
-            {
-                colorTargets[(int)ImTKStyleKey.BackgroundColor] = (int)ImGuiCol.WindowBg;
-                colorTargets[(int)ImTKStyleKey.HoverColor] = (int)ImGuiCol.TitleBg; // Mapping logic from before roughly
-                // ImGui window specific colors
-            }
-        }
 
         private static readonly LogContext s_log = new LogContext("Window");
 

@@ -21,7 +21,10 @@ namespace ImTK.UI
 
         private Dictionary<Type, Delegate> m_callbacks;
 
-        public VisualElementStyle style { get; } = new VisualElementStyle();
+        public IVisualElementStyle internalStyle { get; set; }
+
+        public VisualElementStyle style => internalStyle as VisualElementStyle;
+
 
         public StyleClass classList { get; private set; }
 
@@ -42,18 +45,16 @@ namespace ImTK.UI
         internal bool m_isStyleDirty = true;
         public ResolvedStyle resolvedStyle { get; }
 
-        internal StyleMapping styleMapping { get; }
 
         public VisualElement()
         {
             m_elementId = ++s_elementCounter;
+            internalStyle = new VisualElementStyle();
             resolvedStyle = new ResolvedStyle(this);
             hierarchy = new VisualElementHierarchy(this);
 
             classList = new StyleClass();
             classList.OnClassChanged = MarkStyleDirty;
-
-            styleMapping = StyleMappingRegistry.GetMappingFor(this.GetType());
         }
 
         public void MarkStyleDirty()
@@ -275,7 +276,7 @@ namespace ImTK.UI
                 ImGui.SetNextItemAllowOverlap();
             }
 
-            resolvedStyle.PushToImGui();
+            internalStyle.PushToImGui(resolvedStyle);
 
             OnRenderLayout();
 
@@ -314,7 +315,7 @@ namespace ImTK.UI
 
             m_wasHovered = isEffectivelyHovered;
 
-            resolvedStyle.PopFromImGui();
+            internalStyle.PopFromImGui();
 
             if (m_useAutoId)
             {
@@ -343,6 +344,19 @@ namespace ImTK.UI
             {
                 callback.DynamicInvoke(evt);
             }
+        }
+    }
+}
+
+namespace ImTK.UI
+{
+    public class VisualElement<TStyle> : VisualElement where TStyle : ImTK.UI.Style.IVisualElementStyle, new()
+    {
+        public new TStyle style => (TStyle)internalStyle;
+
+        public VisualElement() : base()
+        {
+            internalStyle = new TStyle();
         }
     }
 }

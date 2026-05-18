@@ -21,6 +21,8 @@ namespace ImTK.UI.Style
 
         private Dictionary<int, StyleBlock> m_blocks = new Dictionary<int, StyleBlock>();
 
+        public IEnumerable<StyleBlock> Blocks => m_blocks.Values;
+
         public StyleBlock AddBlock(HashedString targetClass)
         {
             var block = new StyleBlock(targetClass);

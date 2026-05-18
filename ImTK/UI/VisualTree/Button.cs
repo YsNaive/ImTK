@@ -6,16 +6,6 @@ namespace ImTK.UI
 {
     public class Button : VisualElement
     {
-        public class Mapping : StyleMapping
-        {
-            public Mapping()
-            {
-                colorTargets[(int)ImTKStyleKey.BackgroundColor] = (int)ImGuiCol.Button;
-                colorTargets[(int)ImTKStyleKey.HoverColor] = (int)ImGuiCol.ButtonHovered;
-                colorTargets[(int)ImTKStyleKey.ActiveColor] = (int)ImGuiCol.ButtonActive;
-                colorTargets[(int)ImTKStyleKey.TextColor] = (int)ImGuiCol.Text;
-            }
-        }
 
         public string text { get; set; }
 

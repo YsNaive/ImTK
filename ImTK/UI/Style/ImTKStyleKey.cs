@@ -1,23 +1,23 @@
+using ImTK.Core;
+
 namespace ImTK.UI.Style
 {
-    public enum ImTKStyleKey
+    public static class ImTKStyleKey
     {
-        BackgroundColor = 0,
-        HoverColor = 1,
-        ActiveColor = 2,
-        TextColor = 3,
-        DisabledTextColor = 4,
-        BorderColor = 5,
-        CheckMarkColor = 6,
+        public static readonly HashedString BackgroundColor = new HashedString("BackgroundColor");
+        public static readonly HashedString HoverColor = new HashedString("HoverColor");
+        public static readonly HashedString ActiveColor = new HashedString("ActiveColor");
+        public static readonly HashedString TextColor = new HashedString("TextColor");
+        public static readonly HashedString DisabledTextColor = new HashedString("DisabledTextColor");
+        public static readonly HashedString BorderColor = new HashedString("BorderColor");
+        public static readonly HashedString CheckMarkColor = new HashedString("CheckMarkColor");
 
-        Padding = 7,
-        ItemSpacing = 8,
-        ItemInnerSpacing = 9,
-        BorderWidth = 10,
-        BorderRadius = 11,
-        Alpha = 12,
-        DisabledAlpha = 13,
-
-        MaxCount
+        public static readonly HashedString Padding = new HashedString("Padding");
+        public static readonly HashedString ItemSpacing = new HashedString("ItemSpacing");
+        public static readonly HashedString ItemInnerSpacing = new HashedString("ItemInnerSpacing");
+        public static readonly HashedString BorderWidth = new HashedString("BorderWidth");
+        public static readonly HashedString BorderRadius = new HashedString("BorderRadius");
+        public static readonly HashedString Alpha = new HashedString("Alpha");
+        public static readonly HashedString DisabledAlpha = new HashedString("DisabledAlpha");
     }
 }

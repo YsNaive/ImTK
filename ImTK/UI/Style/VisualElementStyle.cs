@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.Numerics;
 using ImTK.Core;
+using ImGuiNET;
 
 namespace ImTK.UI.Style
 {
-    public class VisualElementStyle
+    public class VisualElementStyle : IVisualElementStyle
     {
         internal List<StyleProperty> m_overrideStyles;
 
@@ -12,42 +13,42 @@ namespace ImTK.UI.Style
 
         // --- Low-level Override Setters ---
 
-        public void SetColor(ImTKStyleKey key, StyleValue<Color> value)
+        public void SetColor(HashedString key, StyleValue<Color> value)
         {
             EnsureOverrideStyles();
-            RemoveEntry((int)key);
+            RemoveEntry(key.Hash);
 
             if (value.IsNull) return;
 
-            var prop = new StyleProperty { key = (int)key, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.ColorValue };
+            var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.ColorValue };
             if (value.IsToken) prop.tokenHash = value.Token.Hash;
             else prop.colorValue = value.Value.u32;
 
             m_overrideStyles.Add(prop);
         }
 
-        public void SetFloat(ImTKStyleKey key, StyleValue<float> value)
+        public void SetFloat(HashedString key, StyleValue<float> value)
         {
             EnsureOverrideStyles();
-            RemoveEntry((int)key);
+            RemoveEntry(key.Hash);
 
             if (value.IsNull) return;
 
-            var prop = new StyleProperty { key = (int)key, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.FloatValue };
+            var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.FloatValue };
             if (value.IsToken) prop.tokenHash = value.Token.Hash;
             else prop.floatValue = value.Value;
 
             m_overrideStyles.Add(prop);
         }
 
-        public void SetVector2(ImTKStyleKey key, StyleValue<Vector2> value)
+        public void SetVector2(HashedString key, StyleValue<Vector2> value)
         {
             EnsureOverrideStyles();
-            RemoveEntry((int)key);
+            RemoveEntry(key.Hash);
 
             if (value.IsNull) return;
 
-            var prop = new StyleProperty { key = (int)key, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.Vector2Value };
+            var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.Vector2Value };
             if (value.IsToken) prop.tokenHash = value.Token.Hash;
             else prop.vector2Value = value.Value;
 
@@ -56,9 +57,9 @@ namespace ImTK.UI.Style
 
         // --- Low-level Override Clearers ---
 
-        public void Clear(ImTKStyleKey key)
+        public void Clear(HashedString key)
         {
-            RemoveEntry((int)key);
+            RemoveEntry(key.Hash);
         }
 
         // --- High-level Property Syntax Sugar ---
@@ -210,12 +211,12 @@ namespace ImTK.UI.Style
             if (m_overrideStyles == null) m_overrideStyles = new List<StyleProperty>();
         }
 
-        private void RemoveEntry(int key)
+        private void RemoveEntry(int keyHash)
         {
             if (m_overrideStyles == null) return;
             for (int i = 0; i < m_overrideStyles.Count; i++)
             {
-                if (m_overrideStyles[i].key == key)
+                if (m_overrideStyles[i].key == keyHash)
                 {
                     m_overrideStyles.RemoveAt(i);
                     return;
@@ -223,12 +224,13 @@ namespace ImTK.UI.Style
             }
         }
 
-        private StyleValue<Color>? GetOverrideColor(ImTKStyleKey key)
+        private StyleValue<Color>? GetOverrideColor(HashedString key)
         {
             if (m_overrideStyles == null) return null;
+            int keyHash = key.Hash;
             for (int i = 0; i < m_overrideStyles.Count; i++)
             {
-                if (m_overrideStyles[i].key == (int)key)
+                if (m_overrideStyles[i].key == keyHash)
                 {
                     if (m_overrideStyles[i].isToken)
                         return new StyleValue<Color> { Keyword = StyleKeyword.Undefined };
@@ -238,12 +240,13 @@ namespace ImTK.UI.Style
             return null;
         }
 
-        private StyleValue<float>? GetOverrideFloat(ImTKStyleKey key)
+        private StyleValue<float>? GetOverrideFloat(HashedString key)
         {
             if (m_overrideStyles == null) return null;
+            int keyHash = key.Hash;
             for (int i = 0; i < m_overrideStyles.Count; i++)
             {
-                if (m_overrideStyles[i].key == (int)key)
+                if (m_overrideStyles[i].key == keyHash)
                 {
                     if (m_overrideStyles[i].isToken)
                         return new StyleValue<float> { Keyword = StyleKeyword.Undefined };
@@ -253,12 +256,13 @@ namespace ImTK.UI.Style
             return null;
         }
 
-        private StyleValue<Vector2>? GetOverrideVector2(ImTKStyleKey key)
+        private StyleValue<Vector2>? GetOverrideVector2(HashedString key)
         {
             if (m_overrideStyles == null) return null;
+            int keyHash = key.Hash;
             for (int i = 0; i < m_overrideStyles.Count; i++)
             {
-                if (m_overrideStyles[i].key == (int)key)
+                if (m_overrideStyles[i].key == keyHash)
                 {
                     if (m_overrideStyles[i].isToken)
                         return new StyleValue<Vector2> { Keyword = StyleKeyword.Undefined };
@@ -266,6 +270,96 @@ namespace ImTK.UI.Style
                 }
             }
             return null;
+        }
+
+        // --- IVisualElementStyle Implementation ---
+
+        private int m_pushedColors = 0;
+        private int m_pushedVars = 0;
+
+        public virtual void PushToImGui(ResolvedStyle resolvedStyle)
+        {
+            m_pushedColors = 0;
+            m_pushedVars = 0;
+
+            Color? bgColor = resolvedStyle.GetColor(ImTKStyleKey.BackgroundColor);
+            if (bgColor.HasValue)
+            {
+                ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor.Value.u32);
+                ImGui.PushStyleColor(ImGuiCol.ChildBg, bgColor.Value.u32);
+                m_pushedColors += 2;
+            }
+
+            Color? textColor = resolvedStyle.GetColor(ImTKStyleKey.TextColor);
+            if (textColor.HasValue)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, textColor.Value.u32);
+                m_pushedColors++;
+            }
+
+            Color? borderColor = resolvedStyle.GetColor(ImTKStyleKey.BorderColor);
+            if (borderColor.HasValue)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Border, borderColor.Value.u32);
+                m_pushedColors++;
+            }
+
+            float? borderRadius = resolvedStyle.GetFloat(ImTKStyleKey.BorderRadius);
+            if (borderRadius.HasValue)
+            {
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, borderRadius.Value);
+                ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, borderRadius.Value);
+                ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, borderRadius.Value);
+                ImGui.PushStyleVar(ImGuiStyleVar.PopupRounding, borderRadius.Value);
+                m_pushedVars += 4;
+            }
+
+            float? borderWidth = resolvedStyle.GetFloat(ImTKStyleKey.BorderWidth);
+            if (borderWidth.HasValue)
+            {
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, borderWidth.Value);
+                ImGui.PushStyleVar(ImGuiStyleVar.ChildBorderSize, borderWidth.Value);
+                ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, borderWidth.Value);
+                ImGui.PushStyleVar(ImGuiStyleVar.PopupBorderSize, borderWidth.Value);
+                m_pushedVars += 4;
+            }
+
+            Vector2? padding = resolvedStyle.GetVector2(ImTKStyleKey.Padding);
+            if (padding.HasValue)
+            {
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, padding.Value);
+                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, padding.Value);
+                m_pushedVars += 2;
+            }
+
+            Vector2? itemSpacing = resolvedStyle.GetVector2(ImTKStyleKey.ItemSpacing);
+            if (itemSpacing.HasValue)
+            {
+                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, itemSpacing.Value);
+                m_pushedVars++;
+            }
+
+            Vector2? itemInnerSpacing = resolvedStyle.GetVector2(ImTKStyleKey.ItemInnerSpacing);
+            if (itemInnerSpacing.HasValue)
+            {
+                ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, itemInnerSpacing.Value);
+                m_pushedVars++;
+            }
+
+            float? alpha = resolvedStyle.GetFloat(ImTKStyleKey.Alpha);
+            if (alpha.HasValue)
+            {
+                ImGui.PushStyleVar(ImGuiStyleVar.Alpha, alpha.Value);
+                m_pushedVars++;
+            }
+        }
+
+        public virtual void PopFromImGui()
+        {
+            if (m_pushedColors > 0) ImGui.PopStyleColor(m_pushedColors);
+            if (m_pushedVars > 0) ImGui.PopStyleVar(m_pushedVars);
+            m_pushedColors = 0;
+            m_pushedVars = 0;
         }
     }
 }

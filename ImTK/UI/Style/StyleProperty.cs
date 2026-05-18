@@ -16,6 +16,7 @@ namespace ImTK.UI.Style
     public struct StyleProperty
     {
         [FieldOffset(0)] public int key;
+        // key is now treated as HashedString.Hash
         [FieldOffset(4)] public StylePropertyType type;
 
         [FieldOffset(8)] public uint colorValue;
