@@ -13,8 +13,8 @@
 | **Method (Override)**| Public / Protected | Any | PascalCase | `OnLogicUpdate()` | 覆寫生命週期或公開合約 |
 | **Method (Util)** | **Protected** | Any | **camelCase** | `setupDefaults()`, `calculateBounds()`| **[特例]** 供子類呼叫的繼承鍊工具函式 |
 | **Method (Util)** | **Private** | Any | **_camelCase** | `_updateInternalState()` | **[特例]** 僅限自身的私有工具函式，前綴 `_` |
-| **Property / Field**| Public | Any | PascalCase | `DisplayName`, `CurrentState` | 一般的公開資料 |
-| **Property / Field**| Public / Protected | Instance | **camelCase** | `enabled`, `isHovered` | **[特例]** 核心狀態、開關旗標（仿造 Unity 風格） |
+| **Property / Field**| Public / Protected | Instance | **camelCase** | `enabled`, `colorValue`, `style` | 包含一般公開資料、核心狀態與 Struct 欄位（仿造 Unity 風格） |
+| **Field (Readonly)**| Public / Protected | Static | PascalCase | `DefaultPath`, `MainColor` | 靜態且不可變的常數或唯讀變數 |
 | **Field (Variable)**| Private / Internal | Instance | **m_camelCase** | `m_pendingAdd`, `m_enabled` | 私有/內部成員變數，字首 `m_` |
 | **Field (Variable)**| Private / Internal | Static | **s_camelCase** | `s_minAllowedState` | 私有/內部靜態變數，字首 `s_` |
 | **Constant** | Any | Static | PascalCase | `MaxCount`, `DefaultPath` | |

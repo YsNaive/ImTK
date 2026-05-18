@@ -18,22 +18,21 @@ namespace ImTK.UI.Style
 
         public StyleBlock SetColor(ImTKStyleKey key, StyleValue<Color> value)
         {
-            RemoveProperty(StyleVarType.Color, (int)key);
+            RemoveProperty((int)key);
 
             var prop = new StyleProperty
             {
-                Key = (int)key,
-                Type = StyleVarType.Color,
-                Keyword = value.Keyword
+                key = (int)key,
+                type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.ColorValue)
             };
 
             if (value.IsToken)
             {
-                prop.TokenHash = value.Token.Hash;
+                prop.tokenHash = value.Token.Hash;
             }
-            else
+            else if (!value.IsNull)
             {
-                prop.ColorValue = value.Value.u32;
+                prop.colorValue = value.Value.u32;
             }
 
             Properties.Add(prop);
@@ -42,22 +41,21 @@ namespace ImTK.UI.Style
 
         public StyleBlock SetFloat(ImTKStyleKey key, StyleValue<float> value)
         {
-            RemoveProperty(StyleVarType.Float, (int)key);
+            RemoveProperty((int)key);
 
             var prop = new StyleProperty
             {
-                Key = (int)key,
-                Type = StyleVarType.Float,
-                Keyword = value.Keyword
+                key = (int)key,
+                type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.FloatValue)
             };
 
             if (value.IsToken)
             {
-                prop.TokenHash = value.Token.Hash;
+                prop.tokenHash = value.Token.Hash;
             }
-            else
+            else if (!value.IsNull)
             {
-                prop.FloatValue = value.Value;
+                prop.floatValue = value.Value;
             }
 
             Properties.Add(prop);
@@ -66,33 +64,32 @@ namespace ImTK.UI.Style
 
         public StyleBlock SetVector2(ImTKStyleKey key, StyleValue<Vector2> value)
         {
-            RemoveProperty(StyleVarType.Vector2, (int)key);
+            RemoveProperty((int)key);
 
             var prop = new StyleProperty
             {
-                Key = (int)key,
-                Type = StyleVarType.Vector2,
-                Keyword = value.Keyword
+                key = (int)key,
+                type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.Vector2Value)
             };
 
             if (value.IsToken)
             {
-                prop.TokenHash = value.Token.Hash;
+                prop.tokenHash = value.Token.Hash;
             }
-            else
+            else if (!value.IsNull)
             {
-                prop.Vector2Value = value.Value;
+                prop.vector2Value = value.Value;
             }
 
             Properties.Add(prop);
             return this;
         }
 
-        private void RemoveProperty(StyleVarType type, int key)
+        private void RemoveProperty(int key)
         {
             for (int i = 0; i < Properties.Count; i++)
             {
-                if (Properties[i].Type == type && Properties[i].Key == key)
+                if (Properties[i].key == key)
                 {
                     Properties.RemoveAt(i);
                     return;
