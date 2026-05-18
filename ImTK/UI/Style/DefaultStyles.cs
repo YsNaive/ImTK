@@ -14,8 +14,7 @@ namespace ImTK.UI.Style
 
             var win = sheet.AddBlock("Window");
             win.SetColor(VisualElement.StyleKey.BackgroundColor, "--background-1");
-            win.SetColor(VisualElement.StyleKey.HoverColor, "--background-2");
-            win.SetColor(VisualElement.StyleKey.ActiveColor, "--background-2");
+            win.SetColor(Window.StyleKey.TitleBg, "--background-2");
             win.SetColor(VisualElement.StyleKey.BorderColor, "--background-2");
         }
     }

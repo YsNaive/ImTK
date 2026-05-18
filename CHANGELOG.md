@@ -109,3 +109,7 @@
 - 將原有的 `Architecture/` 目錄下的架構設計文件重組並移至對應的子系統資料夾。
 - 將 `AGENT.md` 移至專案根目錄，並擴充了 AI 代理的條列式探勘與開發指引。
 - 修改 `DevelopmentWrapUp.md`，新增了「回歸測試與維護檢查 (Regression Testing & Maintenance)」SOP。
+
+### Changed (變更)
+- 重構了 VisualElement 樣式系統，移除全局 `StyleMappingRegistry` 並引入 `VisualElement<TStyle>` 泛型，讓 `Button` 等特異元件能自行實作 ImGui 的 `PushToImGui` 與屬性擴充 (如 `Window.StyleKey.TitleBg`)。
+- 將 `VisualElementStyle` 和 `ImTKStyleKey` 改為巢狀結構 (`VisualElement.Style` 與 `VisualElement.StyleKey`)，讓命名空間與架構更具層次性與擴展性。
