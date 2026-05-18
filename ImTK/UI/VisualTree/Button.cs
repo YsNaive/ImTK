@@ -4,9 +4,8 @@ using ImTK.UI.Style;
 
 namespace ImTK.UI
 {
-    public class Button : VisualElement
+    public class Button : VisualElement<ButtonStyle>
     {
-
         public string text { get; set; }
 
         public event Action<ClickEvent> onClicked

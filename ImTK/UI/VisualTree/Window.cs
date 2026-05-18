@@ -29,9 +29,8 @@ namespace ImTK.UI
         public bool noDocking { get => GetFlag(ImGuiWindowFlags.NoDocking); set => SetFlag(ImGuiWindowFlags.NoDocking, value); }
     }
 
-    public abstract class Window : VisualElement
+    public abstract class Window : VisualElement<WindowStyle>
     {
-
         private static readonly LogContext s_log = new LogContext("Window");
 
         public string displayName { get; protected set; }
