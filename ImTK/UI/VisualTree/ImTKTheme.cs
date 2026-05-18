@@ -59,43 +59,87 @@ namespace ImTK.UI
         }
 
         // --- Helper for Syntax Sugar ---
-        private Color GetColor(string tokenName, Color fallback = default)
+        private Color GetColor(HashedString token, Color fallback = default)
         {
-            return TryGetColorToken(new HashedString(tokenName).Hash, out Color c) ? c : fallback;
+            return TryGetColorToken(token.Hash, out Color c) ? c : fallback;
         }
-        private void SetColor(string tokenName, Color value)
+        private void SetColor(HashedString token, Color value)
         {
-            SetColorToken(new HashedString(tokenName), value);
+            SetColorToken(token, value);
         }
 
-        private float GetFloat(string tokenName, float fallback = 0f)
+        private float GetFloat(HashedString token, float fallback = 0f)
         {
-            return TryGetFloatToken(new HashedString(tokenName).Hash, out float f) ? f : fallback;
+            return TryGetFloatToken(token.Hash, out float f) ? f : fallback;
         }
-        private void SetFloat(string tokenName, float value)
+        private void SetFloat(HashedString token, float value)
         {
-            SetFloatToken(new HashedString(tokenName), value);
+            SetFloatToken(token, value);
+        }
+
+        // --- Cached Token Keys ---
+        public static class Tokens
+        {
+            public static readonly HashedString BackgroundColor = new HashedString("--background-color");
+            public static readonly HashedString SubBackgroundColor = new HashedString("--sub-background-color");
+            public static readonly HashedString ForegroundColor = new HashedString("--foreground-color");
+            public static readonly HashedString SubForegroundColor = new HashedString("--sub-foreground-color");
+
+            public static readonly HashedString SuccessColor = new HashedString("--success-color");
+            public static readonly HashedString SuccessTextColor = new HashedString("--success-text-color");
+            public static readonly HashedString WarningColor = new HashedString("--warning-color");
+            public static readonly HashedString WarningTextColor = new HashedString("--warning-text-color");
+            public static readonly HashedString DangerColor = new HashedString("--danger-color");
+            public static readonly HashedString DangerTextColor = new HashedString("--danger-text-color");
+            public static readonly HashedString HintColor = new HashedString("--hint-color");
+            public static readonly HashedString HintTextColor = new HashedString("--hint-text-color");
+
+            public static readonly HashedString LabelWidth = new HashedString("--label-width");
+            public static readonly HashedString EdgePadding = new HashedString("--edge-padding");
+
+            // Temporary backwards compatibility tokens
+            public static readonly HashedString Background1 = new HashedString("--background-1");
+            public static readonly HashedString Background2 = new HashedString("--background-2");
+            public static readonly HashedString TextPrimary = new HashedString("--text-primary");
+            public static readonly HashedString PrimaryColor = new HashedString("--primary-color");
+            public static readonly HashedString ButtonHovered = new HashedString("--button-hovered");
+            public static readonly HashedString ButtonActive = new HashedString("--button-active");
+
+            public static class Syntax
+            {
+                public static readonly HashedString FuncColor = new HashedString("--syntax-func-color");
+                public static readonly HashedString ArgsColor = new HashedString("--syntax-args-color");
+                public static readonly HashedString TypeColor = new HashedString("--syntax-type-color");
+                public static readonly HashedString ValueTypeColor = new HashedString("--syntax-value-type-color");
+                public static readonly HashedString PrefixColor = new HashedString("--syntax-prefix-color");
+                public static readonly HashedString StringColor = new HashedString("--syntax-string-color");
+                public static readonly HashedString NumberColor = new HashedString("--syntax-number-color");
+                public static readonly HashedString ControlColor = new HashedString("--syntax-control-color");
+                public static readonly HashedString CommentsColor = new HashedString("--syntax-comments-color");
+                public static readonly HashedString CodeBgColor = new HashedString("--syntax-code-bg-color");
+                public static readonly HashedString CodeTextColor = new HashedString("--syntax-code-text-color");
+            }
         }
 
         // --- Base Colors ---
-        public Color backgroundColor { get => GetColor("--background-color"); set => SetColor("--background-color", value); }
-        public Color subBackgroundColor { get => GetColor("--sub-background-color"); set => SetColor("--sub-background-color", value); }
-        public Color foregroundColor { get => GetColor("--foreground-color"); set => SetColor("--foreground-color", value); }
-        public Color subForegroundColor { get => GetColor("--sub-foreground-color"); set => SetColor("--sub-foreground-color", value); }
+        public Color backgroundColor { get => GetColor(Tokens.BackgroundColor); set => SetColor(Tokens.BackgroundColor, value); }
+        public Color subBackgroundColor { get => GetColor(Tokens.SubBackgroundColor); set => SetColor(Tokens.SubBackgroundColor, value); }
+        public Color foregroundColor { get => GetColor(Tokens.ForegroundColor); set => SetColor(Tokens.ForegroundColor, value); }
+        public Color subForegroundColor { get => GetColor(Tokens.SubForegroundColor); set => SetColor(Tokens.SubForegroundColor, value); }
 
         // --- Semantic Colors ---
-        public Color successColor { get => GetColor("--success-color"); set => SetColor("--success-color", value); }
-        public Color successTextColor { get => GetColor("--success-text-color"); set => SetColor("--success-text-color", value); }
-        public Color warningColor { get => GetColor("--warning-color"); set => SetColor("--warning-color", value); }
-        public Color warningTextColor { get => GetColor("--warning-text-color"); set => SetColor("--warning-text-color", value); }
-        public Color dangerColor { get => GetColor("--danger-color"); set => SetColor("--danger-color", value); }
-        public Color dangerTextColor { get => GetColor("--danger-text-color"); set => SetColor("--danger-text-color", value); }
-        public Color hintColor { get => GetColor("--hint-color"); set => SetColor("--hint-color", value); }
-        public Color hintTextColor { get => GetColor("--hint-text-color"); set => SetColor("--hint-text-color", value); }
+        public Color successColor { get => GetColor(Tokens.SuccessColor); set => SetColor(Tokens.SuccessColor, value); }
+        public Color successTextColor { get => GetColor(Tokens.SuccessTextColor); set => SetColor(Tokens.SuccessTextColor, value); }
+        public Color warningColor { get => GetColor(Tokens.WarningColor); set => SetColor(Tokens.WarningColor, value); }
+        public Color warningTextColor { get => GetColor(Tokens.WarningTextColor); set => SetColor(Tokens.WarningTextColor, value); }
+        public Color dangerColor { get => GetColor(Tokens.DangerColor); set => SetColor(Tokens.DangerColor, value); }
+        public Color dangerTextColor { get => GetColor(Tokens.DangerTextColor); set => SetColor(Tokens.DangerTextColor, value); }
+        public Color hintColor { get => GetColor(Tokens.HintColor); set => SetColor(Tokens.HintColor, value); }
+        public Color hintTextColor { get => GetColor(Tokens.HintTextColor); set => SetColor(Tokens.HintTextColor, value); }
 
         // --- Layout Tokens ---
-        public float labelWidth { get => GetFloat("--label-width", 120f); set => SetFloat("--label-width", value); }
-        public float edgePadding { get => GetFloat("--edge-padding", 10f); set => SetFloat("--edge-padding", value); }
+        public float labelWidth { get => GetFloat(Tokens.LabelWidth, 120f); set => SetFloat(Tokens.LabelWidth, value); }
+        public float edgePadding { get => GetFloat(Tokens.EdgePadding, 10f); set => SetFloat(Tokens.EdgePadding, value); }
 
         // --- Syntax Highlight Wrapper ---
         public class SyntaxTheme
@@ -103,17 +147,17 @@ namespace ImTK.UI
             private ImTKTheme _theme;
             public SyntaxTheme(ImTKTheme theme) { _theme = theme; }
 
-            public Color funcColor { get => _theme.GetColor("--syntax-func-color"); set => _theme.SetColor("--syntax-func-color", value); }
-            public Color argsColor { get => _theme.GetColor("--syntax-args-color"); set => _theme.SetColor("--syntax-args-color", value); }
-            public Color typeColor { get => _theme.GetColor("--syntax-type-color"); set => _theme.SetColor("--syntax-type-color", value); }
-            public Color valueTypeColor { get => _theme.GetColor("--syntax-value-type-color"); set => _theme.SetColor("--syntax-value-type-color", value); }
-            public Color prefixColor { get => _theme.GetColor("--syntax-prefix-color"); set => _theme.SetColor("--syntax-prefix-color", value); }
-            public Color stringColor { get => _theme.GetColor("--syntax-string-color"); set => _theme.SetColor("--syntax-string-color", value); }
-            public Color numberColor { get => _theme.GetColor("--syntax-number-color"); set => _theme.SetColor("--syntax-number-color", value); }
-            public Color controlColor { get => _theme.GetColor("--syntax-control-color"); set => _theme.SetColor("--syntax-control-color", value); }
-            public Color commentsColor { get => _theme.GetColor("--syntax-comments-color"); set => _theme.SetColor("--syntax-comments-color", value); }
-            public Color codeBackgroundColor { get => _theme.GetColor("--syntax-code-bg-color"); set => _theme.SetColor("--syntax-code-bg-color", value); }
-            public Color codeTextColor { get => _theme.GetColor("--syntax-code-text-color"); set => _theme.SetColor("--syntax-code-text-color", value); }
+            public Color funcColor { get => _theme.GetColor(Tokens.Syntax.FuncColor); set => _theme.SetColor(Tokens.Syntax.FuncColor, value); }
+            public Color argsColor { get => _theme.GetColor(Tokens.Syntax.ArgsColor); set => _theme.SetColor(Tokens.Syntax.ArgsColor, value); }
+            public Color typeColor { get => _theme.GetColor(Tokens.Syntax.TypeColor); set => _theme.SetColor(Tokens.Syntax.TypeColor, value); }
+            public Color valueTypeColor { get => _theme.GetColor(Tokens.Syntax.ValueTypeColor); set => _theme.SetColor(Tokens.Syntax.ValueTypeColor, value); }
+            public Color prefixColor { get => _theme.GetColor(Tokens.Syntax.PrefixColor); set => _theme.SetColor(Tokens.Syntax.PrefixColor, value); }
+            public Color stringColor { get => _theme.GetColor(Tokens.Syntax.StringColor); set => _theme.SetColor(Tokens.Syntax.StringColor, value); }
+            public Color numberColor { get => _theme.GetColor(Tokens.Syntax.NumberColor); set => _theme.SetColor(Tokens.Syntax.NumberColor, value); }
+            public Color controlColor { get => _theme.GetColor(Tokens.Syntax.ControlColor); set => _theme.SetColor(Tokens.Syntax.ControlColor, value); }
+            public Color commentsColor { get => _theme.GetColor(Tokens.Syntax.CommentsColor); set => _theme.SetColor(Tokens.Syntax.CommentsColor, value); }
+            public Color codeBackgroundColor { get => _theme.GetColor(Tokens.Syntax.CodeBgColor); set => _theme.SetColor(Tokens.Syntax.CodeBgColor, value); }
+            public Color codeTextColor { get => _theme.GetColor(Tokens.Syntax.CodeTextColor); set => _theme.SetColor(Tokens.Syntax.CodeTextColor, value); }
         }
 
         private SyntaxTheme m_syntax;
@@ -137,18 +181,18 @@ namespace ImTK.UI
                     s_defaultDark.subForegroundColor = new Color(0.8f, 0.8f, 0.8f, 1.0f);
 
                     // Keeping original tokens for backwards compatibility temporarily
-                    s_defaultDark.SetColorToken(new HashedString("--background-1"), s_defaultDark.backgroundColor);
-                    s_defaultDark.SetColorToken(new HashedString("--background-2"), s_defaultDark.subBackgroundColor);
-                    s_defaultDark.SetColorToken(new HashedString("--text-primary"), s_defaultDark.foregroundColor);
-                    s_defaultDark.SetColorToken(new HashedString("--primary-color"), new Color(0.15f, 0.35f, 0.65f, 1.0f));
+                    s_defaultDark.SetColorToken(Tokens.Background1, s_defaultDark.backgroundColor);
+                    s_defaultDark.SetColorToken(Tokens.Background2, s_defaultDark.subBackgroundColor);
+                    s_defaultDark.SetColorToken(Tokens.TextPrimary, s_defaultDark.foregroundColor);
+                    s_defaultDark.SetColorToken(Tokens.PrimaryColor, new Color(0.15f, 0.35f, 0.65f, 1.0f));
 
                     Color hover = new Color(0.15f, 0.35f, 0.65f, 1.0f);
                     hover.v = Math.Min(1.0f, hover.v + 0.1f);
-                    s_defaultDark.SetColorToken(new HashedString("--button-hovered"), hover);
+                    s_defaultDark.SetColorToken(Tokens.ButtonHovered, hover);
 
                     Color active = new Color(0.15f, 0.35f, 0.65f, 1.0f);
                     active.v = Math.Max(0.0f, active.v - 0.1f);
-                    s_defaultDark.SetColorToken(new HashedString("--button-active"), active);
+                    s_defaultDark.SetColorToken(Tokens.ButtonActive, active);
 
                     // Semantic
                     s_defaultDark.successColor = new Color(0.2f, 0.7f, 0.2f, 1.0f);
@@ -197,18 +241,18 @@ namespace ImTK.UI
                     s_defaultLight.subForegroundColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 
                     // Keeping original tokens for backwards compatibility temporarily
-                    s_defaultLight.SetColorToken(new HashedString("--background-1"), s_defaultLight.backgroundColor);
-                    s_defaultLight.SetColorToken(new HashedString("--background-2"), s_defaultLight.subBackgroundColor);
-                    s_defaultLight.SetColorToken(new HashedString("--text-primary"), s_defaultLight.foregroundColor);
-                    s_defaultLight.SetColorToken(new HashedString("--primary-color"), new Color(0.4f, 0.6f, 0.9f, 1.0f));
+                    s_defaultLight.SetColorToken(Tokens.Background1, s_defaultLight.backgroundColor);
+                    s_defaultLight.SetColorToken(Tokens.Background2, s_defaultLight.subBackgroundColor);
+                    s_defaultLight.SetColorToken(Tokens.TextPrimary, s_defaultLight.foregroundColor);
+                    s_defaultLight.SetColorToken(Tokens.PrimaryColor, new Color(0.4f, 0.6f, 0.9f, 1.0f));
 
                     Color hover = new Color(0.4f, 0.6f, 0.9f, 1.0f);
                     hover.v = Math.Min(1.0f, hover.v + 0.1f);
-                    s_defaultLight.SetColorToken(new HashedString("--button-hovered"), hover);
+                    s_defaultLight.SetColorToken(Tokens.ButtonHovered, hover);
 
                     Color active = new Color(0.4f, 0.6f, 0.9f, 1.0f);
                     active.v = Math.Max(0.0f, active.v - 0.1f);
-                    s_defaultLight.SetColorToken(new HashedString("--button-active"), active);
+                    s_defaultLight.SetColorToken(Tokens.ButtonActive, active);
 
                     // Semantic
                     s_defaultLight.successColor = new Color(0.1f, 0.6f, 0.1f, 1.0f);
