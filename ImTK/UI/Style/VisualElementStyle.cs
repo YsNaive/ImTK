@@ -83,6 +83,16 @@ namespace ImTK.UI.Style
             }
         }
 
+        public StyleValue<Color>? disabledTextColor
+        {
+            get => GetOverrideColor(ImTKStyleKey.DisabledTextColor);
+            set
+            {
+                if (value.HasValue) SetColor(ImTKStyleKey.DisabledTextColor, value.Value);
+                else Clear(StyleVarType.Color, ImTKStyleKey.DisabledTextColor);
+            }
+        }
+
         public StyleValue<Color>? hoverColor
         {
             get => GetOverrideColor(ImTKStyleKey.HoverColor);
@@ -113,6 +123,56 @@ namespace ImTK.UI.Style
             }
         }
 
+        public StyleValue<Color>? checkMarkColor
+        {
+            get => GetOverrideColor(ImTKStyleKey.CheckMarkColor);
+            set
+            {
+                if (value.HasValue) SetColor(ImTKStyleKey.CheckMarkColor, value.Value);
+                else Clear(StyleVarType.Color, ImTKStyleKey.CheckMarkColor);
+            }
+        }
+
+        public StyleValue<Vector2>? padding
+        {
+            get => GetOverrideVector2(ImTKStyleKey.Padding);
+            set
+            {
+                if (value.HasValue) SetVector2(ImTKStyleKey.Padding, value.Value);
+                else Clear(StyleVarType.Vector2, ImTKStyleKey.Padding);
+            }
+        }
+
+        public StyleValue<Vector2>? itemSpacing
+        {
+            get => GetOverrideVector2(ImTKStyleKey.ItemSpacing);
+            set
+            {
+                if (value.HasValue) SetVector2(ImTKStyleKey.ItemSpacing, value.Value);
+                else Clear(StyleVarType.Vector2, ImTKStyleKey.ItemSpacing);
+            }
+        }
+
+        public StyleValue<Vector2>? itemInnerSpacing
+        {
+            get => GetOverrideVector2(ImTKStyleKey.ItemInnerSpacing);
+            set
+            {
+                if (value.HasValue) SetVector2(ImTKStyleKey.ItemInnerSpacing, value.Value);
+                else Clear(StyleVarType.Vector2, ImTKStyleKey.ItemInnerSpacing);
+            }
+        }
+
+        public StyleValue<float>? borderWidth
+        {
+            get => GetOverrideFloat(ImTKStyleKey.BorderWidth);
+            set
+            {
+                if (value.HasValue) SetFloat(ImTKStyleKey.BorderWidth, value.Value);
+                else Clear(StyleVarType.Float, ImTKStyleKey.BorderWidth);
+            }
+        }
+
         public StyleValue<float>? borderRadius
         {
             get => GetOverrideFloat(ImTKStyleKey.BorderRadius);
@@ -120,6 +180,26 @@ namespace ImTK.UI.Style
             {
                 if (value.HasValue) SetFloat(ImTKStyleKey.BorderRadius, value.Value);
                 else Clear(StyleVarType.Float, ImTKStyleKey.BorderRadius);
+            }
+        }
+
+        public StyleValue<float>? alpha
+        {
+            get => GetOverrideFloat(ImTKStyleKey.Alpha);
+            set
+            {
+                if (value.HasValue) SetFloat(ImTKStyleKey.Alpha, value.Value);
+                else Clear(StyleVarType.Float, ImTKStyleKey.Alpha);
+            }
+        }
+
+        public StyleValue<float>? disabledAlpha
+        {
+            get => GetOverrideFloat(ImTKStyleKey.DisabledAlpha);
+            set
+            {
+                if (value.HasValue) SetFloat(ImTKStyleKey.DisabledAlpha, value.Value);
+                else Clear(StyleVarType.Float, ImTKStyleKey.DisabledAlpha);
             }
         }
 

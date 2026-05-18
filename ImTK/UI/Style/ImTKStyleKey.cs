@@ -6,13 +6,18 @@ namespace ImTK.UI.Style
         HoverColor = 1,
         ActiveColor = 2,
         TextColor = 3,
-        BorderColor = 4,
-        Width = 5,
-        Height = 6,
+        DisabledTextColor = 4,
+        BorderColor = 5,
+        CheckMarkColor = 6,
+
         Padding = 7,
-        Margin = 8,
-        BorderRadius = 9,
-        // Add more as needed
-        MaxCount = 10
+        ItemSpacing = 8,
+        ItemInnerSpacing = 9,
+        BorderWidth = 10,
+        BorderRadius = 11,
+        Alpha = 12,
+        DisabledAlpha = 13,
+
+        MaxCount
     }
 }
