@@ -35,7 +35,6 @@ namespace ImTK.Test.UI.Element
             };
 
             checkBox.value = true;
-            EventDispatcher.ProcessQueue();
             ImTKAssert.IsTrue(eventFired, "CheckBox onValueChanged event not fired.");
             ImTKAssert.AreEqual(true, checkBox.value, "CheckBox value update failed.");
         }
@@ -53,7 +52,6 @@ namespace ImTK.Test.UI.Element
             };
 
             textField.value = "NewText";
-            EventDispatcher.ProcessQueue();
             ImTKAssert.IsTrue(eventFired, "TextField onValueChanged event not fired.");
             ImTKAssert.AreEqual("NewText", textField.value, "TextField value update failed.");
         }
