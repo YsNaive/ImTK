@@ -16,13 +16,13 @@ namespace ImTK.UI.Style
 
         // --- Core Setters ---
 
-        public StyleBlock SetColor(ImTKStyleKey key, StyleValue<Color> value)
+        public StyleBlock SetColor(HashedString key, StyleValue<Color> value)
         {
-            RemoveProperty((int)key);
+            RemoveProperty(key.Hash);
 
             var prop = new StyleProperty
             {
-                key = (int)key,
+                key = key.Hash,
                 type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.ColorValue)
             };
 
@@ -39,13 +39,13 @@ namespace ImTK.UI.Style
             return this;
         }
 
-        public StyleBlock SetFloat(ImTKStyleKey key, StyleValue<float> value)
+        public StyleBlock SetFloat(HashedString key, StyleValue<float> value)
         {
-            RemoveProperty((int)key);
+            RemoveProperty(key.Hash);
 
             var prop = new StyleProperty
             {
-                key = (int)key,
+                key = key.Hash,
                 type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.FloatValue)
             };
 
@@ -62,13 +62,13 @@ namespace ImTK.UI.Style
             return this;
         }
 
-        public StyleBlock SetVector2(ImTKStyleKey key, StyleValue<Vector2> value)
+        public StyleBlock SetVector2(HashedString key, StyleValue<Vector2> value)
         {
-            RemoveProperty((int)key);
+            RemoveProperty(key.Hash);
 
             var prop = new StyleProperty
             {
-                key = (int)key,
+                key = key.Hash,
                 type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.Vector2Value)
             };
 
@@ -85,11 +85,11 @@ namespace ImTK.UI.Style
             return this;
         }
 
-        private void RemoveProperty(int key)
+        private void RemoveProperty(int keyHash)
         {
             for (int i = 0; i < Properties.Count; i++)
             {
-                if (Properties[i].key == key)
+                if (Properties[i].key == keyHash)
                 {
                     Properties.RemoveAt(i);
                     return;
@@ -99,12 +99,12 @@ namespace ImTK.UI.Style
 
         // --- Fluent Syntax Sugar ---
 
-        public StyleBlock BackgroundColor(StyleValue<Color> value) => SetColor(ImTKStyleKey.BackgroundColor, value);
-        public StyleBlock TextColor(StyleValue<Color> value) => SetColor(ImTKStyleKey.TextColor, value);
-        public StyleBlock HoverColor(StyleValue<Color> value) => SetColor(ImTKStyleKey.HoverColor, value);
-        public StyleBlock ActiveColor(StyleValue<Color> value) => SetColor(ImTKStyleKey.ActiveColor, value);
-        public StyleBlock BorderColor(StyleValue<Color> value) => SetColor(ImTKStyleKey.BorderColor, value);
+        public StyleBlock BackgroundColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.BackgroundColor, value);
+        public StyleBlock TextColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.TextColor, value);
+        public StyleBlock HoverColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.HoverColor, value);
+        public StyleBlock ActiveColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.ActiveColor, value);
+        public StyleBlock BorderColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.BorderColor, value);
 
-        public StyleBlock BorderRadius(StyleValue<float> value) => SetFloat(ImTKStyleKey.BorderRadius, value);
+        public StyleBlock BorderRadius(StyleValue<float> value) => SetFloat(VisualElement.StyleKey.BorderRadius, value);
     }
 }

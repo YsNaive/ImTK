@@ -1,19 +1,52 @@
 using System;
 using ImGuiNET;
 using ImTK.UI.Style;
+using ImTK.Core;
 
 namespace ImTK.UI
 {
-    public class Button : VisualElement
+    public class Button : VisualElement<Button.Style>
     {
-        public class Mapping : StyleMapping
+        public new class Style : VisualElement.Style
         {
-            public Mapping()
+            private int m_pushedColors = 0;
+
+            public override void PushToImGui(ResolvedStyle resolvedStyle)
             {
-                colorTargets[(int)ImTKStyleKey.BackgroundColor] = (int)ImGuiCol.Button;
-                colorTargets[(int)ImTKStyleKey.HoverColor] = (int)ImGuiCol.ButtonHovered;
-                colorTargets[(int)ImTKStyleKey.ActiveColor] = (int)ImGuiCol.ButtonActive;
-                colorTargets[(int)ImTKStyleKey.TextColor] = (int)ImGuiCol.Text;
+                base.PushToImGui(resolvedStyle);
+
+                m_pushedColors = 0;
+
+                Color? bgColor = resolvedStyle.GetColor(VisualElement.StyleKey.BackgroundColor);
+                if (bgColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Button, bgColor.Value.u32);
+                    m_pushedColors++;
+                }
+
+                Color? hoverColor = resolvedStyle.GetColor(VisualElement.StyleKey.HoverColor);
+                if (hoverColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, hoverColor.Value.u32);
+                    m_pushedColors++;
+                }
+
+                Color? activeColor = resolvedStyle.GetColor(VisualElement.StyleKey.ActiveColor);
+                if (activeColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.ButtonActive, activeColor.Value.u32);
+                    m_pushedColors++;
+                }
+            }
+
+            public override void PopFromImGui()
+            {
+                if (m_pushedColors > 0)
+                {
+                    ImGui.PopStyleColor(m_pushedColors);
+                    m_pushedColors = 0;
+                }
+                base.PopFromImGui();
             }
         }
 

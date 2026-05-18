@@ -2,7 +2,7 @@
 
 ImTK 的主題與樣式系統分為兩層架構：
 
-1. **元件層級 (`VisualElementStyle` & `ImTKStyleKey`)**
+1. **元件層級 (`VisualElement.Style` & `VisualElement.StyleKey`)**
    這是底層物理層的映射，用來直接控制 `ImGui.PushStyleColor` 與 `ImGui.PushStyleVar`。此處的 Key 都是明確與 ImGui API 綁定的，例如 `BackgroundColor`, `Padding`, `ItemSpacing`。
 
 2. **全域主題層級 (`ImTKTheme`)**

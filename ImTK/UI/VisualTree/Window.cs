@@ -2,6 +2,7 @@ using System;
 using ImGuiNET;
 using ImTK.Log;
 using ImTK.UI.Style;
+using ImTK.Core;
 
 namespace ImTK.UI
 {
@@ -29,15 +30,50 @@ namespace ImTK.UI
         public bool noDocking { get => GetFlag(ImGuiWindowFlags.NoDocking); set => SetFlag(ImGuiWindowFlags.NoDocking, value); }
     }
 
-    public abstract class Window : VisualElement
+    public abstract class Window : VisualElement<Window.Style>
     {
-        public class Mapping : StyleMapping
+        public new class StyleKey : VisualElement.StyleKey
         {
-            public Mapping()
+            public static readonly HashedString TitleBg = new HashedString("TitleBg");
+        }
+
+        public new class Style : VisualElement.Style
+        {
+            private int m_pushedColors = 0;
+
+            public override void PushToImGui(ResolvedStyle resolvedStyle)
             {
-                colorTargets[(int)ImTKStyleKey.BackgroundColor] = (int)ImGuiCol.WindowBg;
-                colorTargets[(int)ImTKStyleKey.HoverColor] = (int)ImGuiCol.TitleBg; // Mapping logic from before roughly
-                // ImGui window specific colors
+                base.PushToImGui(resolvedStyle);
+
+                m_pushedColors = 0;
+
+                Color? titleBg = resolvedStyle.GetColor(Window.StyleKey.TitleBg);
+                if (titleBg.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.TitleBg, titleBg.Value.u32);
+                    ImGui.PushStyleColor(ImGuiCol.TitleBgActive, titleBg.Value.u32);
+                    m_pushedColors += 2;
+                }
+            }
+
+            public override void PopFromImGui()
+            {
+                if (m_pushedColors > 0)
+                {
+                    ImGui.PopStyleColor(m_pushedColors);
+                    m_pushedColors = 0;
+                }
+                base.PopFromImGui();
+            }
+
+            public StyleValue<Color>? titleBg
+            {
+                get => GetOverrideColor(StyleKey.TitleBg);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.TitleBg, value.Value);
+                    else Clear(StyleKey.TitleBg);
+                }
             }
         }
 
