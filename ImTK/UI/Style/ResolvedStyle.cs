@@ -28,7 +28,7 @@ namespace ImTK.UI.Style
             ApplyAncestorStyleSheets(m_element);
 
             // 4. Inline Style Overrides
-            if (m_element.internalStyle is VisualElementStyle styleBase && styleBase.m_overrideStyles != null)
+            if (m_element.internalStyle is VisualElement.Style styleBase && styleBase.m_overrideStyles != null)
             {
                 foreach (var prop in styleBase.m_overrideStyles)
                 {

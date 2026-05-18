@@ -90,8 +90,8 @@ ImTK 的 UI 系統目標是**「在 Immediate Mode (ImGui) 的底層上，搭建
 
 為了讓開發者能以類似 CSS 或 Unity UITK 的語法糖修改元件外觀，ImTK 實作了專屬的 `VisualElement.style` 與 `ImTKTheme` 系統。
 
-### 6.1 HashedString 與 ImTKStyleKey (核心解耦)
-為了將 UI 元件的樣式語義 (如 BackgroundColor) 與 ImGui 底層具體的 ImGuiCol (如 WindowBg, Button 等) 徹底解耦，我們引進了 `ImTKStyleKey` 統一列舉。並且透過 `HashedString` 實作 Token (如 "--primary") 和 class 名字的 O(1) 查表。
+### 6.1 HashedString 與 VisualElement.StyleKey (核心解耦)
+為了將 UI 元件的樣式語義 (如 BackgroundColor) 與 ImGui 底層具體的 ImGuiCol (如 WindowBg, Button 等) 徹底解耦，我們引進了 `VisualElement.StyleKey` 統一列舉。並且透過 `HashedString` 實作 Token (如 "--primary") 和 class 名字的 O(1) 查表。
 
 * **`StyleProperty`**: 利用 C# 的 `[StructLayout(LayoutKind.Explicit)]`，讓 Color、Float、Vector2 和 TokenHash 共用記憶體，實現零裝箱。
 * **零成本預設**: 預設情況下，`VisualElement` 不會分配任何 Style List 的記憶體，直到被顯式賦值或套用 Theme。
@@ -102,7 +102,7 @@ ImTK 的樣式遵循完整的 CSS 層疊優先級 (Inline > Local Ancestor > Glo
 2. **`localStyleSheet`**: 掛載於祖先節點的樣式表 (向父節點遞迴層疊)。
 3. **`Inline Style`**: 元件自身的 `style` 覆寫，優先級最高。
 
-當元素的 `classList` 修改時，會觸發 Dirty 標記，並在 `Render()` 階段由 `ComputeStyle.Overlay` 快取出一份合併好的 `m_computedStyles`，然後利用 `StyleMapping` 查表自動將 `ImTKStyleKey` 注入為 `ImGuiCol`，保證每幀渲染效能。
+當元素的 `classList` 修改時，會觸發 Dirty 標記，並在 `Render()` 階段由 `ComputeStyle.Overlay` 快取出一份合併好的 `m_computedStyles`，然後利用 `StyleMapping` 查表自動將 `VisualElement.StyleKey` 注入為 `ImGuiCol`，保證每幀渲染效能。
 
 ### 6.3 Design Tokens 與自動 Fallback
 Theme 從死板的屬性轉型為 `Dictionary<int, Color>` 等 Token 儲存器：

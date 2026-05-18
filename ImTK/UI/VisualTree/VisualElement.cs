@@ -3,10 +3,390 @@ using System.Collections.Generic;
 using ImGuiNET;
 using ImTK.UI.Style;
 
+using System.Numerics;
+using ImTK.Core;
+
 namespace ImTK.UI
 {
     public class VisualElement : IVisualElementHierarchy
     {
+        public class StyleKey
+        {
+            public static readonly HashedString BackgroundColor = new HashedString("BackgroundColor");
+            public static readonly HashedString HoverColor = new HashedString("HoverColor");
+            public static readonly HashedString ActiveColor = new HashedString("ActiveColor");
+            public static readonly HashedString TextColor = new HashedString("TextColor");
+            public static readonly HashedString DisabledTextColor = new HashedString("DisabledTextColor");
+            public static readonly HashedString BorderColor = new HashedString("BorderColor");
+            public static readonly HashedString CheckMarkColor = new HashedString("CheckMarkColor");
+
+            public static readonly HashedString Padding = new HashedString("Padding");
+            public static readonly HashedString ItemSpacing = new HashedString("ItemSpacing");
+            public static readonly HashedString ItemInnerSpacing = new HashedString("ItemInnerSpacing");
+            public static readonly HashedString BorderWidth = new HashedString("BorderWidth");
+            public static readonly HashedString BorderRadius = new HashedString("BorderRadius");
+            public static readonly HashedString Alpha = new HashedString("Alpha");
+            public static readonly HashedString DisabledAlpha = new HashedString("DisabledAlpha");
+        }
+
+        public class Style : IVisualElementStyle
+        {
+            internal List<StyleProperty> m_overrideStyles;
+
+            public Style() { }
+
+            // --- Low-level Override Setters ---
+
+            public void SetColor(HashedString key, StyleValue<Color> value)
+            {
+                EnsureOverrideStyles();
+                RemoveEntry(key.Hash);
+
+                if (value.IsNull) return;
+
+                var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.ColorValue };
+                if (value.IsToken) prop.tokenHash = value.Token.Hash;
+                else prop.colorValue = value.Value.u32;
+
+                m_overrideStyles.Add(prop);
+            }
+
+            public void SetFloat(HashedString key, StyleValue<float> value)
+            {
+                EnsureOverrideStyles();
+                RemoveEntry(key.Hash);
+
+                if (value.IsNull) return;
+
+                var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.FloatValue };
+                if (value.IsToken) prop.tokenHash = value.Token.Hash;
+                else prop.floatValue = value.Value;
+
+                m_overrideStyles.Add(prop);
+            }
+
+            public void SetVector2(HashedString key, StyleValue<Vector2> value)
+            {
+                EnsureOverrideStyles();
+                RemoveEntry(key.Hash);
+
+                if (value.IsNull) return;
+
+                var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.Vector2Value };
+                if (value.IsToken) prop.tokenHash = value.Token.Hash;
+                else prop.vector2Value = value.Value;
+
+                m_overrideStyles.Add(prop);
+            }
+
+            // --- Low-level Override Clearers ---
+
+            public void Clear(HashedString key)
+            {
+                RemoveEntry(key.Hash);
+            }
+
+            // --- High-level Property Syntax Sugar ---
+
+            public StyleValue<Color>? backgroundColor
+            {
+                get => GetOverrideColor(StyleKey.BackgroundColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.BackgroundColor, value.Value);
+                    else Clear(StyleKey.BackgroundColor);
+                }
+            }
+
+            public StyleValue<Color>? textColor
+            {
+                get => GetOverrideColor(StyleKey.TextColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.TextColor, value.Value);
+                    else Clear(StyleKey.TextColor);
+                }
+            }
+
+            public StyleValue<Color>? disabledTextColor
+            {
+                get => GetOverrideColor(StyleKey.DisabledTextColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.DisabledTextColor, value.Value);
+                    else Clear(StyleKey.DisabledTextColor);
+                }
+            }
+
+            public StyleValue<Color>? hoverColor
+            {
+                get => GetOverrideColor(StyleKey.HoverColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.HoverColor, value.Value);
+                    else Clear(StyleKey.HoverColor);
+                }
+            }
+
+            public StyleValue<Color>? activeColor
+            {
+                get => GetOverrideColor(StyleKey.ActiveColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.ActiveColor, value.Value);
+                    else Clear(StyleKey.ActiveColor);
+                }
+            }
+
+            public StyleValue<Color>? borderColor
+            {
+                get => GetOverrideColor(StyleKey.BorderColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.BorderColor, value.Value);
+                    else Clear(StyleKey.BorderColor);
+                }
+            }
+
+            public StyleValue<Color>? checkMarkColor
+            {
+                get => GetOverrideColor(StyleKey.CheckMarkColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.CheckMarkColor, value.Value);
+                    else Clear(StyleKey.CheckMarkColor);
+                }
+            }
+
+            public StyleValue<Vector2>? padding
+            {
+                get => GetOverrideVector2(StyleKey.Padding);
+                set
+                {
+                    if (value.HasValue) SetVector2(StyleKey.Padding, value.Value);
+                    else Clear(StyleKey.Padding);
+                }
+            }
+
+            public StyleValue<Vector2>? itemSpacing
+            {
+                get => GetOverrideVector2(StyleKey.ItemSpacing);
+                set
+                {
+                    if (value.HasValue) SetVector2(StyleKey.ItemSpacing, value.Value);
+                    else Clear(StyleKey.ItemSpacing);
+                }
+            }
+
+            public StyleValue<Vector2>? itemInnerSpacing
+            {
+                get => GetOverrideVector2(StyleKey.ItemInnerSpacing);
+                set
+                {
+                    if (value.HasValue) SetVector2(StyleKey.ItemInnerSpacing, value.Value);
+                    else Clear(StyleKey.ItemInnerSpacing);
+                }
+            }
+
+            public StyleValue<float>? borderWidth
+            {
+                get => GetOverrideFloat(StyleKey.BorderWidth);
+                set
+                {
+                    if (value.HasValue) SetFloat(StyleKey.BorderWidth, value.Value);
+                    else Clear(StyleKey.BorderWidth);
+                }
+            }
+
+            public StyleValue<float>? borderRadius
+            {
+                get => GetOverrideFloat(StyleKey.BorderRadius);
+                set
+                {
+                    if (value.HasValue) SetFloat(StyleKey.BorderRadius, value.Value);
+                    else Clear(StyleKey.BorderRadius);
+                }
+            }
+
+            public StyleValue<float>? alpha
+            {
+                get => GetOverrideFloat(StyleKey.Alpha);
+                set
+                {
+                    if (value.HasValue) SetFloat(StyleKey.Alpha, value.Value);
+                    else Clear(StyleKey.Alpha);
+                }
+            }
+
+            public StyleValue<float>? disabledAlpha
+            {
+                get => GetOverrideFloat(StyleKey.DisabledAlpha);
+                set
+                {
+                    if (value.HasValue) SetFloat(StyleKey.DisabledAlpha, value.Value);
+                    else Clear(StyleKey.DisabledAlpha);
+                }
+            }
+
+            // --- Internal Helpers ---
+
+            protected void EnsureOverrideStyles()
+            {
+                if (m_overrideStyles == null) m_overrideStyles = new List<StyleProperty>();
+            }
+
+            protected void RemoveEntry(int keyHash)
+            {
+                if (m_overrideStyles == null) return;
+                for (int i = 0; i < m_overrideStyles.Count; i++)
+                {
+                    if (m_overrideStyles[i].key == keyHash)
+                    {
+                        m_overrideStyles.RemoveAt(i);
+                        return;
+                    }
+                }
+            }
+
+            protected StyleValue<Color>? GetOverrideColor(HashedString key)
+            {
+                if (m_overrideStyles == null) return null;
+                int keyHash = key.Hash;
+                for (int i = 0; i < m_overrideStyles.Count; i++)
+                {
+                    if (m_overrideStyles[i].key == keyHash)
+                    {
+                        if (m_overrideStyles[i].isToken)
+                            return new StyleValue<Color> { Keyword = StyleKeyword.Undefined };
+                        return new StyleValue<Color> { Value = (Color)m_overrideStyles[i].colorValue };
+                    }
+                }
+                return null;
+            }
+
+            protected StyleValue<float>? GetOverrideFloat(HashedString key)
+            {
+                if (m_overrideStyles == null) return null;
+                int keyHash = key.Hash;
+                for (int i = 0; i < m_overrideStyles.Count; i++)
+                {
+                    if (m_overrideStyles[i].key == keyHash)
+                    {
+                        if (m_overrideStyles[i].isToken)
+                            return new StyleValue<float> { Keyword = StyleKeyword.Undefined };
+                        return new StyleValue<float> { Value = m_overrideStyles[i].floatValue };
+                    }
+                }
+                return null;
+            }
+
+            protected StyleValue<Vector2>? GetOverrideVector2(HashedString key)
+            {
+                if (m_overrideStyles == null) return null;
+                int keyHash = key.Hash;
+                for (int i = 0; i < m_overrideStyles.Count; i++)
+                {
+                    if (m_overrideStyles[i].key == keyHash)
+                    {
+                        if (m_overrideStyles[i].isToken)
+                            return new StyleValue<Vector2> { Keyword = StyleKeyword.Undefined };
+                        return new StyleValue<Vector2> { Value = m_overrideStyles[i].vector2Value };
+                    }
+                }
+                return null;
+            }
+
+            // --- IVisualElementStyle Implementation ---
+
+            private int m_pushedColors = 0;
+            private int m_pushedVars = 0;
+
+            public virtual void PushToImGui(ResolvedStyle resolvedStyle)
+            {
+                m_pushedColors = 0;
+                m_pushedVars = 0;
+
+                Color? bgColor = resolvedStyle.GetColor(StyleKey.BackgroundColor);
+                if (bgColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor.Value.u32);
+                    ImGui.PushStyleColor(ImGuiCol.ChildBg, bgColor.Value.u32);
+                    m_pushedColors += 2;
+                }
+
+                Color? textColor = resolvedStyle.GetColor(StyleKey.TextColor);
+                if (textColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Text, textColor.Value.u32);
+                    m_pushedColors++;
+                }
+
+                Color? borderColor = resolvedStyle.GetColor(StyleKey.BorderColor);
+                if (borderColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Border, borderColor.Value.u32);
+                    m_pushedColors++;
+                }
+
+                float? borderRadius = resolvedStyle.GetFloat(StyleKey.BorderRadius);
+                if (borderRadius.HasValue)
+                {
+                    ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, borderRadius.Value);
+                    ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, borderRadius.Value);
+                    ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, borderRadius.Value);
+                    ImGui.PushStyleVar(ImGuiStyleVar.PopupRounding, borderRadius.Value);
+                    m_pushedVars += 4;
+                }
+
+                float? borderWidth = resolvedStyle.GetFloat(StyleKey.BorderWidth);
+                if (borderWidth.HasValue)
+                {
+                    ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, borderWidth.Value);
+                    ImGui.PushStyleVar(ImGuiStyleVar.ChildBorderSize, borderWidth.Value);
+                    ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, borderWidth.Value);
+                    ImGui.PushStyleVar(ImGuiStyleVar.PopupBorderSize, borderWidth.Value);
+                    m_pushedVars += 4;
+                }
+
+                Vector2? padding = resolvedStyle.GetVector2(StyleKey.Padding);
+                if (padding.HasValue)
+                {
+                    ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, padding.Value);
+                    ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, padding.Value);
+                    m_pushedVars += 2;
+                }
+
+                Vector2? itemSpacing = resolvedStyle.GetVector2(StyleKey.ItemSpacing);
+                if (itemSpacing.HasValue)
+                {
+                    ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, itemSpacing.Value);
+                    m_pushedVars++;
+                }
+
+                Vector2? itemInnerSpacing = resolvedStyle.GetVector2(StyleKey.ItemInnerSpacing);
+                if (itemInnerSpacing.HasValue)
+                {
+                    ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, itemInnerSpacing.Value);
+                    m_pushedVars++;
+                }
+
+                float? alpha = resolvedStyle.GetFloat(StyleKey.Alpha);
+                if (alpha.HasValue)
+                {
+                    ImGui.PushStyleVar(ImGuiStyleVar.Alpha, alpha.Value);
+                    m_pushedVars++;
+                }
+            }
+
+            public virtual void PopFromImGui()
+            {
+                if (m_pushedColors > 0) ImGui.PopStyleColor(m_pushedColors);
+                if (m_pushedVars > 0) ImGui.PopStyleVar(m_pushedVars);
+                m_pushedColors = 0;
+                m_pushedVars = 0;
+            }
+        }
+
         private static int s_elementCounter = 0;
         protected readonly int m_elementId;
 
@@ -23,7 +403,7 @@ namespace ImTK.UI
 
         public IVisualElementStyle internalStyle { get; set; }
 
-        public VisualElementStyle style => internalStyle as VisualElementStyle;
+        public Style style => internalStyle as Style;
 
 
         public StyleClass classList { get; private set; }
@@ -49,7 +429,7 @@ namespace ImTK.UI
         public VisualElement()
         {
             m_elementId = ++s_elementCounter;
-            internalStyle = new VisualElementStyle();
+            internalStyle = new Style();
             resolvedStyle = new ResolvedStyle(this);
             hierarchy = new VisualElementHierarchy(this);
 
