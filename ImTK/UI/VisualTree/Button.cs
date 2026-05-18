@@ -7,9 +7,35 @@ namespace ImTK.UI
 {
     public class Button : VisualElement<Button.Style>
     {
+        public new class StyleKey : VisualElement.StyleKey
+        {
+            public static readonly HashedString Width = new HashedString("Width");
+            public static readonly HashedString Height = new HashedString("Height");
+        }
+
         public new class Style : VisualElement.Style
         {
             private int m_pushedColors = 0;
+
+            public StyleValue<float>? width
+            {
+                get => GetOverrideFloat(StyleKey.Width);
+                set
+                {
+                    if (value.HasValue) SetFloat(StyleKey.Width, value.Value);
+                    else Clear(StyleKey.Width);
+                }
+            }
+
+            public StyleValue<float>? height
+            {
+                get => GetOverrideFloat(StyleKey.Height);
+                set
+                {
+                    if (value.HasValue) SetFloat(StyleKey.Height, value.Value);
+                    else Clear(StyleKey.Height);
+                }
+            }
 
             public override void PushToImGui(ResolvedStyle resolvedStyle)
             {
@@ -70,7 +96,10 @@ namespace ImTK.UI
 
         protected override void OnRenderSelf()
         {
-            if (ImGui.Button(text))
+            float width = resolvedStyle.GetFloat(StyleKey.Width) ?? 0f;
+            float height = resolvedStyle.GetFloat(StyleKey.Height) ?? 0f;
+
+            if (ImGui.Button(text, new System.Numerics.Vector2(width, height)))
             {
                 var evt = EventPool<ClickEvent>.Get();
                 SendEvent(evt);

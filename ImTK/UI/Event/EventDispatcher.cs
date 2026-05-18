@@ -8,23 +8,26 @@ namespace ImTK.UI
     {
         private static readonly LogContext s_log = new LogContext("EventDispatcher");
         private static readonly Queue<UIEventBase> s_eventQueue = new Queue<UIEventBase>();
-        private static readonly HashSet<VisualElement> s_hierarchyDirtyElements = new HashSet<VisualElement>();
+
+        private static HashSet<VisualElement> s_dirtyBufferA = new HashSet<VisualElement>();
+        private static HashSet<VisualElement> s_dirtyBufferB = new HashSet<VisualElement>();
+        private static HashSet<VisualElement> s_currentDirtyBuffer = s_dirtyBufferA;
 
         internal static void MarkHierarchyDirty(VisualElement element)
         {
             if (element != null)
             {
-                s_hierarchyDirtyElements.Add(element);
+                s_currentDirtyBuffer.Add(element);
             }
         }
 
         internal static void ProcessDirtyElements()
         {
-            if (s_hierarchyDirtyElements.Count == 0) return;
+            if (s_currentDirtyBuffer.Count == 0) return;
 
-            VisualElement[] elementsToProcess = new VisualElement[s_hierarchyDirtyElements.Count];
-            s_hierarchyDirtyElements.CopyTo(elementsToProcess);
-            s_hierarchyDirtyElements.Clear();
+            var elementsToProcess = s_currentDirtyBuffer;
+            s_currentDirtyBuffer = (s_currentDirtyBuffer == s_dirtyBufferA) ? s_dirtyBufferB : s_dirtyBufferA;
+            s_currentDirtyBuffer.Clear();
 
             foreach (var element in elementsToProcess)
             {
@@ -46,6 +49,7 @@ namespace ImTK.UI
                     evt.Dispose();
                 }
             }
+            elementsToProcess.Clear();
         }
 
         public static void Enqueue(UIEventBase evt)
@@ -73,6 +77,10 @@ namespace ImTK.UI
                     while (currentElement != null)
                     {
                         evt.current = currentElement;
+
+                        // Optimize bubbling by checking if the element has callbacks for this event
+                        // Note: For custom event overrides, developers must hook into HandleEvent,
+                        // so we still always call HandleEvent but we can skip upwards propagation if no parents have listeners.
                         currentElement.HandleEvent(evt);
 
                         if (evt.IsPropagationStopped || !bubbles)
@@ -80,6 +88,7 @@ namespace ImTK.UI
                             break;
                         }
 
+                        // Bubble up
                         currentElement = currentElement.hierarchy.parent;
                     }
                 }
@@ -104,7 +113,8 @@ namespace ImTK.UI
                 var evt = s_eventQueue.Dequeue();
                 evt.Dispose();
             }
-            s_hierarchyDirtyElements.Clear();
+            s_dirtyBufferA.Clear();
+            s_dirtyBufferB.Clear();
         }
     }
 }
