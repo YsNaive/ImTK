@@ -64,11 +64,7 @@ namespace ImTK.UI
 
         protected override void OnRenderLayout()
         {
-            float labelWidth = 150.0f;
-            if (theme.TryGetFloatToken(ImTKTheme.DrawerLabelWidthToken, out float val))
-            {
-                labelWidth = val;
-            }
+            float labelWidth = theme.labelWidth;
 
             if (layoutMode == DrawerLayoutMode.Inline)
             {

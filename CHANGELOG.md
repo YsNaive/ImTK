@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 ### Added (新增)
+- 實作了基礎 UI 元件 (`TextElement`, `CheckBox`, `TextField`)，封裝 ImGui 基礎操作並支援安全的值綁定與狀態事件。
+- 重構了 `ImTKTheme` 主題系統，導入基於 `ColorFamily` 的高階語義群組 (如 `normalColor`, `successColor`)。
+- 擴充並標準化了 `ImTKStyleKey`，移除不適用於 ImGui 的 CSS 屬性，新增支援 Layout (`Padding`, `ItemSpacing`) 與透明度 (`DisabledAlpha`) 的物理對應。
+- 優化了 `ImTKTheme` 與 `ImTKStyleKey` 之間的 `HashedString` 快取，達成零分配讀取，避免每幀執行字串雜湊運算。
 - 實作了高效的 CSS 子集樣式系統 (`StyleSystem`)，具備 Inline > Local > Global 的優先級層疊機制。
 
 - 導入了 `HashedString` 與 `ImTKStyleKey` 高階列舉，徹底解耦樣式語義與底層 ImGui 變數，達成 O(1) 極速查表與零記憶體分配 (Zero GC Allocation)。
@@ -49,6 +53,10 @@
 
 
 ### Added (新增)
+- 實作了基礎 UI 元件 (`TextElement`, `CheckBox`, `TextField`)，封裝 ImGui 基礎操作並支援安全的值綁定與狀態事件。
+- 重構了 `ImTKTheme` 主題系統，導入基於 `ColorFamily` 的高階語義群組 (如 `normalColor`, `successColor`)。
+- 擴充並標準化了 `ImTKStyleKey`，移除不適用於 ImGui 的 CSS 屬性，新增支援 Layout (`Padding`, `ItemSpacing`) 與透明度 (`DisabledAlpha`) 的物理對應。
+- 優化了 `ImTKTheme` 與 `ImTKStyleKey` 之間的 `HashedString` 快取，達成零分配讀取，避免每幀執行字串雜湊運算。
 - 實作了高效的 CSS 子集樣式系統 (`StyleSystem`)，具備 Inline > Local > Global 的優先級層疊機制。
 
 - 導入了 `HashedString` 與 `ImTKStyleKey` 高階列舉，徹底解耦樣式語義與底層 ImGui 變數，達成 O(1) 極速查表與零記憶體分配 (Zero GC Allocation)。

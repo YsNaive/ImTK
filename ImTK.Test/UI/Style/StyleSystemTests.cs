@@ -69,7 +69,7 @@ namespace ImTK.Test.UI.Style
             var globalSheet = StyleSheet.Global;
             var globalBlock = globalSheet.AddBlock("test-btn");
             globalBlock.BackgroundColor(Color.Red);
-            globalBlock.SetFloat(ImTKStyleKey.Width, 0.5f);
+            globalBlock.SetFloat(ImTKStyleKey.BorderRadius, 0.5f);
 
             // Setup Local
             var parent = new VisualElement();
@@ -84,7 +84,7 @@ namespace ImTK.Test.UI.Style
             parent.Add(element);
 
             // Setup Inline
-            element.style.SetFloat(ImTKStyleKey.Width, 0.8f); // Overrides Global
+            element.style.SetFloat(ImTKStyleKey.BorderRadius, 0.8f); // Overrides Global
 
             // Compute
             var computed = ComputeStyle.Overlay(element);
@@ -99,7 +99,7 @@ namespace ImTK.Test.UI.Style
                     ImTKAssert.AreEqual(Color.Green.u32, prop.ColorValue, "Local style should override global style.");
                     foundColor = true;
                 }
-                else if (prop.Type == StyleVarType.Float && prop.Key == (int)ImTKStyleKey.Width)
+                else if (prop.Type == StyleVarType.Float && prop.Key == (int)ImTKStyleKey.BorderRadius)
                 {
                     ImTKAssert.AreEqual(0.8f, prop.FloatValue, "Inline style should override global style.");
                     foundAlpha = true;
