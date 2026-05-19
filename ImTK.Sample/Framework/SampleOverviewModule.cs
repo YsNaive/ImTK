@@ -21,6 +21,39 @@ namespace ImTK.Sample.Framework
 
         private ISampleScenario m_currentScenario;
 
+        private class OverviewHostElement : VisualElement
+        {
+            public ScenarioListElement PanelA { get; set; }
+            public ScenarioDetailElement PanelB { get; set; }
+            public ImRect PanelARect { get; set; }
+            public ImRect PanelBRect { get; set; }
+
+            protected override void OnRenderLayout()
+            {
+                ImGuiWindowFlags flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings;
+
+                // Render Panel A
+                ImGui.SetNextWindowPos(PanelARect.min);
+                ImGui.SetNextWindowSize(new System.Numerics.Vector2(PanelARect.max.X - PanelARect.min.X, PanelARect.max.Y - PanelARect.min.Y));
+                if (ImGui.Begin("ImTK Sample Overview", flags))
+                {
+                    PanelA?.Render();
+                }
+                ImGui.End();
+
+                // Render Panel B
+                ImGui.SetNextWindowPos(PanelBRect.min);
+                ImGui.SetNextWindowSize(new System.Numerics.Vector2(PanelBRect.max.X - PanelBRect.min.X, PanelBRect.max.Y - PanelBRect.min.Y));
+                if (ImGui.Begin("Scenario Details", flags))
+                {
+                    PanelB?.Render();
+                }
+                ImGui.End();
+            }
+        }
+
+        private OverviewHostElement m_overviewHost;
+
         private SampleOverviewModule() { }
 
         protected override void OnInitializeSelf()
@@ -44,6 +77,19 @@ namespace ImTK.Sample.Framework
             m_panelB = new ScenarioDetailElement();
             m_panelB.SetAllScenarios(m_scenarios);
             m_panelB.onScenarioSelected += SetCurrentScenario;
+
+            m_overviewHost = new OverviewHostElement();
+            m_overviewHost.PanelA = m_panelA;
+            m_overviewHost.PanelB = m_panelB;
+            m_overviewHost.hierarchy.Add(m_panelA);
+            m_overviewHost.hierarchy.Add(m_panelB);
+
+            ImTKTheme.onGlobalThemeChanged += OnGlobalThemeChanged;
+        }
+
+        private void OnGlobalThemeChanged()
+        {
+            m_overviewHost?.MarkStyleDirty();
         }
 
         private Dictionary<ISampleScenario, Window> m_scenarioWindows = new Dictionary<ISampleScenario, Window>();
@@ -91,25 +137,12 @@ namespace ImTK.Sample.Framework
 
         protected override void OnGuiRender()
         {
-            ImGuiWindowFlags flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings;
-
-            // Render Panel A
-            ImGui.SetNextWindowPos(m_panelARect.min);
-            ImGui.SetNextWindowSize(new System.Numerics.Vector2(m_panelARect.max.X - m_panelARect.min.X, m_panelARect.max.Y - m_panelARect.min.Y));
-            if (ImGui.Begin("ImTK Sample Overview", flags))
+            if (m_overviewHost != null)
             {
-                m_panelA.Render();
+                m_overviewHost.PanelARect = m_panelARect;
+                m_overviewHost.PanelBRect = m_panelBRect;
+                m_overviewHost.Render();
             }
-            ImGui.End();
-
-            // Render Panel B
-            ImGui.SetNextWindowPos(m_panelBRect.min);
-            ImGui.SetNextWindowSize(new System.Numerics.Vector2(m_panelBRect.max.X - m_panelBRect.min.X, m_panelBRect.max.Y - m_panelBRect.min.Y));
-            if (ImGui.Begin("Scenario Details", flags))
-            {
-                m_panelB.Render();
-            }
-            ImGui.End();
 
             // Focus Tracking
             foreach (var kvp in m_scenarioWindows)
@@ -132,6 +165,11 @@ namespace ImTK.Sample.Framework
             // or just use our Panel registry. For now, since focus tracking via ImGui from outside the window is tricky
             // (ImGui.IsWindowFocused(string) doesn't exist directly), we'll do a basic check by looking at the active window.
             // (Omitted perfect tracking for simplicity unless explicitly required, user click on list already changes scenario).
+        }
+
+        protected override void OnClose()
+        {
+            ImTKTheme.onGlobalThemeChanged -= OnGlobalThemeChanged;
         }
     }
 
