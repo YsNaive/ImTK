@@ -4,7 +4,7 @@
 
 ## 範例架構規範
 
-為了讓總覽面板 (`OverviewWindow`) 能夠自動抓取並顯示所有範例，開發者新增展示單元時，必須遵守以下規範：
+為了讓總覽面板 (`SampleOverviewModule`) 能夠自動抓取並顯示所有範例，開發者新增展示單元時，必須遵守以下規範：
 
 ### 1. 實作 ISampleScenario 介面
 
@@ -24,10 +24,10 @@ namespace ImTK.Sample.Scenarios.MyFeature
         // 指向附帶的 Markdown 說明文件 (相對路徑)
         public string DocumentationPath => "Scenarios/MyFeature/README.md";
 
-        public void Open()
+        public ImTK.UI.Window Open()
         {
             // 當使用者在面板上點擊「Open Demo」時執行的動作
-            Window.Open<MyFeatureDemoWindow>();
+            return Window.Open<MyFeatureDemoWindow>();
         }
     }
 

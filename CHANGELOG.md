@@ -14,6 +14,10 @@
 - 擴充 `Button.Style`，實作 `Width` 與 `Height` 參數自訂功能。
 - 優化 `EventDispatcher` 階層髒標記處理邏輯，透過雙緩衝區 (Double-Buffering) 徹底消除每幀陣列複製造成的 GC 配置。
 ### Added (新增)
+- **ImTK.Sample**: Introduced new robust macro-architecture for sample scenarios.
+- **ImTK.Sample**: Added `ScenarioListElement` and `ScenarioDetailElement` (both inheriting `VisualElement`) to cleanly decouple UI components from framework logic.
+- **ImTK.Sample**: Expanded `ISampleScenario` with metadata for `Category`, `Order`, and `SeeAlso` (cross-referencing links) and implemented a `SampleScenarioBase` default implementation to reduce boilerplate.
+- **ImTK.Sample**: Implemented split panel layout utilizing `Panel.RequireArea` during `OnInitializeDependencies` to allocate fixed screen regions for Lists (Left) and Details (Bottom-Right), pushing newly opened Demo `Window`s into the central right DockSpace automatically.
 - 將 `ComputeStyle` 的靜態計算重構為每個元素實例持有的 `ResolvedStyle`。
 - 實作了由上而下 (Top-Down) 的樣式繼承機制與 `ImGui` 推送防污染邏輯。
 - 將 `StyleProperty` 結構體壓縮至完美的 16 Bytes 並統整 `StyleVarType` 與 `StyleKeyword` 為 `StylePropertyType`。
@@ -65,6 +69,10 @@
 
 
 ### Added (新增)
+- **ImTK.Sample**: Introduced new robust macro-architecture for sample scenarios.
+- **ImTK.Sample**: Added `ScenarioListElement` and `ScenarioDetailElement` (both inheriting `VisualElement`) to cleanly decouple UI components from framework logic.
+- **ImTK.Sample**: Expanded `ISampleScenario` with metadata for `Category`, `Order`, and `SeeAlso` (cross-referencing links) and implemented a `SampleScenarioBase` default implementation to reduce boilerplate.
+- **ImTK.Sample**: Implemented split panel layout utilizing `Panel.RequireArea` during `OnInitializeDependencies` to allocate fixed screen regions for Lists (Left) and Details (Bottom-Right), pushing newly opened Demo `Window`s into the central right DockSpace automatically.
 - 實作了基礎 UI 元件 (`TextElement`, `CheckBox`, `TextField`)，封裝 ImGui 基礎操作並支援安全的值綁定與狀態事件。
 - 重構了 `ImTKTheme` 主題系統，導入基於 `ColorFamily` 的高階語義群組 (如 `normalColor`, `successColor`)。
 - 擴充並標準化了 `ImTKStyleKey`，移除不適用於 ImGui 的 CSS 屬性，新增支援 Layout (`Padding`, `ItemSpacing`) 與透明度 (`DisabledAlpha`) 的物理對應。
