@@ -188,12 +188,13 @@ namespace ImTK.UI
                 {
                     s_defaultDark = new ImTKTheme();
 
+                    // Unity Editor Dark Theme styling
                     // Normal (Base)
-                    s_defaultDark.normalColor.background = new Color(0.06f, 0.06f, 0.06f, 1.0f);
-                    s_defaultDark.normalColor.subBackground = new Color(0.11f, 0.11f, 0.11f, 1.0f);
-                    s_defaultDark.normalColor.foreground = new Color(0.15f, 0.35f, 0.65f, 1.0f);
-                    s_defaultDark.normalColor.subForeground = new Color(0.20f, 0.40f, 0.70f, 1.0f);
-                    s_defaultDark.normalColor.text = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+                    s_defaultDark.normalColor.background = new Color(0.22f, 0.22f, 0.22f, 1.0f);       // #383838
+                    s_defaultDark.normalColor.subBackground = new Color(0.16f, 0.16f, 0.16f, 1.0f);    // #282828
+                    s_defaultDark.normalColor.foreground = new Color(0.17f, 0.36f, 0.53f, 1.0f);       // #2C5D87
+                    s_defaultDark.normalColor.subForeground = new Color(0.22f, 0.45f, 0.65f, 1.0f);
+                    s_defaultDark.normalColor.text = new Color(0.9f, 0.9f, 0.9f, 1.0f);
                     s_defaultDark.normalColor.subText = new Color(0.7f, 0.7f, 0.7f, 1.0f);
                     s_defaultDark.normalColor.disabledText = new Color(0.5f, 0.5f, 0.5f, 1.0f);
 
@@ -247,8 +248,8 @@ namespace ImTK.UI
                     s_defaultDark.syntax.codeTextColor = new Color(0.85f, 0.85f, 0.85f, 1.0f);
 
                     // Global Properties
-                    s_defaultDark.borderColor = new Color(0.3f, 0.3f, 0.3f, 1.0f);
-                    s_defaultDark.checkMarkColor = s_defaultDark.normalColor.foreground;
+                    s_defaultDark.borderColor = new Color(0.12f, 0.12f, 0.12f, 1.0f); // #1E1E1E
+                    s_defaultDark.checkMarkColor = s_defaultDark.normalColor.text;
                     s_defaultDark.labelWidth = 120.0f;
                     s_defaultDark.edgePadding = 10.0f;
                     s_defaultDark.padding = new Vector2(4, 3);
@@ -271,12 +272,13 @@ namespace ImTK.UI
                 {
                     s_defaultLight = new ImTKTheme();
 
+                    // Unity Editor Light Theme styling
                     // Normal (Base)
-                    s_defaultLight.normalColor.background = new Color(0.9f, 0.9f, 0.9f, 1.0f);
-                    s_defaultLight.normalColor.subBackground = new Color(0.8f, 0.8f, 0.8f, 1.0f);
-                    s_defaultLight.normalColor.foreground = new Color(0.4f, 0.6f, 0.9f, 1.0f);
-                    s_defaultLight.normalColor.subForeground = new Color(0.5f, 0.7f, 0.95f, 1.0f);
-                    s_defaultLight.normalColor.text = new Color(0.0f, 0.0f, 0.0f, 1.0f);
+                    s_defaultLight.normalColor.background = new Color(0.78f, 0.78f, 0.78f, 1.0f);       // #C8C8C8
+                    s_defaultLight.normalColor.subBackground = new Color(0.63f, 0.63f, 0.63f, 1.0f);    // #A0A0A0
+                    s_defaultLight.normalColor.foreground = new Color(0.22f, 0.45f, 0.65f, 1.0f);       // #3873A6
+                    s_defaultLight.normalColor.subForeground = new Color(0.30f, 0.55f, 0.80f, 1.0f);
+                    s_defaultLight.normalColor.text = new Color(0.1f, 0.1f, 0.1f, 1.0f);
                     s_defaultLight.normalColor.subText = new Color(0.3f, 0.3f, 0.3f, 1.0f);
                     s_defaultLight.normalColor.disabledText = new Color(0.5f, 0.5f, 0.5f, 1.0f);
 
@@ -330,8 +332,8 @@ namespace ImTK.UI
                     s_defaultLight.syntax.codeTextColor = new Color(0.1f, 0.1f, 0.1f, 1.0f);
 
                     // Global Properties
-                    s_defaultLight.borderColor = new Color(0.7f, 0.7f, 0.7f, 1.0f);
-                    s_defaultLight.checkMarkColor = s_defaultLight.normalColor.foreground;
+                    s_defaultLight.borderColor = new Color(0.55f, 0.55f, 0.55f, 1.0f); // #8C8C8C
+                    s_defaultLight.checkMarkColor = s_defaultLight.normalColor.text;
                     s_defaultLight.labelWidth = 120.0f;
                     s_defaultLight.edgePadding = 10.0f;
                     s_defaultLight.padding = new Vector2(4, 3);
