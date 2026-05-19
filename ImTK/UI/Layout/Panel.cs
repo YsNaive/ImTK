@@ -22,6 +22,27 @@ namespace ImTK.UI
         private static readonly Dictionary<WindowKey, Window> s_windows = new Dictionary<WindowKey, Window>();
         private static readonly List<Window> s_windowsToRemove = new List<Window>();
 
+        private class WindowHostElement : VisualElement
+        {
+            protected override void OnRenderLayout()
+            {
+                int count = hierarchy.childCount;
+                for (int i = 0; i < count; i++)
+                {
+                    try
+                    {
+                        hierarchy.childAt(i).Render();
+                    }
+                    catch (Exception ex)
+                    {
+                        s_log.Error(ex, $"Exception in Render of window child");
+                    }
+                }
+            }
+        }
+
+        private static WindowHostElement s_hostElement;
+
         protected Panel() { }
 
         internal static void RegisterWindow(Window window)
@@ -33,6 +54,12 @@ namespace ImTK.UI
                 throw new InvalidOperationException($"A window of type '{key.Type}' with windowId '{key.WindowId}' is already open.");
             }
             s_windows[key] = window;
+
+            if (s_hostElement != null)
+            {
+                s_hostElement.hierarchy.Add(window);
+            }
+
             s_log.Trace($"Window registered in Panel: {window.imguiId}");
         }
 
@@ -52,6 +79,10 @@ namespace ImTK.UI
             {
                 WindowKey key = new WindowKey(window.GetType(), window.windowId);
                 s_windows.Remove(key);
+                if (s_hostElement != null)
+                {
+                    s_hostElement.hierarchy.Remove(window);
+                }
                 s_log.Trace($"Window unregistered from Panel: {window.imguiId}");
             }
             s_windowsToRemove.Clear();
@@ -71,6 +102,21 @@ namespace ImTK.UI
 
         protected internal override void OnInitializeSelf()
         {
+            s_hostElement = new WindowHostElement();
+            ImTKTheme.onGlobalThemeChanged += OnGlobalThemeChanged;
+
+            foreach (var window in s_windows.Values)
+            {
+                s_hostElement.hierarchy.Add(window);
+            }
+        }
+
+        private void OnGlobalThemeChanged()
+        {
+            if (s_hostElement != null)
+            {
+                s_hostElement.MarkStyleDirty();
+            }
         }
 
         protected internal override void OnInitializeDependencies()
@@ -116,21 +162,23 @@ namespace ImTK.UI
 
             ImGui.End();
 
-            foreach (var window in s_windows.Values)
+            try
             {
-                try
+                if (s_hostElement != null)
                 {
-                    window.Render();
+                    s_hostElement.Render();
                 }
-                catch (Exception ex)
-                {
-                    s_log.Error(ex, $"Exception in Render of window: {window.imguiId}");
-                }
+            }
+            catch (Exception ex)
+            {
+                s_log.Error(ex, $"Exception in Render of WindowHostElement");
             }
         }
 
         protected internal override void OnClose()
         {
+            ImTKTheme.onGlobalThemeChanged -= OnGlobalThemeChanged;
+            s_hostElement = null;
         }
     }
 }

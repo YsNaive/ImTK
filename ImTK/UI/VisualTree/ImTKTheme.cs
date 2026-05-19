@@ -66,13 +66,11 @@ namespace ImTK.UI
             public static readonly HashedString BorderRadius = new HashedString("--border-radius");
             public static readonly HashedString DisabledAlpha = new HashedString("--disabled-alpha");
 
-            // Temporary backwards compatibility tokens
-            public static readonly HashedString Background1 = new HashedString("--background-1");
-            public static readonly HashedString Background2 = new HashedString("--background-2");
-            public static readonly HashedString TextPrimary = new HashedString("--text-primary");
-            public static readonly HashedString PrimaryColor = new HashedString("--primary-color");
-            public static readonly HashedString ButtonHovered = new HashedString("--button-hovered");
-            public static readonly HashedString ButtonActive = new HashedString("--button-active");
+            public static readonly HashedString NormalBg = new HashedString("--normal-bg");
+            public static readonly HashedString NormalSubBg = new HashedString("--normal-sub-bg");
+            public static readonly HashedString NormalFg = new HashedString("--normal-fg");
+            public static readonly HashedString NormalSubFg = new HashedString("--normal-sub-fg");
+            public static readonly HashedString NormalText = new HashedString("--normal-text");
 
             public static class Syntax
             {
@@ -162,6 +160,23 @@ namespace ImTK.UI
         public SyntaxTheme syntax => m_syntax ??= new SyntaxTheme(this);
 
 
+        // --- Global Theme ---
+        private static ImTKTheme s_globalTheme;
+        public static ImTKTheme GlobalTheme
+        {
+            get => s_globalTheme ?? DefaultDark;
+            set
+            {
+                if (s_globalTheme != value)
+                {
+                    s_globalTheme = value;
+                    onGlobalThemeChanged?.Invoke();
+                }
+            }
+        }
+
+        public static event Action onGlobalThemeChanged;
+
         // --- Default Themes ---
 
         private static ImTKTheme s_defaultDark;
@@ -181,16 +196,6 @@ namespace ImTK.UI
                     s_defaultDark.normalColor.text = new Color(1.0f, 1.0f, 1.0f, 1.0f);
                     s_defaultDark.normalColor.subText = new Color(0.7f, 0.7f, 0.7f, 1.0f);
                     s_defaultDark.normalColor.disabledText = new Color(0.5f, 0.5f, 0.5f, 1.0f);
-
-                    // Keeping original tokens for backwards compatibility temporarily
-                    s_defaultDark.SetColorToken(Tokens.Background1, s_defaultDark.normalColor.background);
-                    s_defaultDark.SetColorToken(Tokens.Background2, s_defaultDark.normalColor.subBackground);
-                    s_defaultDark.SetColorToken(Tokens.TextPrimary, s_defaultDark.normalColor.text);
-                    s_defaultDark.SetColorToken(Tokens.PrimaryColor, s_defaultDark.normalColor.foreground);
-                    Color hover = s_defaultDark.normalColor.foreground; hover.v = Math.Min(1.0f, hover.v + 0.1f);
-                    s_defaultDark.SetColorToken(Tokens.ButtonHovered, hover);
-                    Color active = s_defaultDark.normalColor.foreground; active.v = Math.Max(0.0f, active.v - 0.1f);
-                    s_defaultDark.SetColorToken(Tokens.ButtonActive, active);
 
                     // Success
                     s_defaultDark.successColor.background = new Color(0.1f, 0.4f, 0.1f, 1.0f);
@@ -274,16 +279,6 @@ namespace ImTK.UI
                     s_defaultLight.normalColor.text = new Color(0.0f, 0.0f, 0.0f, 1.0f);
                     s_defaultLight.normalColor.subText = new Color(0.3f, 0.3f, 0.3f, 1.0f);
                     s_defaultLight.normalColor.disabledText = new Color(0.5f, 0.5f, 0.5f, 1.0f);
-
-                    // Keeping original tokens for backwards compatibility temporarily
-                    s_defaultLight.SetColorToken(Tokens.Background1, s_defaultLight.normalColor.background);
-                    s_defaultLight.SetColorToken(Tokens.Background2, s_defaultLight.normalColor.subBackground);
-                    s_defaultLight.SetColorToken(Tokens.TextPrimary, s_defaultLight.normalColor.text);
-                    s_defaultLight.SetColorToken(Tokens.PrimaryColor, s_defaultLight.normalColor.foreground);
-                    Color hover = s_defaultLight.normalColor.foreground; hover.v = Math.Min(1.0f, hover.v + 0.1f);
-                    s_defaultLight.SetColorToken(Tokens.ButtonHovered, hover);
-                    Color active = s_defaultLight.normalColor.foreground; active.v = Math.Max(0.0f, active.v - 0.1f);
-                    s_defaultLight.SetColorToken(Tokens.ButtonActive, active);
 
                     // Success
                     s_defaultLight.successColor.background = new Color(0.8f, 0.95f, 0.8f, 1.0f);
