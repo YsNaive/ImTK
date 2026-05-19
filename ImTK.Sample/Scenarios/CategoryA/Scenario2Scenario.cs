@@ -13,9 +13,9 @@ namespace ImTK.Sample.Scenarios.CategoryA
         public override string Category => "Category A";
         public override int Order => 20;
 
-        public override void Open()
+        public override Window Open()
         {
-            Window.Open<Scenario2Window>();
+            return Window.Open<Scenario2Window>();
         }
     }
 

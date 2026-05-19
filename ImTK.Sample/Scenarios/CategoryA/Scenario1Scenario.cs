@@ -15,9 +15,9 @@ namespace ImTK.Sample.Scenarios.CategoryA
 
         public override IEnumerable<Type> SeeAlso => new[] { typeof(Scenario2Scenario), typeof(ImTK.Sample.Scenarios.CategoryB.Scenario3Scenario) };
 
-        public override void Open()
+        public override Window Open()
         {
-            Window.Open<Scenario1Window>();
+            return Window.Open<Scenario1Window>();
         }
     }
 

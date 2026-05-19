@@ -37,8 +37,8 @@ namespace ImTK.Sample.Framework
         System.Collections.Generic.IEnumerable<System.Type> SeeAlso { get; }
 
         /// <summary>
-        /// 開啟或觸發此範例的動作。
+        /// 開啟或觸發此範例的動作，並回傳對應開啟的 Window。
         /// </summary>
-        void Open();
+        ImTK.UI.Window Open();
     }
 }

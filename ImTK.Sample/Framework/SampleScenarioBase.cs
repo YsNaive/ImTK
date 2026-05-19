@@ -50,6 +50,6 @@ namespace ImTK.Sample.Framework
 
         public virtual IEnumerable<Type> SeeAlso => Array.Empty<Type>();
 
-        public abstract void Open();
+        public abstract ImTK.UI.Window Open();
     }
 }
