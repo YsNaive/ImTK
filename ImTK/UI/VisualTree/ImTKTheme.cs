@@ -92,13 +92,15 @@ namespace ImTK.UI
         public class ColorFamily
         {
             private ImTKTheme _theme;
-            private HashedString _bg, _subBg, _fg, _subFg, _text, _subText, _disabledText;
+            private HashedString _bg, _subBg, _hoverBg, _selectedBg, _fg, _subFg, _text, _subText, _disabledText;
 
             public ColorFamily(ImTKTheme theme, string prefix)
             {
                 _theme = theme;
                 _bg = new HashedString(prefix + "-bg");
                 _subBg = new HashedString(prefix + "-sub-bg");
+                _hoverBg = new HashedString(prefix + "-hover-bg");
+                _selectedBg = new HashedString(prefix + "-selected-bg");
                 _fg = new HashedString(prefix + "-fg");
                 _subFg = new HashedString(prefix + "-sub-fg");
                 _text = new HashedString(prefix + "-text");
@@ -108,6 +110,8 @@ namespace ImTK.UI
 
             public Color background { get => _theme.GetColor(_bg); set => _theme.SetColor(_bg, value); }
             public Color subBackground { get => _theme.GetColor(_subBg); set => _theme.SetColor(_subBg, value); }
+            public Color hoverBackground { get => _theme.GetColor(_hoverBg); set => _theme.SetColor(_hoverBg, value); }
+            public Color selectedBackground { get => _theme.GetColor(_selectedBg); set => _theme.SetColor(_selectedBg, value); }
             public Color foreground { get => _theme.GetColor(_fg); set => _theme.SetColor(_fg, value); }
             public Color subForeground { get => _theme.GetColor(_subFg); set => _theme.SetColor(_subFg, value); }
             public Color text { get => _theme.GetColor(_text); set => _theme.SetColor(_text, value); }
@@ -177,8 +181,8 @@ namespace ImTK.UI
                 style.Colors[(int)ImGuiCol.BorderShadow] = new Vector4(0, 0, 0, 0);
 
                 style.Colors[(int)ImGuiCol.FrameBg] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.FrameBgHovered] = normalColor.subForeground.rgba;
-                style.Colors[(int)ImGuiCol.FrameBgActive] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.FrameBgHovered] = normalColor.hoverBackground.rgba;
+                style.Colors[(int)ImGuiCol.FrameBgActive] = normalColor.selectedBackground.rgba;
 
                 style.Colors[(int)ImGuiCol.TitleBg] = normalColor.subBackground.rgba;
                 style.Colors[(int)ImGuiCol.TitleBgActive] = normalColor.subBackground.rgba;
@@ -188,37 +192,37 @@ namespace ImTK.UI
 
                 style.Colors[(int)ImGuiCol.ScrollbarBg] = normalColor.subBackground.rgba;
                 style.Colors[(int)ImGuiCol.ScrollbarGrab] = normalColor.foreground.rgba;
-                style.Colors[(int)ImGuiCol.ScrollbarGrabHovered] = normalColor.subForeground.rgba;
+                style.Colors[(int)ImGuiCol.ScrollbarGrabHovered] = normalColor.foreground.rgba;
                 style.Colors[(int)ImGuiCol.ScrollbarGrabActive] = normalColor.foreground.rgba;
 
                 style.Colors[(int)ImGuiCol.CheckMark] = checkMarkColor.rgba;
 
                 style.Colors[(int)ImGuiCol.SliderGrab] = normalColor.foreground.rgba;
-                style.Colors[(int)ImGuiCol.SliderGrabActive] = normalColor.subForeground.rgba;
+                style.Colors[(int)ImGuiCol.SliderGrabActive] = normalColor.foreground.rgba;
 
-                style.Colors[(int)ImGuiCol.Button] = normalColor.foreground.rgba;
-                style.Colors[(int)ImGuiCol.ButtonHovered] = normalColor.subForeground.rgba;
-                style.Colors[(int)ImGuiCol.ButtonActive] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.Button] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.ButtonHovered] = normalColor.hoverBackground.rgba;
+                style.Colors[(int)ImGuiCol.ButtonActive] = normalColor.selectedBackground.rgba;
 
-                style.Colors[(int)ImGuiCol.Header] = normalColor.foreground.rgba;
-                style.Colors[(int)ImGuiCol.HeaderHovered] = normalColor.subForeground.rgba;
-                style.Colors[(int)ImGuiCol.HeaderActive] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.Header] = normalColor.subBackground.rgba; // Usually transparent or sub-bg
+                style.Colors[(int)ImGuiCol.HeaderHovered] = normalColor.hoverBackground.rgba;
+                style.Colors[(int)ImGuiCol.HeaderActive] = normalColor.selectedBackground.rgba;
 
                 style.Colors[(int)ImGuiCol.Separator] = borderColor.rgba;
-                style.Colors[(int)ImGuiCol.SeparatorHovered] = normalColor.subForeground.rgba;
+                style.Colors[(int)ImGuiCol.SeparatorHovered] = normalColor.foreground.rgba;
                 style.Colors[(int)ImGuiCol.SeparatorActive] = normalColor.foreground.rgba;
 
-                style.Colors[(int)ImGuiCol.ResizeGrip] = normalColor.foreground.rgba;
-                style.Colors[(int)ImGuiCol.ResizeGripHovered] = normalColor.subForeground.rgba;
-                style.Colors[(int)ImGuiCol.ResizeGripActive] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.ResizeGrip] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.ResizeGripHovered] = normalColor.hoverBackground.rgba;
+                style.Colors[(int)ImGuiCol.ResizeGripActive] = normalColor.selectedBackground.rgba;
 
                 style.Colors[(int)ImGuiCol.Tab] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.TabHovered] = normalColor.subForeground.rgba;
-                style.Colors[(int)ImGuiCol.TabSelected] = normalColor.background.rgba;
+                style.Colors[(int)ImGuiCol.TabHovered] = normalColor.hoverBackground.rgba;
+                style.Colors[(int)ImGuiCol.TabSelected] = normalColor.selectedBackground.rgba;
                 style.Colors[(int)ImGuiCol.TabDimmed] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.TabDimmedSelected] = normalColor.background.rgba;
+                style.Colors[(int)ImGuiCol.TabDimmedSelected] = normalColor.selectedBackground.rgba;
 
-                style.Colors[(int)ImGuiCol.TextSelectedBg] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.TextSelectedBg] = normalColor.selectedBackground.rgba;
                 // Note: NavHighlight doesn't exist in older ImGui versions or is named differently in the wrapper
                 // style.Colors[(int)ImGuiCol.NavHighlight] = normalColor.foreground.rgba;
 
@@ -277,19 +281,23 @@ namespace ImTK.UI
                 {
                     s_defaultDark = new ImTKTheme();
 
-                    // Unity Editor Dark Theme styling
+                    // VS Code Modern Dark Theme styling
                     // Normal (Base)
-                    s_defaultDark.normalColor.background = new Color(0.22f, 0.22f, 0.22f, 1.0f);       // #383838
-                    s_defaultDark.normalColor.subBackground = new Color(0.16f, 0.16f, 0.16f, 1.0f);    // #282828
-                    s_defaultDark.normalColor.foreground = new Color(0.17f, 0.36f, 0.53f, 1.0f);       // #2C5D87
-                    s_defaultDark.normalColor.subForeground = new Color(0.22f, 0.45f, 0.65f, 1.0f);
-                    s_defaultDark.normalColor.text = new Color(0.9f, 0.9f, 0.9f, 1.0f);
-                    s_defaultDark.normalColor.subText = new Color(0.7f, 0.7f, 0.7f, 1.0f);
-                    s_defaultDark.normalColor.disabledText = new Color(0.5f, 0.5f, 0.5f, 1.0f);
+                    s_defaultDark.normalColor.background = new Color(0.12f, 0.12f, 0.12f, 1.0f);       // #1E1E1E
+                    s_defaultDark.normalColor.subBackground = new Color(0.15f, 0.15f, 0.15f, 1.0f);    // #252526
+                    s_defaultDark.normalColor.hoverBackground = new Color(0.16f, 0.18f, 0.18f, 1.0f);  // #2A2D2E
+                    s_defaultDark.normalColor.selectedBackground = new Color(0.04f, 0.28f, 0.44f, 1.0f); // #094771
+                    s_defaultDark.normalColor.foreground = new Color(0.0f, 0.5f, 0.83f, 1.0f);         // #007FD4
+                    s_defaultDark.normalColor.subForeground = new Color(0.04f, 0.39f, 0.62f, 1.0f);    // Slightly dimmer blue
+                    s_defaultDark.normalColor.text = new Color(0.8f, 0.8f, 0.8f, 1.0f);                // #CCCCCC
+                    s_defaultDark.normalColor.subText = new Color(0.6f, 0.6f, 0.6f, 1.0f);
+                    s_defaultDark.normalColor.disabledText = new Color(0.4f, 0.4f, 0.4f, 1.0f);
 
                     // Success
                     s_defaultDark.successColor.background = new Color(0.1f, 0.4f, 0.1f, 1.0f);
                     s_defaultDark.successColor.subBackground = new Color(0.15f, 0.5f, 0.15f, 1.0f);
+                    s_defaultDark.successColor.hoverBackground = new Color(0.12f, 0.45f, 0.12f, 1.0f);
+                    s_defaultDark.successColor.selectedBackground = new Color(0.15f, 0.6f, 0.15f, 1.0f);
                     s_defaultDark.successColor.foreground = new Color(0.2f, 0.7f, 0.2f, 1.0f);
                     s_defaultDark.successColor.subForeground = new Color(0.25f, 0.8f, 0.25f, 1.0f);
                     s_defaultDark.successColor.text = new Color(0.1f, 0.9f, 0.1f, 1.0f);
@@ -299,6 +307,8 @@ namespace ImTK.UI
                     // Info
                     s_defaultDark.infoColor.background = new Color(0.1f, 0.3f, 0.4f, 1.0f);
                     s_defaultDark.infoColor.subBackground = new Color(0.15f, 0.4f, 0.5f, 1.0f);
+                    s_defaultDark.infoColor.hoverBackground = new Color(0.12f, 0.35f, 0.45f, 1.0f);
+                    s_defaultDark.infoColor.selectedBackground = new Color(0.18f, 0.5f, 0.6f, 1.0f);
                     s_defaultDark.infoColor.foreground = new Color(0.2f, 0.6f, 0.8f, 1.0f);
                     s_defaultDark.infoColor.subForeground = new Color(0.25f, 0.7f, 0.9f, 1.0f);
                     s_defaultDark.infoColor.text = new Color(0.4f, 0.8f, 1.0f, 1.0f);
@@ -308,6 +318,8 @@ namespace ImTK.UI
                     // Warning
                     s_defaultDark.warningColor.background = new Color(0.4f, 0.4f, 0.1f, 1.0f);
                     s_defaultDark.warningColor.subBackground = new Color(0.5f, 0.5f, 0.15f, 1.0f);
+                    s_defaultDark.warningColor.hoverBackground = new Color(0.45f, 0.45f, 0.12f, 1.0f);
+                    s_defaultDark.warningColor.selectedBackground = new Color(0.6f, 0.6f, 0.18f, 1.0f);
                     s_defaultDark.warningColor.foreground = new Color(0.8f, 0.8f, 0.2f, 1.0f);
                     s_defaultDark.warningColor.subForeground = new Color(0.9f, 0.9f, 0.25f, 1.0f);
                     s_defaultDark.warningColor.text = new Color(0.9f, 0.9f, 0.1f, 1.0f);
@@ -317,6 +329,8 @@ namespace ImTK.UI
                     // Danger
                     s_defaultDark.dangerColor.background = new Color(0.4f, 0.1f, 0.1f, 1.0f);
                     s_defaultDark.dangerColor.subBackground = new Color(0.5f, 0.15f, 0.15f, 1.0f);
+                    s_defaultDark.dangerColor.hoverBackground = new Color(0.45f, 0.12f, 0.12f, 1.0f);
+                    s_defaultDark.dangerColor.selectedBackground = new Color(0.6f, 0.18f, 0.18f, 1.0f);
                     s_defaultDark.dangerColor.foreground = new Color(0.8f, 0.2f, 0.2f, 1.0f);
                     s_defaultDark.dangerColor.subForeground = new Color(0.9f, 0.25f, 0.25f, 1.0f);
                     s_defaultDark.dangerColor.text = new Color(1.0f, 0.4f, 0.4f, 1.0f);
@@ -365,6 +379,8 @@ namespace ImTK.UI
                     // Normal (Base)
                     s_defaultLight.normalColor.background = new Color(0.78f, 0.78f, 0.78f, 1.0f);       // #C8C8C8
                     s_defaultLight.normalColor.subBackground = new Color(0.63f, 0.63f, 0.63f, 1.0f);    // #A0A0A0
+                    s_defaultLight.normalColor.hoverBackground = new Color(0.83f, 0.83f, 0.83f, 1.0f);
+                    s_defaultLight.normalColor.selectedBackground = new Color(0.55f, 0.75f, 0.95f, 1.0f);
                     s_defaultLight.normalColor.foreground = new Color(0.22f, 0.45f, 0.65f, 1.0f);       // #3873A6
                     s_defaultLight.normalColor.subForeground = new Color(0.30f, 0.55f, 0.80f, 1.0f);
                     s_defaultLight.normalColor.text = new Color(0.1f, 0.1f, 0.1f, 1.0f);
@@ -374,6 +390,8 @@ namespace ImTK.UI
                     // Success
                     s_defaultLight.successColor.background = new Color(0.8f, 0.95f, 0.8f, 1.0f);
                     s_defaultLight.successColor.subBackground = new Color(0.7f, 0.9f, 0.7f, 1.0f);
+                    s_defaultLight.successColor.hoverBackground = new Color(0.85f, 0.98f, 0.85f, 1.0f);
+                    s_defaultLight.successColor.selectedBackground = new Color(0.6f, 0.8f, 0.6f, 1.0f);
                     s_defaultLight.successColor.foreground = new Color(0.2f, 0.7f, 0.2f, 1.0f);
                     s_defaultLight.successColor.subForeground = new Color(0.3f, 0.8f, 0.3f, 1.0f);
                     s_defaultLight.successColor.text = new Color(0.05f, 0.5f, 0.05f, 1.0f);
@@ -383,6 +401,8 @@ namespace ImTK.UI
                     // Info
                     s_defaultLight.infoColor.background = new Color(0.8f, 0.9f, 0.95f, 1.0f);
                     s_defaultLight.infoColor.subBackground = new Color(0.7f, 0.85f, 0.9f, 1.0f);
+                    s_defaultLight.infoColor.hoverBackground = new Color(0.85f, 0.95f, 0.98f, 1.0f);
+                    s_defaultLight.infoColor.selectedBackground = new Color(0.6f, 0.75f, 0.85f, 1.0f);
                     s_defaultLight.infoColor.foreground = new Color(0.2f, 0.6f, 0.8f, 1.0f);
                     s_defaultLight.infoColor.subForeground = new Color(0.3f, 0.7f, 0.9f, 1.0f);
                     s_defaultLight.infoColor.text = new Color(0.05f, 0.3f, 0.5f, 1.0f);
@@ -392,6 +412,8 @@ namespace ImTK.UI
                     // Warning
                     s_defaultLight.warningColor.background = new Color(0.95f, 0.95f, 0.8f, 1.0f);
                     s_defaultLight.warningColor.subBackground = new Color(0.9f, 0.9f, 0.7f, 1.0f);
+                    s_defaultLight.warningColor.hoverBackground = new Color(0.98f, 0.98f, 0.85f, 1.0f);
+                    s_defaultLight.warningColor.selectedBackground = new Color(0.85f, 0.85f, 0.6f, 1.0f);
                     s_defaultLight.warningColor.foreground = new Color(0.8f, 0.8f, 0.2f, 1.0f);
                     s_defaultLight.warningColor.subForeground = new Color(0.9f, 0.9f, 0.3f, 1.0f);
                     s_defaultLight.warningColor.text = new Color(0.5f, 0.5f, 0.05f, 1.0f);
@@ -401,6 +423,8 @@ namespace ImTK.UI
                     // Danger
                     s_defaultLight.dangerColor.background = new Color(0.95f, 0.8f, 0.8f, 1.0f);
                     s_defaultLight.dangerColor.subBackground = new Color(0.9f, 0.7f, 0.7f, 1.0f);
+                    s_defaultLight.dangerColor.hoverBackground = new Color(0.98f, 0.85f, 0.85f, 1.0f);
+                    s_defaultLight.dangerColor.selectedBackground = new Color(0.85f, 0.6f, 0.6f, 1.0f);
                     s_defaultLight.dangerColor.foreground = new Color(0.8f, 0.2f, 0.2f, 1.0f);
                     s_defaultLight.dangerColor.subForeground = new Color(0.9f, 0.3f, 0.3f, 1.0f);
                     s_defaultLight.dangerColor.text = new Color(0.6f, 0.05f, 0.05f, 1.0f);
