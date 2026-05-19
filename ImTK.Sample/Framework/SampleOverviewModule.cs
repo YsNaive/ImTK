@@ -38,6 +38,8 @@ namespace ImTK.Sample.Framework
     public class OverviewWindow : Window
     {
         private List<ISampleScenario> m_scenarios;
+        private Dictionary<string, List<ISampleScenario>> m_groupedScenarios = new Dictionary<string, List<ISampleScenario>>();
+        private string m_searchQuery = "";
 
         public OverviewWindow() : base("ImTK Sample Overview")
         {
@@ -46,44 +48,122 @@ namespace ImTK.Sample.Framework
         internal void SetScenarios(List<ISampleScenario> scenarios)
         {
             m_scenarios = scenarios;
+            UpdateGrouping();
+        }
+
+        private void UpdateGrouping()
+        {
+            m_groupedScenarios.Clear();
+            if (m_scenarios == null) return;
+
+            var query = m_searchQuery.ToLowerInvariant();
+
+            var filtered = m_scenarios.Where(s =>
+                string.IsNullOrEmpty(query) ||
+                (s.ScenarioName ?? "").ToLowerInvariant().Contains(query) ||
+                (s.Description ?? "").ToLowerInvariant().Contains(query)
+            );
+
+            foreach (var scenario in filtered)
+            {
+                var category = string.IsNullOrEmpty(scenario.Category) ? "Uncategorized" : scenario.Category;
+                if (!m_groupedScenarios.ContainsKey(category))
+                {
+                    m_groupedScenarios[category] = new List<ISampleScenario>();
+                }
+                m_groupedScenarios[category].Add(scenario);
+            }
+
+            foreach (var list in m_groupedScenarios.Values)
+            {
+                list.Sort((a, b) => a.Order.CompareTo(b.Order));
+            }
         }
 
         protected override void OnRenderSelf()
         {
-            if (m_scenarios == null) return;
-
             ImGui.Text("Welcome to the ImTK Sample Overview!");
             ImGui.TextWrapped("Select a scenario below to explore the capabilities of the ImTK framework.");
+            ImGui.Spacing();
+
+            if (ImGui.InputText("Search", ref m_searchQuery, 100))
+            {
+                UpdateGrouping();
+            }
+
             ImGui.Separator();
 
-            foreach (var scenario in m_scenarios)
+            if (m_groupedScenarios == null || m_groupedScenarios.Count == 0)
             {
-                ImGui.PushID(scenario.ScenarioName);
+                ImGui.TextDisabled("No scenarios found.");
+                return;
+            }
 
-                ImGui.TextDisabled(scenario.ScenarioName);
-                ImGui.TextWrapped(scenario.Description);
+            // Render categories sorted alphabetically
+            var categories = m_groupedScenarios.Keys.ToList();
+            categories.Sort();
 
-                if (ImGui.Button("Open Demo"))
+            foreach (var category in categories)
+            {
+                if (ImGui.CollapsingHeader(category, ImGuiTreeNodeFlags.DefaultOpen))
                 {
-                    scenario.Open();
-                }
-
-                if (!string.IsNullOrEmpty(scenario.DocumentationPath))
-                {
-                    ImGui.SameLine();
-                    if (ImGui.Button("View Source Doc"))
+                    var scenarios = m_groupedScenarios[category];
+                    foreach (var scenario in scenarios)
                     {
-                        // Fallback logic to open doc, or just copy path
-                        ImGui.SetClipboardText(scenario.DocumentationPath);
-                    }
-                    if (ImGui.IsItemHovered())
-                    {
-                        ImGui.SetTooltip($"Path copied to clipboard:\n{scenario.DocumentationPath}");
+                        ImGui.PushID(scenario.ScenarioName);
+
+                        ImGui.Indent();
+                        ImGui.Spacing();
+
+                        ImGui.TextColored(new System.Numerics.Vector4(0.4f, 0.7f, 1.0f, 1.0f), scenario.ScenarioName);
+                        ImGui.TextWrapped(scenario.Description);
+
+                        ImGui.Spacing();
+
+                        if (ImGui.Button("Open Demo"))
+                        {
+                            scenario.Open();
+                        }
+
+                        if (!string.IsNullOrEmpty(scenario.DocumentationPath))
+                        {
+                            ImGui.SameLine();
+                            if (ImGui.Button("View Source Doc"))
+                            {
+                                ImGui.SetClipboardText(scenario.DocumentationPath);
+                            }
+                            if (ImGui.IsItemHovered())
+                            {
+                                ImGui.SetTooltip($"Path copied to clipboard:\n{scenario.DocumentationPath}");
+                            }
+                        }
+
+                        // Render "See Also" links
+                        if (scenario.SeeAlso != null && scenario.SeeAlso.Any())
+                        {
+                            ImGui.SameLine();
+                            ImGui.Text("  See Also: ");
+
+                            foreach (var type in scenario.SeeAlso)
+                            {
+                                ImGui.SameLine();
+                                var target = m_scenarios.FirstOrDefault(s => s.GetType() == type);
+                                if (target != null)
+                                {
+                                    if (ImGui.SmallButton(target.ScenarioName))
+                                    {
+                                        target.Open();
+                                    }
+                                }
+                            }
+                        }
+
+                        ImGui.Spacing();
+                        ImGui.Unindent();
+                        ImGui.Separator();
+                        ImGui.PopID();
                     }
                 }
-
-                ImGui.Separator();
-                ImGui.PopID();
             }
         }
     }

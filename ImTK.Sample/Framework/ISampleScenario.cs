@@ -22,6 +22,21 @@ namespace ImTK.Sample.Framework
         string DocumentationPath { get; }
 
         /// <summary>
+        /// 範例所屬的分類 (Category)，用於在總覽面板中群組顯示。
+        /// </summary>
+        string Category { get; }
+
+        /// <summary>
+        /// 排序權重，數字越小越排在前面。
+        /// </summary>
+        int Order { get; }
+
+        /// <summary>
+        /// 關聯的範例型別，用於在面板中顯示 "See Also" 快速跳轉。
+        /// </summary>
+        System.Collections.Generic.IEnumerable<System.Type> SeeAlso { get; }
+
+        /// <summary>
         /// 開啟或觸發此範例的動作。
         /// </summary>
         void Open();
