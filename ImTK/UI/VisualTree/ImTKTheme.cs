@@ -247,6 +247,8 @@ namespace ImTK.UI
         }
 
         // --- Global Theme ---
+        public static bool isGlobalThemeDirty = true;
+
         private static ImTKTheme s_globalTheme;
         public static ImTKTheme GlobalTheme
         {
@@ -256,7 +258,7 @@ namespace ImTK.UI
                 if (s_globalTheme != value)
                 {
                     s_globalTheme = value;
-                    s_globalTheme?.ApplyToImGui();
+                    isGlobalThemeDirty = true;
                     onGlobalThemeChanged?.Invoke();
                 }
             }

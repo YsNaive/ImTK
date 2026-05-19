@@ -72,6 +72,12 @@ namespace ImTK.UI
 
         protected internal override void OnLogicUpdate()
         {
+            if (ImTKTheme.isGlobalThemeDirty)
+            {
+                ImTKTheme.GlobalTheme.ApplyToImGui();
+                ImTKTheme.isGlobalThemeDirty = false;
+            }
+
             foreach (var window in s_windowsToAdd)
             {
                 if (s_hostElement != null)
@@ -110,9 +116,6 @@ namespace ImTK.UI
         {
             s_hostElement = new WindowHostElement();
             ImTKTheme.onGlobalThemeChanged += OnGlobalThemeChanged;
-
-            // Apply initial theme globally
-            ImTKTheme.GlobalTheme.ApplyToImGui();
 
             foreach (var window in s_windows.Values)
             {
