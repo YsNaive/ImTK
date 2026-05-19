@@ -143,7 +143,8 @@ namespace ImTK.UI
 
         protected override void OnRenderLayout()
         {
-            bool isExpanded = ImGui.Begin(imguiId, ref m_isOpen, flags.Value);
+            bool isOpenForImGui = m_isOpen;
+            bool isExpanded = ImGui.Begin(imguiId, ref isOpenForImGui, flags.Value);
 
             if (isExpanded)
             {
@@ -158,7 +159,7 @@ namespace ImTK.UI
 
             ImGui.End();
 
-            if (!m_isOpen)
+            if (!isOpenForImGui && m_isOpen)
             {
                 Close();
             }

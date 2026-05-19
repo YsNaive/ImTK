@@ -7,12 +7,39 @@ namespace ImTK.UI.Style
     public class ResolvedStyle
     {
         private VisualElement m_element;
-        private Dictionary<int, StyleProperty> m_properties;
+        private List<StyleProperty> m_properties;
 
         public ResolvedStyle(VisualElement element)
         {
             m_element = element;
-            m_properties = new Dictionary<int, StyleProperty>();
+            m_properties = new List<StyleProperty>();
+        }
+
+        private void SetOrUpdateProperty(StyleProperty newProp)
+        {
+            for (int i = 0; i < m_properties.Count; i++)
+            {
+                if (m_properties[i].key == newProp.key)
+                {
+                    m_properties[i] = newProp;
+                    return;
+                }
+            }
+            m_properties.Add(newProp);
+        }
+
+        private bool TryGetProperty(int key, out StyleProperty property)
+        {
+            for (int i = 0; i < m_properties.Count; i++)
+            {
+                if (m_properties[i].key == key)
+                {
+                    property = m_properties[i];
+                    return true;
+                }
+            }
+            property = default;
+            return false;
         }
 
         public void Compute()
@@ -32,7 +59,7 @@ namespace ImTK.UI.Style
             {
                 foreach (var prop in styleBase.m_overrideStyles)
                 {
-                    m_properties[prop.key] = prop;
+                    SetOrUpdateProperty(prop);
                 }
             }
         }
@@ -60,7 +87,7 @@ namespace ImTK.UI.Style
                     {
                         foreach (var prop in block.Properties)
                         {
-                            m_properties[prop.key] = prop;
+                            SetOrUpdateProperty(prop);
                         }
                     }
                 }
@@ -71,7 +98,7 @@ namespace ImTK.UI.Style
 
         public Color? GetColor(HashedString key)
         {
-            if (m_properties.TryGetValue(key.Hash, out var prop))
+            if (TryGetProperty(key.Hash, out var prop))
             {
                 if (prop.type == StylePropertyType.ColorValue)
                     return (Color)prop.colorValue;
@@ -87,7 +114,7 @@ namespace ImTK.UI.Style
 
         public float? GetFloat(HashedString key)
         {
-             if (m_properties.TryGetValue(key.Hash, out var prop))
+             if (TryGetProperty(key.Hash, out var prop))
             {
                 if (prop.type == StylePropertyType.FloatValue)
                     return prop.floatValue;
@@ -101,7 +128,7 @@ namespace ImTK.UI.Style
 
         public System.Numerics.Vector2? GetVector2(HashedString key)
         {
-             if (m_properties.TryGetValue(key.Hash, out var prop))
+             if (TryGetProperty(key.Hash, out var prop))
             {
                 if (prop.type == StylePropertyType.Vector2Value)
                     return prop.vector2Value;

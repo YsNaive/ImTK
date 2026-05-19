@@ -187,9 +187,10 @@ namespace ImTK.Database
                 {
                     return GetAsset<T>(relativePath); // 會回傳已實作 GetAsset 中針對 IAsset 的 new() 但是為了滿足 ISaveableAsset 的型別我們在定義介面時需要確保能被轉型，而在 ImTK 中 GetAsset 要求的泛型只是 IAsset 這是合法的
                 }
-                catch(AssetNotFoundException)
+                catch (Exception ex)
                 {
-                    // 若在 GetAsset 中發生檔案被刪除等極端競爭狀況，會在此被捕捉
+                    s_log.Warning($"Failed to get existing asset '{relativePath}', falling back to create new. Exception: {ex.Message}");
+                    // 若在 GetAsset 中發生檔案被刪除、權限問題或其他 IO 例外，會在此被捕捉並降級為創建新檔案
                 }
             }
 

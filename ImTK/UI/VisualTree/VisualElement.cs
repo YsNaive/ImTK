@@ -725,6 +725,11 @@ namespace ImTK.UI
                 callback.DynamicInvoke(evt);
             }
         }
+
+        internal bool HasAnyCallback()
+        {
+            return m_callbacks != null && m_callbacks.Count > 0;
+        }
     }
 }
 
