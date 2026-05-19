@@ -57,8 +57,6 @@ namespace ImTK.UI
             public static readonly HashedString LabelWidth = new HashedString("--label-width");
             public static readonly HashedString EdgePadding = new HashedString("--edge-padding");
 
-            public static readonly HashedString BorderColor = new HashedString("--border-color");
-            public static readonly HashedString CheckMarkColor = new HashedString("--checkmark-color");
             public static readonly HashedString Padding = new HashedString("--padding");
             public static readonly HashedString ItemSpacing = new HashedString("--item-spacing");
             public static readonly HashedString ItemInnerSpacing = new HashedString("--item-inner-spacing");
@@ -128,9 +126,6 @@ namespace ImTK.UI
 
 
         // --- Global Shared Properties ---
-        public Color borderColor { get => GetColor(Tokens.BorderColor); set => SetColor(Tokens.BorderColor, value); }
-        public Color checkMarkColor { get => GetColor(Tokens.CheckMarkColor); set => SetColor(Tokens.CheckMarkColor, value); }
-
         public float labelWidth { get => GetFloat(Tokens.LabelWidth, 120f); set => SetFloat(Tokens.LabelWidth, value); }
         public float edgePadding { get => GetFloat(Tokens.EdgePadding, 10f); set => SetFloat(Tokens.EdgePadding, value); }
 
@@ -177,7 +172,7 @@ namespace ImTK.UI
                 style.Colors[(int)ImGuiCol.ChildBg] = normalColor.background.rgba;
                 style.Colors[(int)ImGuiCol.PopupBg] = normalColor.subBackground.rgba;
 
-                style.Colors[(int)ImGuiCol.Border] = borderColor.rgba;
+                style.Colors[(int)ImGuiCol.Border] = normalColor.subBackground.rgba;
                 style.Colors[(int)ImGuiCol.BorderShadow] = new Vector4(0, 0, 0, 0);
 
                 style.Colors[(int)ImGuiCol.FrameBg] = normalColor.subBackground.rgba;
@@ -195,7 +190,7 @@ namespace ImTK.UI
                 style.Colors[(int)ImGuiCol.ScrollbarGrabHovered] = normalColor.foreground.rgba;
                 style.Colors[(int)ImGuiCol.ScrollbarGrabActive] = normalColor.foreground.rgba;
 
-                style.Colors[(int)ImGuiCol.CheckMark] = checkMarkColor.rgba;
+                style.Colors[(int)ImGuiCol.CheckMark] = normalColor.foreground.rgba;
 
                 style.Colors[(int)ImGuiCol.SliderGrab] = normalColor.foreground.rgba;
                 style.Colors[(int)ImGuiCol.SliderGrabActive] = normalColor.foreground.rgba;
@@ -208,7 +203,7 @@ namespace ImTK.UI
                 style.Colors[(int)ImGuiCol.HeaderHovered] = normalColor.hoverBackground.rgba;
                 style.Colors[(int)ImGuiCol.HeaderActive] = normalColor.selectedBackground.rgba;
 
-                style.Colors[(int)ImGuiCol.Separator] = borderColor.rgba;
+                style.Colors[(int)ImGuiCol.Separator] = normalColor.subBackground.rgba;
                 style.Colors[(int)ImGuiCol.SeparatorHovered] = normalColor.foreground.rgba;
                 style.Colors[(int)ImGuiCol.SeparatorActive] = normalColor.foreground.rgba;
 
@@ -351,8 +346,6 @@ namespace ImTK.UI
                     s_defaultDark.syntax.codeTextColor = new Color(0.85f, 0.85f, 0.85f, 1.0f);
 
                     // Global Properties
-                    s_defaultDark.borderColor = new Color(0.12f, 0.12f, 0.12f, 1.0f); // #1E1E1E
-                    s_defaultDark.checkMarkColor = s_defaultDark.normalColor.text;
                     s_defaultDark.labelWidth = 120.0f;
                     s_defaultDark.edgePadding = 10.0f;
                     s_defaultDark.padding = new Vector2(4, 3);
@@ -445,8 +438,6 @@ namespace ImTK.UI
                     s_defaultLight.syntax.codeTextColor = new Color(0.1f, 0.1f, 0.1f, 1.0f);
 
                     // Global Properties
-                    s_defaultLight.borderColor = new Color(0.55f, 0.55f, 0.55f, 1.0f); // #8C8C8C
-                    s_defaultLight.checkMarkColor = s_defaultLight.normalColor.text;
                     s_defaultLight.labelWidth = 120.0f;
                     s_defaultLight.edgePadding = 10.0f;
                     s_defaultLight.padding = new Vector2(4, 3);
