@@ -6,6 +6,13 @@
 且本專案遵循 [語意化版本控制 (Semantic Versioning)](https://semver.org/lang/zh-TW/).
 
 ## [Unreleased]
+
+### Fixed (修復)
+- 修正 Window 右上角關閉按鈕點擊後未能觸發 `Close()` 的問題（隔離 ImGui 內部狀態修改與元件本身的 `m_isOpen` 狀態）。
+- 將 `AssetManager.GetOrCreateAsset<T>` 異常捕捉範圍放寬至泛型 `Exception`，防止 IO 異常導致程式崩潰。
+- 優化 `ResolvedStyle` 樣式計算的內部結構，改為使用 `List<StyleProperty>`，消除字典查表與清理時的 GC 記憶體配置壓力。
+- 擴充 `Button.Style`，實作 `Width` 與 `Height` 參數自訂功能。
+- 優化 `EventDispatcher` 階層髒標記處理邏輯，透過雙緩衝區 (Double-Buffering) 徹底消除每幀陣列複製造成的 GC 配置。
 ### Added (新增)
 - 將 `ComputeStyle` 的靜態計算重構為每個元素實例持有的 `ResolvedStyle`。
 - 實作了由上而下 (Top-Down) 的樣式繼承機制與 `ImGui` 推送防污染邏輯。
