@@ -159,6 +159,92 @@ namespace ImTK.UI
         private SyntaxTheme m_syntax;
         public SyntaxTheme syntax => m_syntax ??= new SyntaxTheme(this);
 
+        public void ApplyToImGui()
+        {
+            unsafe
+            {
+                ImGuiStylePtr style = ImGui.GetStyle();
+
+                // Colors
+                style.Colors[(int)ImGuiCol.Text] = normalColor.text.rgba;
+                style.Colors[(int)ImGuiCol.TextDisabled] = normalColor.disabledText.rgba;
+
+                style.Colors[(int)ImGuiCol.WindowBg] = normalColor.background.rgba;
+                style.Colors[(int)ImGuiCol.ChildBg] = normalColor.background.rgba;
+                style.Colors[(int)ImGuiCol.PopupBg] = normalColor.subBackground.rgba;
+
+                style.Colors[(int)ImGuiCol.Border] = borderColor.rgba;
+                style.Colors[(int)ImGuiCol.BorderShadow] = new Vector4(0, 0, 0, 0);
+
+                style.Colors[(int)ImGuiCol.FrameBg] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.FrameBgHovered] = normalColor.subForeground.rgba;
+                style.Colors[(int)ImGuiCol.FrameBgActive] = normalColor.foreground.rgba;
+
+                style.Colors[(int)ImGuiCol.TitleBg] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.TitleBgActive] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.TitleBgCollapsed] = normalColor.subBackground.rgba;
+
+                style.Colors[(int)ImGuiCol.MenuBarBg] = normalColor.subBackground.rgba;
+
+                style.Colors[(int)ImGuiCol.ScrollbarBg] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.ScrollbarGrab] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.ScrollbarGrabHovered] = normalColor.subForeground.rgba;
+                style.Colors[(int)ImGuiCol.ScrollbarGrabActive] = normalColor.foreground.rgba;
+
+                style.Colors[(int)ImGuiCol.CheckMark] = checkMarkColor.rgba;
+
+                style.Colors[(int)ImGuiCol.SliderGrab] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.SliderGrabActive] = normalColor.subForeground.rgba;
+
+                style.Colors[(int)ImGuiCol.Button] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.ButtonHovered] = normalColor.subForeground.rgba;
+                style.Colors[(int)ImGuiCol.ButtonActive] = normalColor.foreground.rgba;
+
+                style.Colors[(int)ImGuiCol.Header] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.HeaderHovered] = normalColor.subForeground.rgba;
+                style.Colors[(int)ImGuiCol.HeaderActive] = normalColor.foreground.rgba;
+
+                style.Colors[(int)ImGuiCol.Separator] = borderColor.rgba;
+                style.Colors[(int)ImGuiCol.SeparatorHovered] = normalColor.subForeground.rgba;
+                style.Colors[(int)ImGuiCol.SeparatorActive] = normalColor.foreground.rgba;
+
+                style.Colors[(int)ImGuiCol.ResizeGrip] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.ResizeGripHovered] = normalColor.subForeground.rgba;
+                style.Colors[(int)ImGuiCol.ResizeGripActive] = normalColor.foreground.rgba;
+
+                style.Colors[(int)ImGuiCol.Tab] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.TabHovered] = normalColor.subForeground.rgba;
+                style.Colors[(int)ImGuiCol.TabSelected] = normalColor.background.rgba;
+                style.Colors[(int)ImGuiCol.TabDimmed] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.TabDimmedSelected] = normalColor.background.rgba;
+
+                style.Colors[(int)ImGuiCol.TextSelectedBg] = normalColor.foreground.rgba;
+                // Note: NavHighlight doesn't exist in older ImGui versions or is named differently in the wrapper
+                // style.Colors[(int)ImGuiCol.NavHighlight] = normalColor.foreground.rgba;
+
+                // Dimensions / Layout
+                style.WindowPadding = padding;
+                style.FramePadding = padding;
+                style.ItemSpacing = itemSpacing;
+                style.ItemInnerSpacing = itemInnerSpacing;
+
+                style.WindowRounding = borderRadius;
+                style.ChildRounding = borderRadius;
+                style.FrameRounding = borderRadius;
+                style.PopupRounding = borderRadius;
+                style.ScrollbarRounding = borderRadius;
+                style.GrabRounding = borderRadius;
+                style.TabRounding = borderRadius;
+
+                style.WindowBorderSize = borderWidth;
+                style.ChildBorderSize = borderWidth;
+                style.PopupBorderSize = borderWidth;
+                style.FrameBorderSize = borderWidth;
+                style.TabBorderSize = borderWidth;
+
+                style.DisabledAlpha = disabledAlpha;
+            }
+        }
 
         // --- Global Theme ---
         private static ImTKTheme s_globalTheme;
@@ -170,6 +256,7 @@ namespace ImTK.UI
                 if (s_globalTheme != value)
                 {
                     s_globalTheme = value;
+                    s_globalTheme?.ApplyToImGui();
                     onGlobalThemeChanged?.Invoke();
                 }
             }

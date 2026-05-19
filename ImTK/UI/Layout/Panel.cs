@@ -111,6 +111,9 @@ namespace ImTK.UI
             s_hostElement = new WindowHostElement();
             ImTKTheme.onGlobalThemeChanged += OnGlobalThemeChanged;
 
+            // Apply initial theme globally
+            ImTKTheme.GlobalTheme.ApplyToImGui();
+
             foreach (var window in s_windows.Values)
             {
                 // Push existing windows to the add queue to be processed safely
