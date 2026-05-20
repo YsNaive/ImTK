@@ -64,12 +64,6 @@ namespace ImTK.UI
             public static readonly HashedString BorderRadius = new HashedString("--border-radius");
             public static readonly HashedString DisabledAlpha = new HashedString("--disabled-alpha");
 
-            public static readonly HashedString NormalBg = new HashedString("--normal-bg");
-            public static readonly HashedString NormalSubBg = new HashedString("--normal-sub-bg");
-            public static readonly HashedString NormalFg = new HashedString("--normal-fg");
-            public static readonly HashedString NormalSubFg = new HashedString("--normal-sub-fg");
-            public static readonly HashedString NormalText = new HashedString("--normal-text");
-
             public static class Syntax
             {
                 public static readonly HashedString FuncColor = new HashedString("--syntax-func-color");
@@ -90,28 +84,38 @@ namespace ImTK.UI
         public class ColorFamily
         {
             private ImTKTheme _theme;
-            private HashedString _bg, _subBg, _hoverBg, _selectedBg, _fg, _subFg, _text, _subText, _disabledText;
+            private HashedString _surface, _container, _component, _componentHover, _componentActive, _accent, _accentHover, _accentActive, _selection, _border, _divider, _text, _subText, _disabledText;
 
             public ColorFamily(ImTKTheme theme, string prefix)
             {
                 _theme = theme;
-                _bg = new HashedString(prefix + "-bg");
-                _subBg = new HashedString(prefix + "-sub-bg");
-                _hoverBg = new HashedString(prefix + "-hover-bg");
-                _selectedBg = new HashedString(prefix + "-selected-bg");
-                _fg = new HashedString(prefix + "-fg");
-                _subFg = new HashedString(prefix + "-sub-fg");
+                _surface = new HashedString(prefix + "-surface");
+                _container = new HashedString(prefix + "-container");
+                _component = new HashedString(prefix + "-component");
+                _componentHover = new HashedString(prefix + "-component-hover");
+                _componentActive = new HashedString(prefix + "-component-active");
+                _accent = new HashedString(prefix + "-accent");
+                _accentHover = new HashedString(prefix + "-accent-hover");
+                _accentActive = new HashedString(prefix + "-accent-active");
+                _selection = new HashedString(prefix + "-selection");
+                _border = new HashedString(prefix + "-border");
+                _divider = new HashedString(prefix + "-divider");
                 _text = new HashedString(prefix + "-text");
                 _subText = new HashedString(prefix + "-sub-text");
                 _disabledText = new HashedString(prefix + "-disabled-text");
             }
 
-            public Color background { get => _theme.GetColor(_bg); set => _theme.SetColor(_bg, value); }
-            public Color subBackground { get => _theme.GetColor(_subBg); set => _theme.SetColor(_subBg, value); }
-            public Color hoverBackground { get => _theme.GetColor(_hoverBg); set => _theme.SetColor(_hoverBg, value); }
-            public Color selectedBackground { get => _theme.GetColor(_selectedBg); set => _theme.SetColor(_selectedBg, value); }
-            public Color foreground { get => _theme.GetColor(_fg); set => _theme.SetColor(_fg, value); }
-            public Color subForeground { get => _theme.GetColor(_subFg); set => _theme.SetColor(_subFg, value); }
+            public Color surface { get => _theme.GetColor(_surface); set => _theme.SetColor(_surface, value); }
+            public Color container { get => _theme.GetColor(_container); set => _theme.SetColor(_container, value); }
+            public Color component { get => _theme.GetColor(_component); set => _theme.SetColor(_component, value); }
+            public Color componentHover { get => _theme.GetColor(_componentHover); set => _theme.SetColor(_componentHover, value); }
+            public Color componentActive { get => _theme.GetColor(_componentActive); set => _theme.SetColor(_componentActive, value); }
+            public Color accent { get => _theme.GetColor(_accent); set => _theme.SetColor(_accent, value); }
+            public Color accentHover { get => _theme.GetColor(_accentHover); set => _theme.SetColor(_accentHover, value); }
+            public Color accentActive { get => _theme.GetColor(_accentActive); set => _theme.SetColor(_accentActive, value); }
+            public Color selection { get => _theme.GetColor(_selection); set => _theme.SetColor(_selection, value); }
+            public Color border { get => _theme.GetColor(_border); set => _theme.SetColor(_border, value); }
+            public Color divider { get => _theme.GetColor(_divider); set => _theme.SetColor(_divider, value); }
             public Color text { get => _theme.GetColor(_text); set => _theme.SetColor(_text, value); }
             public Color subText { get => _theme.GetColor(_subText); set => _theme.SetColor(_subText, value); }
             public Color disabledText { get => _theme.GetColor(_disabledText); set => _theme.SetColor(_disabledText, value); }
@@ -168,58 +172,58 @@ namespace ImTK.UI
                 style.Colors[(int)ImGuiCol.Text] = normalColor.text.rgba;
                 style.Colors[(int)ImGuiCol.TextDisabled] = normalColor.disabledText.rgba;
 
-                style.Colors[(int)ImGuiCol.WindowBg] = normalColor.background.rgba;
-                style.Colors[(int)ImGuiCol.ChildBg] = normalColor.background.rgba;
-                style.Colors[(int)ImGuiCol.PopupBg] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.WindowBg] = normalColor.surface.rgba;
+                style.Colors[(int)ImGuiCol.ChildBg] = normalColor.surface.rgba;
+                style.Colors[(int)ImGuiCol.PopupBg] = normalColor.container.rgba;
 
-                style.Colors[(int)ImGuiCol.Border] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.Border] = normalColor.border.rgba;
                 style.Colors[(int)ImGuiCol.BorderShadow] = new Vector4(0, 0, 0, 0);
 
-                style.Colors[(int)ImGuiCol.FrameBg] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.FrameBgHovered] = normalColor.hoverBackground.rgba;
-                style.Colors[(int)ImGuiCol.FrameBgActive] = normalColor.selectedBackground.rgba;
+                style.Colors[(int)ImGuiCol.FrameBg] = normalColor.component.rgba;
+                style.Colors[(int)ImGuiCol.FrameBgHovered] = normalColor.componentHover.rgba;
+                style.Colors[(int)ImGuiCol.FrameBgActive] = normalColor.componentActive.rgba;
 
-                style.Colors[(int)ImGuiCol.TitleBg] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.TitleBgActive] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.TitleBgCollapsed] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.TitleBg] = normalColor.container.rgba;
+                style.Colors[(int)ImGuiCol.TitleBgActive] = normalColor.container.rgba;
+                style.Colors[(int)ImGuiCol.TitleBgCollapsed] = normalColor.container.rgba;
 
-                style.Colors[(int)ImGuiCol.MenuBarBg] = normalColor.subBackground.rgba;
+                style.Colors[(int)ImGuiCol.MenuBarBg] = normalColor.container.rgba;
 
-                style.Colors[(int)ImGuiCol.ScrollbarBg] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.ScrollbarGrab] = normalColor.foreground.rgba;
-                style.Colors[(int)ImGuiCol.ScrollbarGrabHovered] = normalColor.foreground.rgba;
-                style.Colors[(int)ImGuiCol.ScrollbarGrabActive] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.ScrollbarBg] = normalColor.container.rgba;
+                style.Colors[(int)ImGuiCol.ScrollbarGrab] = normalColor.accent.rgba;
+                style.Colors[(int)ImGuiCol.ScrollbarGrabHovered] = normalColor.accentHover.rgba;
+                style.Colors[(int)ImGuiCol.ScrollbarGrabActive] = normalColor.accentActive.rgba;
 
-                style.Colors[(int)ImGuiCol.CheckMark] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.CheckMark] = normalColor.accent.rgba;
 
-                style.Colors[(int)ImGuiCol.SliderGrab] = normalColor.foreground.rgba;
-                style.Colors[(int)ImGuiCol.SliderGrabActive] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.SliderGrab] = normalColor.accent.rgba;
+                style.Colors[(int)ImGuiCol.SliderGrabActive] = normalColor.accentActive.rgba;
 
-                style.Colors[(int)ImGuiCol.Button] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.ButtonHovered] = normalColor.hoverBackground.rgba;
-                style.Colors[(int)ImGuiCol.ButtonActive] = normalColor.selectedBackground.rgba;
+                style.Colors[(int)ImGuiCol.Button] = normalColor.component.rgba;
+                style.Colors[(int)ImGuiCol.ButtonHovered] = normalColor.componentHover.rgba;
+                style.Colors[(int)ImGuiCol.ButtonActive] = normalColor.componentActive.rgba;
 
-                style.Colors[(int)ImGuiCol.Header] = normalColor.subBackground.rgba; // Usually transparent or sub-bg
-                style.Colors[(int)ImGuiCol.HeaderHovered] = normalColor.hoverBackground.rgba;
-                style.Colors[(int)ImGuiCol.HeaderActive] = normalColor.selectedBackground.rgba;
+                style.Colors[(int)ImGuiCol.Header] = normalColor.component.rgba;
+                style.Colors[(int)ImGuiCol.HeaderHovered] = normalColor.componentHover.rgba;
+                style.Colors[(int)ImGuiCol.HeaderActive] = normalColor.componentActive.rgba;
 
-                style.Colors[(int)ImGuiCol.Separator] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.SeparatorHovered] = normalColor.foreground.rgba;
-                style.Colors[(int)ImGuiCol.SeparatorActive] = normalColor.foreground.rgba;
+                style.Colors[(int)ImGuiCol.Separator] = normalColor.divider.rgba;
+                style.Colors[(int)ImGuiCol.SeparatorHovered] = normalColor.divider.rgba;
+                style.Colors[(int)ImGuiCol.SeparatorActive] = normalColor.divider.rgba;
 
-                style.Colors[(int)ImGuiCol.ResizeGrip] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.ResizeGripHovered] = normalColor.hoverBackground.rgba;
-                style.Colors[(int)ImGuiCol.ResizeGripActive] = normalColor.selectedBackground.rgba;
+                style.Colors[(int)ImGuiCol.ResizeGrip] = normalColor.component.rgba;
+                style.Colors[(int)ImGuiCol.ResizeGripHovered] = normalColor.componentHover.rgba;
+                style.Colors[(int)ImGuiCol.ResizeGripActive] = normalColor.componentActive.rgba;
 
-                style.Colors[(int)ImGuiCol.Tab] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.TabHovered] = normalColor.hoverBackground.rgba;
-                style.Colors[(int)ImGuiCol.TabSelected] = normalColor.selectedBackground.rgba;
-                style.Colors[(int)ImGuiCol.TabDimmed] = normalColor.subBackground.rgba;
-                style.Colors[(int)ImGuiCol.TabDimmedSelected] = normalColor.selectedBackground.rgba;
+                style.Colors[(int)ImGuiCol.Tab] = normalColor.component.rgba;
+                style.Colors[(int)ImGuiCol.TabHovered] = normalColor.componentHover.rgba;
+                style.Colors[(int)ImGuiCol.TabSelected] = normalColor.selection.rgba;
+                style.Colors[(int)ImGuiCol.TabDimmed] = normalColor.component.rgba;
+                style.Colors[(int)ImGuiCol.TabDimmedSelected] = normalColor.selection.rgba;
 
-                style.Colors[(int)ImGuiCol.TextSelectedBg] = normalColor.selectedBackground.rgba;
+                style.Colors[(int)ImGuiCol.TextSelectedBg] = normalColor.selection.rgba;
                 // Note: NavHighlight doesn't exist in older ImGui versions or is named differently in the wrapper
-                // style.Colors[(int)ImGuiCol.NavHighlight] = normalColor.foreground.rgba;
+                // style.Colors[(int)ImGuiCol.NavHighlight] = normalColor.accent.rgba;
 
                 // Dimensions / Layout
                 style.WindowPadding = padding;
@@ -278,56 +282,81 @@ namespace ImTK.UI
 
                     // VS Code Modern Dark Theme styling
                     // Normal (Base)
-                    s_defaultDark.normalColor.background = new Color(0.12f, 0.12f, 0.12f, 1.0f);       // #1E1E1E
-                    s_defaultDark.normalColor.subBackground = new Color(0.15f, 0.15f, 0.15f, 1.0f);    // #252526
-                    s_defaultDark.normalColor.hoverBackground = new Color(0.16f, 0.18f, 0.18f, 1.0f);  // #2A2D2E
-                    s_defaultDark.normalColor.selectedBackground = new Color(0.04f, 0.28f, 0.44f, 1.0f); // #094771
-                    s_defaultDark.normalColor.foreground = new Color(0.0f, 0.5f, 0.83f, 1.0f);         // #007FD4
-                    s_defaultDark.normalColor.subForeground = new Color(0.04f, 0.39f, 0.62f, 1.0f);    // Slightly dimmer blue
+                    s_defaultDark.normalColor.surface = new Color(0.12f, 0.12f, 0.12f, 1.0f);       // #1E1E1E
+                    s_defaultDark.normalColor.container = new Color(0.15f, 0.15f, 0.15f, 1.0f);    // #252526
+                    s_defaultDark.normalColor.component = new Color(0.18f, 0.18f, 0.18f, 1.0f);
+                    s_defaultDark.normalColor.componentHover = new Color(0.28f, 0.28f, 0.28f, 1.0f); // Make hover visibly brighter
+                    s_defaultDark.normalColor.componentActive = new Color(0.35f, 0.35f, 0.35f, 1.0f); // Make active even brighter
+                    s_defaultDark.normalColor.accent = new Color(0.0f, 0.5f, 0.83f, 1.0f);         // #007FD4
+                    s_defaultDark.normalColor.accentHover = new Color(0.1f, 0.6f, 0.93f, 1.0f);
+                    s_defaultDark.normalColor.accentActive = new Color(0.0f, 0.4f, 0.73f, 1.0f);
+                    s_defaultDark.normalColor.selection = new Color(0.20f, 0.35f, 0.45f, 0.8f); // Softer, more transparent selection
+                    s_defaultDark.normalColor.border = new Color(0.25f, 0.25f, 0.25f, 1.0f);
+                    s_defaultDark.normalColor.divider = new Color(0.20f, 0.20f, 0.20f, 1.0f);
                     s_defaultDark.normalColor.text = new Color(0.8f, 0.8f, 0.8f, 1.0f);                // #CCCCCC
                     s_defaultDark.normalColor.subText = new Color(0.6f, 0.6f, 0.6f, 1.0f);
                     s_defaultDark.normalColor.disabledText = new Color(0.4f, 0.4f, 0.4f, 1.0f);
 
                     // Success
-                    s_defaultDark.successColor.background = new Color(0.1f, 0.4f, 0.1f, 1.0f);
-                    s_defaultDark.successColor.subBackground = new Color(0.15f, 0.5f, 0.15f, 1.0f);
-                    s_defaultDark.successColor.hoverBackground = new Color(0.12f, 0.45f, 0.12f, 1.0f);
-                    s_defaultDark.successColor.selectedBackground = new Color(0.15f, 0.6f, 0.15f, 1.0f);
-                    s_defaultDark.successColor.foreground = new Color(0.2f, 0.7f, 0.2f, 1.0f);
-                    s_defaultDark.successColor.subForeground = new Color(0.25f, 0.8f, 0.25f, 1.0f);
+                    s_defaultDark.successColor.surface = new Color(0.1f, 0.4f, 0.1f, 1.0f);
+                    s_defaultDark.successColor.container = new Color(0.15f, 0.5f, 0.15f, 1.0f);
+                    s_defaultDark.successColor.component = new Color(0.18f, 0.55f, 0.18f, 1.0f);
+                    s_defaultDark.successColor.componentHover = new Color(0.22f, 0.6f, 0.22f, 1.0f);
+                    s_defaultDark.successColor.componentActive = new Color(0.12f, 0.45f, 0.12f, 1.0f);
+                    s_defaultDark.successColor.accent = new Color(0.2f, 0.7f, 0.2f, 1.0f);
+                    s_defaultDark.successColor.accentHover = new Color(0.3f, 0.8f, 0.3f, 1.0f);
+                    s_defaultDark.successColor.accentActive = new Color(0.15f, 0.6f, 0.15f, 1.0f);
+                    s_defaultDark.successColor.selection = new Color(0.15f, 0.6f, 0.15f, 1.0f);
+                    s_defaultDark.successColor.border = new Color(0.25f, 0.65f, 0.25f, 1.0f);
+                    s_defaultDark.successColor.divider = new Color(0.20f, 0.60f, 0.20f, 1.0f);
                     s_defaultDark.successColor.text = new Color(0.1f, 0.9f, 0.1f, 1.0f);
                     s_defaultDark.successColor.subText = new Color(0.6f, 0.9f, 0.6f, 1.0f);
                     s_defaultDark.successColor.disabledText = new Color(0.4f, 0.6f, 0.4f, 1.0f);
 
                     // Info
-                    s_defaultDark.infoColor.background = new Color(0.1f, 0.3f, 0.4f, 1.0f);
-                    s_defaultDark.infoColor.subBackground = new Color(0.15f, 0.4f, 0.5f, 1.0f);
-                    s_defaultDark.infoColor.hoverBackground = new Color(0.12f, 0.35f, 0.45f, 1.0f);
-                    s_defaultDark.infoColor.selectedBackground = new Color(0.18f, 0.5f, 0.6f, 1.0f);
-                    s_defaultDark.infoColor.foreground = new Color(0.2f, 0.6f, 0.8f, 1.0f);
-                    s_defaultDark.infoColor.subForeground = new Color(0.25f, 0.7f, 0.9f, 1.0f);
+                    s_defaultDark.infoColor.surface = new Color(0.1f, 0.3f, 0.4f, 1.0f);
+                    s_defaultDark.infoColor.container = new Color(0.15f, 0.4f, 0.5f, 1.0f);
+                    s_defaultDark.infoColor.component = new Color(0.18f, 0.45f, 0.55f, 1.0f);
+                    s_defaultDark.infoColor.componentHover = new Color(0.22f, 0.5f, 0.6f, 1.0f);
+                    s_defaultDark.infoColor.componentActive = new Color(0.12f, 0.35f, 0.45f, 1.0f);
+                    s_defaultDark.infoColor.accent = new Color(0.2f, 0.6f, 0.8f, 1.0f);
+                    s_defaultDark.infoColor.accentHover = new Color(0.3f, 0.7f, 0.9f, 1.0f);
+                    s_defaultDark.infoColor.accentActive = new Color(0.15f, 0.5f, 0.7f, 1.0f);
+                    s_defaultDark.infoColor.selection = new Color(0.18f, 0.5f, 0.6f, 1.0f);
+                    s_defaultDark.infoColor.border = new Color(0.25f, 0.55f, 0.65f, 1.0f);
+                    s_defaultDark.infoColor.divider = new Color(0.20f, 0.50f, 0.60f, 1.0f);
                     s_defaultDark.infoColor.text = new Color(0.4f, 0.8f, 1.0f, 1.0f);
                     s_defaultDark.infoColor.subText = new Color(0.6f, 0.8f, 0.9f, 1.0f);
                     s_defaultDark.infoColor.disabledText = new Color(0.4f, 0.5f, 0.6f, 1.0f);
 
                     // Warning
-                    s_defaultDark.warningColor.background = new Color(0.4f, 0.4f, 0.1f, 1.0f);
-                    s_defaultDark.warningColor.subBackground = new Color(0.5f, 0.5f, 0.15f, 1.0f);
-                    s_defaultDark.warningColor.hoverBackground = new Color(0.45f, 0.45f, 0.12f, 1.0f);
-                    s_defaultDark.warningColor.selectedBackground = new Color(0.6f, 0.6f, 0.18f, 1.0f);
-                    s_defaultDark.warningColor.foreground = new Color(0.8f, 0.8f, 0.2f, 1.0f);
-                    s_defaultDark.warningColor.subForeground = new Color(0.9f, 0.9f, 0.25f, 1.0f);
+                    s_defaultDark.warningColor.surface = new Color(0.4f, 0.4f, 0.1f, 1.0f);
+                    s_defaultDark.warningColor.container = new Color(0.5f, 0.5f, 0.15f, 1.0f);
+                    s_defaultDark.warningColor.component = new Color(0.55f, 0.55f, 0.18f, 1.0f);
+                    s_defaultDark.warningColor.componentHover = new Color(0.6f, 0.6f, 0.22f, 1.0f);
+                    s_defaultDark.warningColor.componentActive = new Color(0.45f, 0.45f, 0.12f, 1.0f);
+                    s_defaultDark.warningColor.accent = new Color(0.8f, 0.8f, 0.2f, 1.0f);
+                    s_defaultDark.warningColor.accentHover = new Color(0.9f, 0.9f, 0.3f, 1.0f);
+                    s_defaultDark.warningColor.accentActive = new Color(0.7f, 0.7f, 0.15f, 1.0f);
+                    s_defaultDark.warningColor.selection = new Color(0.6f, 0.6f, 0.18f, 1.0f);
+                    s_defaultDark.warningColor.border = new Color(0.65f, 0.65f, 0.25f, 1.0f);
+                    s_defaultDark.warningColor.divider = new Color(0.60f, 0.60f, 0.20f, 1.0f);
                     s_defaultDark.warningColor.text = new Color(0.9f, 0.9f, 0.1f, 1.0f);
                     s_defaultDark.warningColor.subText = new Color(0.9f, 0.9f, 0.6f, 1.0f);
                     s_defaultDark.warningColor.disabledText = new Color(0.6f, 0.6f, 0.4f, 1.0f);
 
                     // Danger
-                    s_defaultDark.dangerColor.background = new Color(0.4f, 0.1f, 0.1f, 1.0f);
-                    s_defaultDark.dangerColor.subBackground = new Color(0.5f, 0.15f, 0.15f, 1.0f);
-                    s_defaultDark.dangerColor.hoverBackground = new Color(0.45f, 0.12f, 0.12f, 1.0f);
-                    s_defaultDark.dangerColor.selectedBackground = new Color(0.6f, 0.18f, 0.18f, 1.0f);
-                    s_defaultDark.dangerColor.foreground = new Color(0.8f, 0.2f, 0.2f, 1.0f);
-                    s_defaultDark.dangerColor.subForeground = new Color(0.9f, 0.25f, 0.25f, 1.0f);
+                    s_defaultDark.dangerColor.surface = new Color(0.4f, 0.1f, 0.1f, 1.0f);
+                    s_defaultDark.dangerColor.container = new Color(0.5f, 0.15f, 0.15f, 1.0f);
+                    s_defaultDark.dangerColor.component = new Color(0.55f, 0.18f, 0.18f, 1.0f);
+                    s_defaultDark.dangerColor.componentHover = new Color(0.6f, 0.22f, 0.22f, 1.0f);
+                    s_defaultDark.dangerColor.componentActive = new Color(0.45f, 0.12f, 0.12f, 1.0f);
+                    s_defaultDark.dangerColor.accent = new Color(0.8f, 0.2f, 0.2f, 1.0f);
+                    s_defaultDark.dangerColor.accentHover = new Color(0.9f, 0.3f, 0.3f, 1.0f);
+                    s_defaultDark.dangerColor.accentActive = new Color(0.7f, 0.15f, 0.15f, 1.0f);
+                    s_defaultDark.dangerColor.selection = new Color(0.6f, 0.18f, 0.18f, 1.0f);
+                    s_defaultDark.dangerColor.border = new Color(0.65f, 0.25f, 0.25f, 1.0f);
+                    s_defaultDark.dangerColor.divider = new Color(0.60f, 0.20f, 0.20f, 1.0f);
                     s_defaultDark.dangerColor.text = new Color(1.0f, 0.4f, 0.4f, 1.0f);
                     s_defaultDark.dangerColor.subText = new Color(0.9f, 0.6f, 0.6f, 1.0f);
                     s_defaultDark.dangerColor.disabledText = new Color(0.6f, 0.4f, 0.4f, 1.0f);
@@ -370,56 +399,81 @@ namespace ImTK.UI
 
                     // Unity Editor Light Theme styling
                     // Normal (Base)
-                    s_defaultLight.normalColor.background = new Color(0.78f, 0.78f, 0.78f, 1.0f);       // #C8C8C8
-                    s_defaultLight.normalColor.subBackground = new Color(0.63f, 0.63f, 0.63f, 1.0f);    // #A0A0A0
-                    s_defaultLight.normalColor.hoverBackground = new Color(0.83f, 0.83f, 0.83f, 1.0f);
-                    s_defaultLight.normalColor.selectedBackground = new Color(0.55f, 0.75f, 0.95f, 1.0f);
-                    s_defaultLight.normalColor.foreground = new Color(0.22f, 0.45f, 0.65f, 1.0f);       // #3873A6
-                    s_defaultLight.normalColor.subForeground = new Color(0.30f, 0.55f, 0.80f, 1.0f);
+                    s_defaultLight.normalColor.surface = new Color(0.78f, 0.78f, 0.78f, 1.0f);       // #C8C8C8
+                    s_defaultLight.normalColor.container = new Color(0.63f, 0.63f, 0.63f, 1.0f);    // #A0A0A0
+                    s_defaultLight.normalColor.component = new Color(0.68f, 0.68f, 0.68f, 1.0f);
+                    s_defaultLight.normalColor.componentHover = new Color(0.85f, 0.85f, 0.85f, 1.0f); // Ensure it brightens
+                    s_defaultLight.normalColor.componentActive = new Color(0.92f, 0.92f, 0.92f, 1.0f); // Brighten even more
+                    s_defaultLight.normalColor.accent = new Color(0.22f, 0.45f, 0.65f, 1.0f);       // #3873A6
+                    s_defaultLight.normalColor.accentHover = new Color(0.32f, 0.55f, 0.75f, 1.0f);
+                    s_defaultLight.normalColor.accentActive = new Color(0.12f, 0.35f, 0.55f, 1.0f);
+                    s_defaultLight.normalColor.selection = new Color(0.45f, 0.65f, 0.80f, 0.8f); // Desaturated, softer selection
+                    s_defaultLight.normalColor.border = new Color(0.55f, 0.55f, 0.55f, 1.0f);
+                    s_defaultLight.normalColor.divider = new Color(0.50f, 0.50f, 0.50f, 1.0f);
                     s_defaultLight.normalColor.text = new Color(0.1f, 0.1f, 0.1f, 1.0f);
                     s_defaultLight.normalColor.subText = new Color(0.3f, 0.3f, 0.3f, 1.0f);
                     s_defaultLight.normalColor.disabledText = new Color(0.5f, 0.5f, 0.5f, 1.0f);
 
                     // Success
-                    s_defaultLight.successColor.background = new Color(0.8f, 0.95f, 0.8f, 1.0f);
-                    s_defaultLight.successColor.subBackground = new Color(0.7f, 0.9f, 0.7f, 1.0f);
-                    s_defaultLight.successColor.hoverBackground = new Color(0.85f, 0.98f, 0.85f, 1.0f);
-                    s_defaultLight.successColor.selectedBackground = new Color(0.6f, 0.8f, 0.6f, 1.0f);
-                    s_defaultLight.successColor.foreground = new Color(0.2f, 0.7f, 0.2f, 1.0f);
-                    s_defaultLight.successColor.subForeground = new Color(0.3f, 0.8f, 0.3f, 1.0f);
+                    s_defaultLight.successColor.surface = new Color(0.8f, 0.95f, 0.8f, 1.0f);
+                    s_defaultLight.successColor.container = new Color(0.7f, 0.9f, 0.7f, 1.0f);
+                    s_defaultLight.successColor.component = new Color(0.75f, 0.95f, 0.75f, 1.0f);
+                    s_defaultLight.successColor.componentHover = new Color(0.85f, 0.98f, 0.85f, 1.0f);
+                    s_defaultLight.successColor.componentActive = new Color(0.65f, 0.85f, 0.65f, 1.0f);
+                    s_defaultLight.successColor.accent = new Color(0.2f, 0.7f, 0.2f, 1.0f);
+                    s_defaultLight.successColor.accentHover = new Color(0.3f, 0.8f, 0.3f, 1.0f);
+                    s_defaultLight.successColor.accentActive = new Color(0.1f, 0.6f, 0.1f, 1.0f);
+                    s_defaultLight.successColor.selection = new Color(0.6f, 0.8f, 0.6f, 1.0f);
+                    s_defaultLight.successColor.border = new Color(0.6f, 0.8f, 0.6f, 1.0f);
+                    s_defaultLight.successColor.divider = new Color(0.55f, 0.75f, 0.55f, 1.0f);
                     s_defaultLight.successColor.text = new Color(0.05f, 0.5f, 0.05f, 1.0f);
                     s_defaultLight.successColor.subText = new Color(0.2f, 0.6f, 0.2f, 1.0f);
                     s_defaultLight.successColor.disabledText = new Color(0.6f, 0.7f, 0.6f, 1.0f);
 
                     // Info
-                    s_defaultLight.infoColor.background = new Color(0.8f, 0.9f, 0.95f, 1.0f);
-                    s_defaultLight.infoColor.subBackground = new Color(0.7f, 0.85f, 0.9f, 1.0f);
-                    s_defaultLight.infoColor.hoverBackground = new Color(0.85f, 0.95f, 0.98f, 1.0f);
-                    s_defaultLight.infoColor.selectedBackground = new Color(0.6f, 0.75f, 0.85f, 1.0f);
-                    s_defaultLight.infoColor.foreground = new Color(0.2f, 0.6f, 0.8f, 1.0f);
-                    s_defaultLight.infoColor.subForeground = new Color(0.3f, 0.7f, 0.9f, 1.0f);
+                    s_defaultLight.infoColor.surface = new Color(0.8f, 0.9f, 0.95f, 1.0f);
+                    s_defaultLight.infoColor.container = new Color(0.7f, 0.85f, 0.9f, 1.0f);
+                    s_defaultLight.infoColor.component = new Color(0.75f, 0.9f, 0.95f, 1.0f);
+                    s_defaultLight.infoColor.componentHover = new Color(0.85f, 0.95f, 0.98f, 1.0f);
+                    s_defaultLight.infoColor.componentActive = new Color(0.65f, 0.8f, 0.85f, 1.0f);
+                    s_defaultLight.infoColor.accent = new Color(0.2f, 0.6f, 0.8f, 1.0f);
+                    s_defaultLight.infoColor.accentHover = new Color(0.3f, 0.7f, 0.9f, 1.0f);
+                    s_defaultLight.infoColor.accentActive = new Color(0.1f, 0.5f, 0.7f, 1.0f);
+                    s_defaultLight.infoColor.selection = new Color(0.6f, 0.75f, 0.85f, 1.0f);
+                    s_defaultLight.infoColor.border = new Color(0.6f, 0.75f, 0.8f, 1.0f);
+                    s_defaultLight.infoColor.divider = new Color(0.55f, 0.7f, 0.75f, 1.0f);
                     s_defaultLight.infoColor.text = new Color(0.05f, 0.3f, 0.5f, 1.0f);
                     s_defaultLight.infoColor.subText = new Color(0.2f, 0.5f, 0.7f, 1.0f);
                     s_defaultLight.infoColor.disabledText = new Color(0.6f, 0.7f, 0.8f, 1.0f);
 
                     // Warning
-                    s_defaultLight.warningColor.background = new Color(0.95f, 0.95f, 0.8f, 1.0f);
-                    s_defaultLight.warningColor.subBackground = new Color(0.9f, 0.9f, 0.7f, 1.0f);
-                    s_defaultLight.warningColor.hoverBackground = new Color(0.98f, 0.98f, 0.85f, 1.0f);
-                    s_defaultLight.warningColor.selectedBackground = new Color(0.85f, 0.85f, 0.6f, 1.0f);
-                    s_defaultLight.warningColor.foreground = new Color(0.8f, 0.8f, 0.2f, 1.0f);
-                    s_defaultLight.warningColor.subForeground = new Color(0.9f, 0.9f, 0.3f, 1.0f);
+                    s_defaultLight.warningColor.surface = new Color(0.95f, 0.95f, 0.8f, 1.0f);
+                    s_defaultLight.warningColor.container = new Color(0.9f, 0.9f, 0.7f, 1.0f);
+                    s_defaultLight.warningColor.component = new Color(0.95f, 0.95f, 0.75f, 1.0f);
+                    s_defaultLight.warningColor.componentHover = new Color(0.98f, 0.98f, 0.85f, 1.0f);
+                    s_defaultLight.warningColor.componentActive = new Color(0.85f, 0.85f, 0.65f, 1.0f);
+                    s_defaultLight.warningColor.accent = new Color(0.8f, 0.8f, 0.2f, 1.0f);
+                    s_defaultLight.warningColor.accentHover = new Color(0.9f, 0.9f, 0.3f, 1.0f);
+                    s_defaultLight.warningColor.accentActive = new Color(0.7f, 0.7f, 0.1f, 1.0f);
+                    s_defaultLight.warningColor.selection = new Color(0.85f, 0.85f, 0.6f, 1.0f);
+                    s_defaultLight.warningColor.border = new Color(0.8f, 0.8f, 0.6f, 1.0f);
+                    s_defaultLight.warningColor.divider = new Color(0.75f, 0.75f, 0.55f, 1.0f);
                     s_defaultLight.warningColor.text = new Color(0.5f, 0.5f, 0.05f, 1.0f);
                     s_defaultLight.warningColor.subText = new Color(0.6f, 0.6f, 0.2f, 1.0f);
                     s_defaultLight.warningColor.disabledText = new Color(0.7f, 0.7f, 0.6f, 1.0f);
 
                     // Danger
-                    s_defaultLight.dangerColor.background = new Color(0.95f, 0.8f, 0.8f, 1.0f);
-                    s_defaultLight.dangerColor.subBackground = new Color(0.9f, 0.7f, 0.7f, 1.0f);
-                    s_defaultLight.dangerColor.hoverBackground = new Color(0.98f, 0.85f, 0.85f, 1.0f);
-                    s_defaultLight.dangerColor.selectedBackground = new Color(0.85f, 0.6f, 0.6f, 1.0f);
-                    s_defaultLight.dangerColor.foreground = new Color(0.8f, 0.2f, 0.2f, 1.0f);
-                    s_defaultLight.dangerColor.subForeground = new Color(0.9f, 0.3f, 0.3f, 1.0f);
+                    s_defaultLight.dangerColor.surface = new Color(0.95f, 0.8f, 0.8f, 1.0f);
+                    s_defaultLight.dangerColor.container = new Color(0.9f, 0.7f, 0.7f, 1.0f);
+                    s_defaultLight.dangerColor.component = new Color(0.95f, 0.75f, 0.75f, 1.0f);
+                    s_defaultLight.dangerColor.componentHover = new Color(0.98f, 0.85f, 0.85f, 1.0f);
+                    s_defaultLight.dangerColor.componentActive = new Color(0.85f, 0.65f, 0.65f, 1.0f);
+                    s_defaultLight.dangerColor.accent = new Color(0.8f, 0.2f, 0.2f, 1.0f);
+                    s_defaultLight.dangerColor.accentHover = new Color(0.9f, 0.3f, 0.3f, 1.0f);
+                    s_defaultLight.dangerColor.accentActive = new Color(0.7f, 0.1f, 0.1f, 1.0f);
+                    s_defaultLight.dangerColor.selection = new Color(0.85f, 0.6f, 0.6f, 1.0f);
+                    s_defaultLight.dangerColor.border = new Color(0.8f, 0.6f, 0.6f, 1.0f);
+                    s_defaultLight.dangerColor.divider = new Color(0.75f, 0.55f, 0.55f, 1.0f);
                     s_defaultLight.dangerColor.text = new Color(0.6f, 0.05f, 0.05f, 1.0f);
                     s_defaultLight.dangerColor.subText = new Color(0.7f, 0.2f, 0.2f, 1.0f);
                     s_defaultLight.dangerColor.disabledText = new Color(0.7f, 0.6f, 0.6f, 1.0f);
