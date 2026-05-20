@@ -8,6 +8,13 @@
 ## [Unreleased]
 
 ### Added (新增)
+- 實作了雙事件系統架構：建立全域的 `ImTKEventBus` 搭配 `ImTKDispatcher` 處理跨模組非同步廣播 (`OnXXXEvent`)。
+- 在 `ImTKObject` 與 `ImTKModule` 實作了 `SubscribeEvent<T>`，利用 `OnDisable` 生命週期自動清理註冊，防止 Memory Leak。
+- 新增 `EventBusTest` 整合測試，驗證全域事件發布、主執行緒調度及自動解綁邏輯。
+
+### Changed (變更)
+- 重構了 UI 區域事件 (`UIEventBase`) 的冒泡機制，利用虛擬屬性 `bubbles` 遵守開閉原則 (OCP)，移除原本 `is IValueChangedEvent` 的硬編碼判斷。
+- 移除了 `ImTK.Test` 中 `TestRunnerModule` 內遺留的舊版主題切換功能。
 - 實作了全新語意化的 14-token `ColorFamily` 系統，並重構 `ImTKTheme.ApplyToImGui` 映射。
 - 替 `Window` 元件新增 `TitleBarColor`, `TitleBarActiveColor`, `TitleBarCollapsedColor` 等專屬樣式映射。
 - 撰寫 `ThemeAndStyleMapping.md` 設計文檔定義樣式映射與色彩約束。
