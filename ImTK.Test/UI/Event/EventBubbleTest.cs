@@ -10,7 +10,13 @@ namespace ImTK.Test.UI.Event
 
         private class DummyEvent : UIEventBase
         {
-            public bool bubbles = true;
+            public override bool bubbles { get; }
+
+            public DummyEvent(bool bubbles = true)
+            {
+                this.bubbles = bubbles;
+            }
+
             public override void Dispose() { }
         }
 
@@ -26,7 +32,7 @@ namespace ImTK.Test.UI.Event
             parent.RegisterCallback<DummyEvent>(evt => parentReceived = true);
             child.RegisterCallback<DummyEvent>(evt => childReceived = true);
 
-            var dummyEvent = EventPool<DummyEvent>.Get();
+            var dummyEvent = new DummyEvent();
             dummyEvent.source = child;
 
             // Dispatch

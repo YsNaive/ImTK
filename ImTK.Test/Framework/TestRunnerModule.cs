@@ -109,20 +109,6 @@ namespace ImTK.Test.Framework
         {
             if (m_tests == null) return;
 
-            ImGui.Text("Theme Options:");
-            ImGui.SameLine();
-            if (ImGui.Button("Dark Theme"))
-            {
-                this.theme = ImTKTheme.DefaultDark;
-            }
-            ImGui.SameLine();
-            if (ImGui.Button("Light Theme"))
-            {
-                this.theme = ImTKTheme.DefaultLight;
-            }
-
-            ImGui.Separator();
-
             var headlessResults = HeadlessRunner.LastResults;
 
             int total = m_tests.Count + headlessResults.Count;

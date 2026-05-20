@@ -24,12 +24,24 @@ namespace ImTK.Core
         /// </summary>
         public bool isDestroyed { get; private set; } = false;
 
+        private readonly System.Collections.Generic.List<System.Action> m_eventUnsubscribers = new System.Collections.Generic.List<System.Action>();
+
         /// <summary>
         /// Constructs a new ImTKObject and automatically registers it to the application lifecycle.
         /// </summary>
         protected ImTKObject()
         {
             ImTKApplication.RegisterObject(this);
+        }
+
+        /// <summary>
+        /// Safely subscribes to a global application event.
+        /// The subscription is automatically cleared when this object is disabled or destroyed.
+        /// </summary>
+        protected void SubscribeEvent<T>(System.Action<T> handler) where T : ImTK.Event.IImTKEvent
+        {
+            System.Action unsub = ImTK.Event.ImTKEventBus.GlobalSubscribe(handler);
+            m_eventUnsubscribers.Add(unsub);
         }
 
         /// <summary>
@@ -46,7 +58,15 @@ namespace ImTK.Core
         // --- Runtime Loop Phase ---
 
         protected internal virtual void OnEnable() { }
-        protected internal virtual void OnDisable() { }
+
+        protected internal virtual void OnDisable()
+        {
+            foreach (var unsub in m_eventUnsubscribers)
+            {
+                unsub?.Invoke();
+            }
+            m_eventUnsubscribers.Clear();
+        }
 
         protected internal virtual void OnLogicUpdate() { }
         protected internal virtual void OnGuiRender() { }

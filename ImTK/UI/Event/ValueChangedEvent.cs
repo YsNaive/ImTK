@@ -7,7 +7,7 @@ namespace ImTK.UI
         public T previousValue { get; private set; }
         public T newValue { get; private set; }
         public bool isInternalChange { get; private set; }
-        public bool bubbles { get; internal set; } = false;
+        public override bool bubbles => false;
 
         public object previousValueObj => previousValue;
         public object newValueObj => newValue;
@@ -18,7 +18,6 @@ namespace ImTK.UI
             previousValue = default;
             newValue = default;
             isInternalChange = false;
-            bubbles = false;
         }
 
         public override void Dispose()
