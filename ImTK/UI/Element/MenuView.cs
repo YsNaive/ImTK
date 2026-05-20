@@ -4,10 +4,46 @@ using System.Linq;
 using ImGuiNET;
 using ImTK.Log;
 
+using ImTK.Core;
+using ImTK.UI.Style;
+
 namespace ImTK.UI
 {
-    public class MenuView : VisualElement, IMenuElement
+    public class MenuView : VisualElement<MenuView.Style>, IMenuElement
     {
+        public new class Style : VisualElement.Style
+        {
+            private int m_pushedColors = 0;
+
+            public override void PushToImGui(ResolvedStyle resolvedStyle)
+            {
+                base.PushToImGui(resolvedStyle);
+
+                m_pushedColors = 0;
+
+                // MenuView's BackgroundColor maps to PopupBg (or MenuBarBg)
+                Color? bgColor = resolvedStyle.GetColor(VisualElement.StyleKey.BackgroundColor);
+                if (bgColor.HasValue)
+                {
+                    // Since we can't easily know if it's a MenuBar inside PushToImGui without reference,
+                    // we push to both common menu backgrounds.
+                    ImGui.PushStyleColor(ImGuiCol.PopupBg, bgColor.Value.u32);
+                    ImGui.PushStyleColor(ImGuiCol.MenuBarBg, bgColor.Value.u32);
+                    m_pushedColors += 2;
+                }
+            }
+
+            public override void PopFromImGui()
+            {
+                if (m_pushedColors > 0)
+                {
+                    ImGui.PopStyleColor(m_pushedColors);
+                    m_pushedColors = 0;
+                }
+                base.PopFromImGui();
+            }
+        }
+
         public string name { get; set; }
         public int priority { get; set; }
         public bool isMenuBar { get; set; } = false;

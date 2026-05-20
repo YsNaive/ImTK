@@ -2,14 +2,87 @@ using System;
 using ImGuiNET;
 using ImTK.Log;
 
+using ImTK.Core;
+using ImTK.UI.Style;
+
 namespace ImTK.UI
 {
     /// <summary>
     /// 代表選單中的末端可點擊項目。
     /// 不能包含子節點。
     /// </summary>
-    public class MenuItem : VisualElement, IMenuElement
+    public class MenuItem : VisualElement<MenuItem.Style>, IMenuElement
     {
+        public new class StyleKey : VisualElement.StyleKey
+        {
+            public static readonly HashedString HoverColor = new HashedString("HoverColor");
+            public static readonly HashedString ActiveColor = new HashedString("ActiveColor");
+        }
+
+        public new class Style : VisualElement.Style
+        {
+            private int m_pushedColors = 0;
+
+            public StyleValue<Color>? hoverColor
+            {
+                get => GetOverrideColor(StyleKey.HoverColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.HoverColor, value.Value);
+                    else Clear(StyleKey.HoverColor);
+                }
+            }
+
+            public StyleValue<Color>? activeColor
+            {
+                get => GetOverrideColor(StyleKey.ActiveColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.ActiveColor, value.Value);
+                    else Clear(StyleKey.ActiveColor);
+                }
+            }
+
+            public override void PushToImGui(ResolvedStyle resolvedStyle)
+            {
+                base.PushToImGui(resolvedStyle);
+
+                m_pushedColors = 0;
+
+                // MenuItem Background maps to Header
+                Color? bgColor = resolvedStyle.GetColor(VisualElement.StyleKey.BackgroundColor);
+                if (bgColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Header, bgColor.Value.u32);
+                    m_pushedColors++;
+                }
+
+                Color? hoverColor = resolvedStyle.GetColor(StyleKey.HoverColor);
+                if (hoverColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, hoverColor.Value.u32);
+                    m_pushedColors++;
+                }
+
+                Color? activeColor = resolvedStyle.GetColor(StyleKey.ActiveColor);
+                if (activeColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.HeaderActive, activeColor.Value.u32);
+                    m_pushedColors++;
+                }
+            }
+
+            public override void PopFromImGui()
+            {
+                if (m_pushedColors > 0)
+                {
+                    ImGui.PopStyleColor(m_pushedColors);
+                    m_pushedColors = 0;
+                }
+                base.PopFromImGui();
+            }
+        }
+
         public string name { get; set; }
         public int priority { get; set; }
         public bool isChecked { get; set; }

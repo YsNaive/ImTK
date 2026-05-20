@@ -13,12 +13,10 @@ namespace ImTK.UI
         public class StyleKey
         {
             public static readonly HashedString BackgroundColor = new HashedString("BackgroundColor");
-            public static readonly HashedString HoverColor = new HashedString("HoverColor");
-            public static readonly HashedString ActiveColor = new HashedString("ActiveColor");
             public static readonly HashedString TextColor = new HashedString("TextColor");
             public static readonly HashedString DisabledTextColor = new HashedString("DisabledTextColor");
+            public static readonly HashedString SelectionColor = new HashedString("SelectionColor");
             public static readonly HashedString BorderColor = new HashedString("BorderColor");
-            public static readonly HashedString CheckMarkColor = new HashedString("CheckMarkColor");
 
             public static readonly HashedString Padding = new HashedString("Padding");
             public static readonly HashedString ItemSpacing = new HashedString("ItemSpacing");
@@ -118,23 +116,13 @@ namespace ImTK.UI
                 }
             }
 
-            public StyleValue<Color>? hoverColor
+            public StyleValue<Color>? selectionColor
             {
-                get => GetOverrideColor(StyleKey.HoverColor);
+                get => GetOverrideColor(StyleKey.SelectionColor);
                 set
                 {
-                    if (value.HasValue) SetColor(StyleKey.HoverColor, value.Value);
-                    else Clear(StyleKey.HoverColor);
-                }
-            }
-
-            public StyleValue<Color>? activeColor
-            {
-                get => GetOverrideColor(StyleKey.ActiveColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.ActiveColor, value.Value);
-                    else Clear(StyleKey.ActiveColor);
+                    if (value.HasValue) SetColor(StyleKey.SelectionColor, value.Value);
+                    else Clear(StyleKey.SelectionColor);
                 }
             }
 
@@ -145,16 +133,6 @@ namespace ImTK.UI
                 {
                     if (value.HasValue) SetColor(StyleKey.BorderColor, value.Value);
                     else Clear(StyleKey.BorderColor);
-                }
-            }
-
-            public StyleValue<Color>? checkMarkColor
-            {
-                get => GetOverrideColor(StyleKey.CheckMarkColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.CheckMarkColor, value.Value);
-                    else Clear(StyleKey.CheckMarkColor);
                 }
             }
 
@@ -318,6 +296,20 @@ namespace ImTK.UI
                 if (textColor.HasValue)
                 {
                     ImGui.PushStyleColor(ImGuiCol.Text, textColor.Value.u32);
+                    m_pushedColors++;
+                }
+
+                Color? disabledTextColor = resolvedStyle.GetColor(StyleKey.DisabledTextColor);
+                if (disabledTextColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.TextDisabled, disabledTextColor.Value.u32);
+                    m_pushedColors++;
+                }
+
+                Color? selectionColor = resolvedStyle.GetColor(StyleKey.SelectionColor);
+                if (selectionColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.TextSelectedBg, selectionColor.Value.u32);
                     m_pushedColors++;
                 }
 

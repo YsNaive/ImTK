@@ -92,9 +92,11 @@ ImTK 的樣式系統分為兩大層級，它們各自負責不同的渲染範圍
 *   `BackgroundColor` -> 覆寫 `ImGuiCol.WindowBg` & `ChildBg` (改變 Surface)
 *   `BorderColor` -> 覆寫 `ImGuiCol.Border`
 *   `TextColor` -> 覆寫 `ImGuiCol.Text`
+*   `DisabledTextColor` -> 覆寫 `ImGuiCol.TextDisabled`
+*   `SelectionColor` -> 覆寫 `ImGuiCol.TextSelectedBg`
 
 ### 4.2 特殊元件 (Specialized Components)
-當 ImTK 的封裝元件在 ImGui 層面對應了多種複合狀態（如 Button、Window），應建立專屬的 `[Element].Style` 子類別，並覆寫 `PushToImGui` 邏輯。
+當 ImTK 的封裝元件在 ImGui 層面對應了多種複合狀態（如 Button、Window），應建立專屬的 `[Element].Style` 子類別，並定義特有的 `StyleKey`，最後覆寫 `PushToImGui` 邏輯。
 
 #### Button
 作為一個「主動發光體」，按鈕不應被視為普通容器。
@@ -108,3 +110,16 @@ ImTK 的樣式系統分為兩大層級，它們各自負責不同的渲染範圍
 *   `TitleBarActiveColor` -> `ImGuiCol.TitleBgActive`
 *   *(未來擴充)*: `ResizeGripColor` 系列。
 這允許開發者實現「無邊框且標題列透明」的客製化視窗，而不影響全域 Theme 的 `container` 設定。
+
+#### TextField & CheckBox
+作為一般的輸入與互動組件，其背景映射至 ImGuiCol.FrameBg。
+建立 `TextField.Style` 與 `CheckBox.Style` 擴充/攔截以下 Key：
+*   `BackgroundColor` -> 攔截並重新導向至 `ImGuiCol.FrameBg`
+*   `HoverColor` -> `ImGuiCol.FrameBgHovered`
+*   `ActiveColor` -> `ImGuiCol.FrameBgActive`
+*   *(CheckBox 特有)* `CheckMarkColor` -> `ImGuiCol.CheckMark`
+
+#### MenuView & MenuItem
+選單系統擁有不同的複合底層 ImGui 變數。
+*   **`MenuView.Style`**: `BackgroundColor` 映射至 `ImGuiCol.PopupBg` 以及 `ImGuiCol.MenuBarBg`。
+*   **`MenuItem.Style`**: 作為點擊項目，`BackgroundColor` 映射至 `ImGuiCol.Header`。並提供特化 `HoverColor` (`ImGuiCol.HeaderHovered`) 與 `ActiveColor` (`ImGuiCol.HeaderActive`)。
