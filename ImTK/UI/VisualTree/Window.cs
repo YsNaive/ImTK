@@ -34,7 +34,9 @@ namespace ImTK.UI
     {
         public new class StyleKey : VisualElement.StyleKey
         {
-            public static readonly HashedString TitleBg = new HashedString("TitleBg");
+            public static readonly HashedString TitleBarColor = new HashedString("TitleBarColor");
+            public static readonly HashedString TitleBarActiveColor = new HashedString("TitleBarActiveColor");
+            public static readonly HashedString TitleBarCollapsedColor = new HashedString("TitleBarCollapsedColor");
         }
 
         public new class Style : VisualElement.Style
@@ -47,12 +49,25 @@ namespace ImTK.UI
 
                 m_pushedColors = 0;
 
-                Color? titleBg = resolvedStyle.GetColor(Window.StyleKey.TitleBg);
-                if (titleBg.HasValue)
+                Color? titleBarColor = resolvedStyle.GetColor(Window.StyleKey.TitleBarColor);
+                if (titleBarColor.HasValue)
                 {
-                    ImGui.PushStyleColor(ImGuiCol.TitleBg, titleBg.Value.u32);
-                    ImGui.PushStyleColor(ImGuiCol.TitleBgActive, titleBg.Value.u32);
-                    m_pushedColors += 2;
+                    ImGui.PushStyleColor(ImGuiCol.TitleBg, titleBarColor.Value.u32);
+                    m_pushedColors++;
+                }
+
+                Color? titleBarActiveColor = resolvedStyle.GetColor(Window.StyleKey.TitleBarActiveColor);
+                if (titleBarActiveColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.TitleBgActive, titleBarActiveColor.Value.u32);
+                    m_pushedColors++;
+                }
+
+                Color? titleBarCollapsedColor = resolvedStyle.GetColor(Window.StyleKey.TitleBarCollapsedColor);
+                if (titleBarCollapsedColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.TitleBgCollapsed, titleBarCollapsedColor.Value.u32);
+                    m_pushedColors++;
                 }
             }
 
@@ -66,13 +81,33 @@ namespace ImTK.UI
                 base.PopFromImGui();
             }
 
-            public StyleValue<Color>? titleBg
+            public StyleValue<Color>? titleBarColor
             {
-                get => GetOverrideColor(StyleKey.TitleBg);
+                get => GetOverrideColor(StyleKey.TitleBarColor);
                 set
                 {
-                    if (value.HasValue) SetColor(StyleKey.TitleBg, value.Value);
-                    else Clear(StyleKey.TitleBg);
+                    if (value.HasValue) SetColor(StyleKey.TitleBarColor, value.Value);
+                    else Clear(StyleKey.TitleBarColor);
+                }
+            }
+
+            public StyleValue<Color>? titleBarActiveColor
+            {
+                get => GetOverrideColor(StyleKey.TitleBarActiveColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.TitleBarActiveColor, value.Value);
+                    else Clear(StyleKey.TitleBarActiveColor);
+                }
+            }
+
+            public StyleValue<Color>? titleBarCollapsedColor
+            {
+                get => GetOverrideColor(StyleKey.TitleBarCollapsedColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.TitleBarCollapsedColor, value.Value);
+                    else Clear(StyleKey.TitleBarCollapsedColor);
                 }
             }
         }
