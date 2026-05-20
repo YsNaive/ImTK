@@ -153,3 +153,6 @@
 ### Changed (變更)
 - 重構了 VisualElement 樣式系統，移除全局 `StyleMappingRegistry` 並引入 `VisualElement<TStyle>` 泛型，讓 `Button` 等特異元件能自行實作 ImGui 的 `PushToImGui` 與屬性擴充 (如 `Window.StyleKey.TitleBg`)。
 - 將 `VisualElementStyle` 和 `ImTKStyleKey` 改為巢狀結構 (`VisualElement.Style` 與 `VisualElement.StyleKey`)，讓命名空間與架構更具層次性與擴展性。
+- 將 `HoverColor`、`ActiveColor` 與 `CheckMarkColor` 從基底 `VisualElement.StyleKey` 中移除，改由各特化元件 (`Button`, `TextField`, `CheckBox`, `MenuItem`) 的 `<T>.StyleKey` 獨立實作，避免語意混淆。
+- 擴充基底 `VisualElement.StyleKey`，新增 `SelectionColor` 與 `DisabledTextColor` 的 ImGui 映射支援。
+- 更新 `TextField`、`CheckBox`、`MenuView` 及 `MenuItem` 的樣式映射實作，將背景色精準導向至 `FrameBg`、`PopupBg/MenuBarBg` 與 `Header`，完成全域與局部組件語義化覆寫的最終拼圖。
