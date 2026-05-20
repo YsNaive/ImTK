@@ -7,7 +7,22 @@
 
 ## [Unreleased]
 
+### Added (新增)
+- 新增 `ImTKTheme.GlobalTheme` 全域主題管理系統，取代了以往各個 `Window` 獨立硬塞預設樣式表的邏輯。
+- 在 `ImTKTheme` 的 `ColorFamily` 擴充了 `hoverBackground` 與 `selectedBackground`，實現更細緻的互動狀態著色。
+- `ImTK.Sample` 中新增 `ThemeMenu`，支援透過上方選單列切換深色/淺色主題。
+
+### Changed (變更)
+- 將 `DefaultDark` 更新為 VS Code 的 Modern Dark 風格。
+- 將 `DefaultLight` 更新為 Unity Editor 的 Light 風格。
+- **架構重構**：將 `ImTKTheme` 配置改為在 `Panel.OnLogicUpdate` 時統一透過 `ApplyToImGui()` 深度映射至 `ImGui.GetStyle()` 全域參數中。這顯著降低了 `VisualElement` 處理預設樣式的效能負擔，並解決了 Tab、TitleBg、MenuBar 等原生 UI 的漏色問題。
+- **效能優化**：清除 `DefaultStyles.cs` 中的冗餘組態與過時的相容 Token，符合 YAGNI 原則並完全依賴於 ImGui 底層的高效繼承。
+- 移除了 `ImTKTheme` 中的 `borderColor` 與 `checkMarkColor` 屬性，全面改用更一致的 `ColorFamily` 語義。
+
 ### Fixed (修復)
+- 修復了 `Panel` 在 `OnGuiRender` 期間直接註冊視窗 (`Window.Open`) 導致的 `[VisualElementHierarchy] Cannot modify VisualElement hierarchy during GuiRender state` 崩潰問題。現在 `RegisterWindow` 會把視窗推入 `s_windowsToAdd` 佇列，延遲至安全的 `OnLogicUpdate` 階段加入。
+- 修復了 Theme 初始化過早導致 `NullReferenceException` 的崩潰問題（將 ImGui 指標的映射延後並由 `isGlobalThemeDirty` 旗標保護）。
+- 修復了 `SampleOverviewModule` 的左右面板吃不到樣式的問題，將其封裝進 `OverviewHostElement` 並納入正規的渲染管線。
 - 修正 Window 右上角關閉按鈕點擊後未能觸發 `Close()` 的問題（隔離 ImGui 內部狀態修改與元件本身的 `m_isOpen` 狀態）。
 - 將 `AssetManager.GetOrCreateAsset<T>` 異常捕捉範圍放寬至泛型 `Exception`，防止 IO 異常導致程式崩潰。
 - 優化 `ResolvedStyle` 樣式計算的內部結構，改為使用 `List<StyleProperty>`，消除字典查表與清理時的 GC 記憶體配置壓力。
