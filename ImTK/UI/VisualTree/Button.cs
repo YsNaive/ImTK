@@ -11,11 +11,33 @@ namespace ImTK.UI
         {
             public static readonly HashedString Width = new HashedString("Width");
             public static readonly HashedString Height = new HashedString("Height");
+            public static readonly HashedString HoverColor = new HashedString("HoverColor");
+            public static readonly HashedString ActiveColor = new HashedString("ActiveColor");
         }
 
         public new class Style : VisualElement.Style
         {
             private int m_pushedColors = 0;
+
+            public StyleValue<Color>? hoverColor
+            {
+                get => GetOverrideColor(StyleKey.HoverColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.HoverColor, value.Value);
+                    else Clear(StyleKey.HoverColor);
+                }
+            }
+
+            public StyleValue<Color>? activeColor
+            {
+                get => GetOverrideColor(StyleKey.ActiveColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.ActiveColor, value.Value);
+                    else Clear(StyleKey.ActiveColor);
+                }
+            }
 
             public StyleValue<float>? width
             {
@@ -50,14 +72,14 @@ namespace ImTK.UI
                     m_pushedColors++;
                 }
 
-                Color? hoverColor = resolvedStyle.GetColor(VisualElement.StyleKey.HoverColor);
+                Color? hoverColor = resolvedStyle.GetColor(StyleKey.HoverColor);
                 if (hoverColor.HasValue)
                 {
                     ImGui.PushStyleColor(ImGuiCol.ButtonHovered, hoverColor.Value.u32);
                     m_pushedColors++;
                 }
 
-                Color? activeColor = resolvedStyle.GetColor(VisualElement.StyleKey.ActiveColor);
+                Color? activeColor = resolvedStyle.GetColor(StyleKey.ActiveColor);
                 if (activeColor.HasValue)
                 {
                     ImGui.PushStyleColor(ImGuiCol.ButtonActive, activeColor.Value.u32);

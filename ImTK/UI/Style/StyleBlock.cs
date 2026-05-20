@@ -101,8 +101,8 @@ namespace ImTK.UI.Style
 
         public StyleBlock BackgroundColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.BackgroundColor, value);
         public StyleBlock TextColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.TextColor, value);
-        public StyleBlock HoverColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.HoverColor, value);
-        public StyleBlock ActiveColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.ActiveColor, value);
+        public StyleBlock DisabledTextColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.DisabledTextColor, value);
+        public StyleBlock SelectionColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.SelectionColor, value);
         public StyleBlock BorderColor(StyleValue<Color> value) => SetColor(VisualElement.StyleKey.BorderColor, value);
 
         public StyleBlock BorderRadius(StyleValue<float> value) => SetFloat(VisualElement.StyleKey.BorderRadius, value);
