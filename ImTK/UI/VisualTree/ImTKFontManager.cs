@@ -70,12 +70,22 @@ namespace ImTK.UI
             // Build fonts based on GlobalTheme sizes
             var sizes = ImTKTheme.GlobalTheme.GetFontSizes();
 
+            // To ensure ImGui's default font (io.Fonts.Fonts[0]) aligns with our conceptual "Normal" size,
+            // we sort the dictionary to process FontSize.Normal first.
+            var sortedSizes = new List<KeyValuePair<FontSize, float>>(sizes);
+            sortedSizes.Sort((a, b) =>
+            {
+                if (a.Key == FontSize.Normal && b.Key != FontSize.Normal) return -1;
+                if (a.Key != FontSize.Normal && b.Key == FontSize.Normal) return 1;
+                return a.Key.CompareTo(b.Key);
+            });
+
             foreach (var familyKvp in s_fontFamilies)
             {
                 var familyHash = familyKvp.Key;
                 var family = familyKvp.Value;
 
-                foreach (var sizeKvp in sizes)
+                foreach (var sizeKvp in sortedSizes)
                 {
                     var fontSizeEnum = sizeKvp.Key;
                     float sizePixels = sizeKvp.Value;
