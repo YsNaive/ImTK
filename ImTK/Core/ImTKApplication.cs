@@ -178,6 +178,9 @@ namespace ImTK.Core
                     module.OnGraphicsSetup();
                 }
 
+                // Initial font resolution before the first frame begins
+                ImTK.UI.ImTKFontManager.ResolveFont();
+
                 SetState(ApplicationState.Idle);
                 s_minAllowedFrameState = ApplicationState.LogicUpdate;
                 s_log.Info("Graphics setup completed. Entering runtime loop.");
@@ -186,10 +189,6 @@ namespace ImTK.Core
             public static void LogicUpdate(double rawDeltaTime)
         {
                 EnforceFrameOrder(ApplicationState.LogicUpdate);
-
-                // --- Font System Resolution ---
-                // We resolve fonts here at the beginning of the frame before any logic or GUI rendering
-                ImTK.UI.ImTKFontManager.ResolveFont();
 
                 Time.Update(rawDeltaTime);
 
@@ -284,6 +283,10 @@ namespace ImTK.Core
 
                 // Process pending collections and Enable/Disable state changes
                 ProcessPendingQueuesAndStateChanges();
+
+                // --- Font System Resolution ---
+                // Resolve fonts at the very end of the frame when ImGui is completely unlocked
+                ImTK.UI.ImTKFontManager.ResolveFont();
 
                 SetState(ApplicationState.Idle);
                 s_minAllowedFrameState = ApplicationState.LogicUpdate; // Reset frame lock
