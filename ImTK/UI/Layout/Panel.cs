@@ -20,7 +20,29 @@ namespace ImTK.UI
         private readonly List<(Func<ImRect, ImRect> func, int priority)> m_reservedAreas = new();
 
         private static readonly Dictionary<WindowKey, Window> s_windows = new Dictionary<WindowKey, Window>();
+        private static readonly List<Window> s_windowsToAdd = new List<Window>();
         private static readonly List<Window> s_windowsToRemove = new List<Window>();
+
+        private class WindowHostElement : VisualElement
+        {
+            protected override void OnRenderLayout()
+            {
+                int count = hierarchy.childCount;
+                for (int i = 0; i < count; i++)
+                {
+                    try
+                    {
+                        hierarchy.childAt(i).Render();
+                    }
+                    catch (Exception ex)
+                    {
+                        s_log.Error(ex, $"Exception in Render of window child");
+                    }
+                }
+            }
+        }
+
+        private static WindowHostElement s_hostElement;
 
         protected Panel() { }
 
@@ -33,6 +55,8 @@ namespace ImTK.UI
                 throw new InvalidOperationException($"A window of type '{key.Type}' with windowId '{key.WindowId}' is already open.");
             }
             s_windows[key] = window;
+            s_windowsToAdd.Add(window);
+
             s_log.Trace($"Window registered in Panel: {window.imguiId}");
         }
 
@@ -48,10 +72,29 @@ namespace ImTK.UI
 
         protected internal override void OnLogicUpdate()
         {
+            if (ImTKTheme.isGlobalThemeDirty)
+            {
+                ImTKTheme.GlobalTheme.ApplyToImGui();
+                ImTKTheme.isGlobalThemeDirty = false;
+            }
+
+            foreach (var window in s_windowsToAdd)
+            {
+                if (s_hostElement != null)
+                {
+                    s_hostElement.hierarchy.Add(window);
+                }
+            }
+            s_windowsToAdd.Clear();
+
             foreach (var window in s_windowsToRemove)
             {
                 WindowKey key = new WindowKey(window.GetType(), window.windowId);
                 s_windows.Remove(key);
+                if (s_hostElement != null)
+                {
+                    s_hostElement.hierarchy.Remove(window);
+                }
                 s_log.Trace($"Window unregistered from Panel: {window.imguiId}");
             }
             s_windowsToRemove.Clear();
@@ -71,6 +114,25 @@ namespace ImTK.UI
 
         protected internal override void OnInitializeSelf()
         {
+            s_hostElement = new WindowHostElement();
+            ImTKTheme.onGlobalThemeChanged += OnGlobalThemeChanged;
+
+            foreach (var window in s_windows.Values)
+            {
+                // Push existing windows to the add queue to be processed safely
+                if (!s_windowsToAdd.Contains(window))
+                {
+                    s_windowsToAdd.Add(window);
+                }
+            }
+        }
+
+        private void OnGlobalThemeChanged()
+        {
+            if (s_hostElement != null)
+            {
+                s_hostElement.MarkStyleDirty();
+            }
         }
 
         protected internal override void OnInitializeDependencies()
@@ -116,21 +178,23 @@ namespace ImTK.UI
 
             ImGui.End();
 
-            foreach (var window in s_windows.Values)
+            try
             {
-                try
+                if (s_hostElement != null)
                 {
-                    window.Render();
+                    s_hostElement.Render();
                 }
-                catch (Exception ex)
-                {
-                    s_log.Error(ex, $"Exception in Render of window: {window.imguiId}");
-                }
+            }
+            catch (Exception ex)
+            {
+                s_log.Error(ex, $"Exception in Render of WindowHostElement");
             }
         }
 
         protected internal override void OnClose()
         {
+            ImTKTheme.onGlobalThemeChanged -= OnGlobalThemeChanged;
+            s_hostElement = null;
         }
     }
 }

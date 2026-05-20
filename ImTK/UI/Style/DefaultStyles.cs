@@ -7,15 +7,9 @@ namespace ImTK.UI.Style
     {
         public static void Register(StyleSheet sheet)
         {
-            var btn = sheet.AddBlock("Button");
-            btn.SetColor(VisualElement.StyleKey.BackgroundColor, "--primary-color");
-            btn.SetColor(VisualElement.StyleKey.HoverColor, "--button-hovered");
-            btn.SetColor(VisualElement.StyleKey.ActiveColor, "--button-active");
-
-            var win = sheet.AddBlock("Window");
-            win.SetColor(VisualElement.StyleKey.BackgroundColor, "--background-1");
-            win.SetColor(Window.StyleKey.TitleBg, "--background-2");
-            win.SetColor(VisualElement.StyleKey.BorderColor, "--background-2");
+            // By utilizing ImTKTheme.ApplyToImGui(), ImGui now handles standard window, button,
+            // and text styling globally.
+            // This global style sheet is now reserved for future custom overrides or extensions.
         }
     }
 }

@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <RootNamespace>ImTK</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 </PropertyGroup>
 
   <ItemGroup>

@@ -456,7 +456,7 @@ namespace ImTK.UI
             {
                 if (m_theme != null) return m_theme;
                 if (parent != null) return parent.theme;
-                return ImTKTheme.DefaultDark; // Root fallback
+                return ImTKTheme.GlobalTheme; // Root fallback
             }
             set
             {
