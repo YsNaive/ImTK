@@ -25,11 +25,19 @@ namespace ImTK.UI
             public static readonly HashedString BorderRadius = new HashedString("BorderRadius");
             public static readonly HashedString Alpha = new HashedString("Alpha");
             public static readonly HashedString DisabledAlpha = new HashedString("DisabledAlpha");
+
+            public static readonly HashedString FontFamily = new HashedString("FontFamily");
+            public static readonly HashedString FontSize = new HashedString("FontSize");
         }
 
         public class Style : IVisualElementStyle
         {
             internal List<StyleProperty> m_overrideStyles;
+            internal int m_pushedFonts = 0;
+            internal float m_previousFontScale = 1.0f;
+
+            public StyleValue<HashedString> fontFamily { set => SetStringToken(StyleKey.FontFamily, value); }
+            public StyleValue<int> fontSize { set => SetInt(StyleKey.FontSize, value); }
 
             public Style() { }
 
@@ -46,6 +54,31 @@ namespace ImTK.UI
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.colorValue = value.Value.u32;
 
+                m_overrideStyles.Add(prop);
+            }
+
+            public void SetInt(HashedString key, StyleValue<int> value)
+            {
+                EnsureOverrideStyles();
+                RemoveEntry(key.Hash);
+
+                if (value.IsNull) return;
+
+                var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.IntValue };
+                if (value.IsToken) prop.tokenHash = value.Token.Hash;
+                else prop.intValue = value.Value;
+
+                m_overrideStyles.Add(prop);
+            }
+
+            public void SetStringToken(HashedString key, StyleValue<HashedString> value)
+            {
+                EnsureOverrideStyles();
+                RemoveEntry(key.Hash);
+
+                if (value.IsNull) return;
+
+                var prop = new StyleProperty { key = key.Hash, type = StylePropertyType.Token, tokenHash = value.Value.Hash };
                 m_overrideStyles.Add(prop);
             }
 
@@ -283,6 +316,37 @@ namespace ImTK.UI
             {
                 m_pushedColors = 0;
                 m_pushedVars = 0;
+                m_pushedFonts = 0;
+
+                int? familyHash = resolvedStyle.GetTokenHash(StyleKey.FontFamily);
+                int? size = resolvedStyle.GetInt(StyleKey.FontSize);
+
+                if (familyHash.HasValue || size.HasValue)
+                {
+                    int finalFamilyHash = familyHash.HasValue ? familyHash.Value : ImTKFontManager.DefaultFontFamilyHash;
+
+                    if (size.HasValue)
+                    {
+                        var (font, scale) = ImTKFontManager.GetFontWithScale(finalFamilyHash, size.Value);
+                        ImGui.PushFont(font);
+                        // ImGui.NET doesn't expose GetWindowFontScale.
+                        // WindowFontScale is mostly manipulated locally via SetWindowFontScale and resets
+                        // when the window ends, or it applies to all subsequent text in the window.
+                        // To properly nest scales across visual elements without a getter, we fallback to tracking it
+                        // by passing 1.0f on pop, which reverts to default window scale for now.
+                        // In a true deep hierarchy we'd track this via ImTK's Context or Hierarchy pass, but
+                        // since font sizing is usually uniform in a container, reverting to 1.0f is acceptable.
+                        ImGui.SetWindowFontScale(scale);
+                        m_previousFontScale = 1.0f;
+                        m_pushedFonts++;
+                    }
+                    else
+                    {
+                        var font = ImTKFontManager.GetFont(finalFamilyHash, ImTK.UI.Style.FontSize.Normal);
+                        ImGui.PushFont(font);
+                        m_pushedFonts++;
+                    }
+                }
 
                 Color? bgColor = resolvedStyle.GetColor(StyleKey.BackgroundColor);
                 if (bgColor.HasValue)
@@ -374,8 +438,16 @@ namespace ImTK.UI
             {
                 if (m_pushedColors > 0) ImGui.PopStyleColor(m_pushedColors);
                 if (m_pushedVars > 0) ImGui.PopStyleVar(m_pushedVars);
+
+                if (m_pushedFonts > 0)
+                {
+                    ImGui.PopFont();
+                    ImGui.SetWindowFontScale(m_previousFontScale); // Reset scale
+                }
+
                 m_pushedColors = 0;
                 m_pushedVars = 0;
+                m_pushedFonts = 0;
             }
         }
 

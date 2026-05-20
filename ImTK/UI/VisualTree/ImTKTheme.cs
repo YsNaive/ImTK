@@ -140,6 +140,33 @@ namespace ImTK.UI
         public float borderRadius { get => GetFloat(Tokens.BorderRadius, 3f); set => SetFloat(Tokens.BorderRadius, value); }
         public float disabledAlpha { get => GetFloat(Tokens.DisabledAlpha, 0.6f); set => SetFloat(Tokens.DisabledAlpha, value); }
 
+        // --- Font System ---
+        private Dictionary<ImTK.UI.Style.FontSize, float> m_fontSizes = new Dictionary<ImTK.UI.Style.FontSize, float>
+        {
+            { ImTK.UI.Style.FontSize.Small, 14f },
+            { ImTK.UI.Style.FontSize.Normal, 18f },
+            { ImTK.UI.Style.FontSize.H3, 24f },
+            { ImTK.UI.Style.FontSize.H2, 32f },
+            { ImTK.UI.Style.FontSize.H1, 48f }
+        };
+
+        internal IReadOnlyDictionary<ImTK.UI.Style.FontSize, float> GetFontSizes() => m_fontSizes;
+
+        private void SetFontSizeInternal(ImTK.UI.Style.FontSize sizeEnum, float pixelSize)
+        {
+            if (m_fontSizes[sizeEnum] != pixelSize)
+            {
+                m_fontSizes[sizeEnum] = pixelSize;
+                ImTKFontManager.MarkFontDirty();
+            }
+        }
+
+        public float fontSizeSmall { get => m_fontSizes[ImTK.UI.Style.FontSize.Small]; set => SetFontSizeInternal(ImTK.UI.Style.FontSize.Small, value); }
+        public float fontSizeNormal { get => m_fontSizes[ImTK.UI.Style.FontSize.Normal]; set => SetFontSizeInternal(ImTK.UI.Style.FontSize.Normal, value); }
+        public float fontSizeH3 { get => m_fontSizes[ImTK.UI.Style.FontSize.H3]; set => SetFontSizeInternal(ImTK.UI.Style.FontSize.H3, value); }
+        public float fontSizeH2 { get => m_fontSizes[ImTK.UI.Style.FontSize.H2]; set => SetFontSizeInternal(ImTK.UI.Style.FontSize.H2, value); }
+        public float fontSizeH1 { get => m_fontSizes[ImTK.UI.Style.FontSize.H1]; set => SetFontSizeInternal(ImTK.UI.Style.FontSize.H1, value); }
+
         // --- Syntax Highlight Wrapper ---
         public class SyntaxTheme
         {

@@ -50,6 +50,9 @@ namespace ImTK.Silk
         {
             s_gl = s_window.CreateOpenGL();
 
+            // Subscribe to font rebuild events from ImTK Core
+            ImTK.Event.ImTKEventBus.GlobalSubscribe<ImTK.Event.OnFontChangedEvent>(OnFontChanged);
+
             // Initialize ImGui Controller
             // Important: We must use the 'onConfigureIO' callback parameter to configure ViewportsEnable.
             // ImGuiController initializes fonts and might implicitly call NewFrame or build states early.
@@ -72,6 +75,19 @@ namespace ImTK.Silk
 
             // Phase 3: Setup graphics resources for ImTK modules
             ImTKApplication.Lifecycle.GraphicsSetup();
+        }
+
+        private static void OnFontChanged(ImTK.Event.OnFontChangedEvent evt)
+        {
+            if (s_imguiController != null)
+            {
+                // RecreateFontDeviceTexture is non-public in Silk.NET.OpenGL.Extensions.ImGui
+                var method = typeof(ImGuiController).GetMethod("RecreateFontDeviceTexture", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (method != null)
+                {
+                    method.Invoke(s_imguiController, null);
+                }
+            }
         }
 
         private static void OnUpdate(double deltaTime)

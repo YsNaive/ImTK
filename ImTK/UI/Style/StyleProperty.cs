@@ -9,7 +9,8 @@ namespace ImTK.UI.Style
         Token = 1,
         ColorValue = 2,
         FloatValue = 3,
-        Vector2Value = 4
+        Vector2Value = 4,
+        IntValue = 5
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 16)]
@@ -22,6 +23,7 @@ namespace ImTK.UI.Style
         [FieldOffset(8)] public uint colorValue;
         [FieldOffset(8)] public float floatValue;
         [FieldOffset(8)] public Vector2 vector2Value;
+        [FieldOffset(8)] public int intValue;
         [FieldOffset(8)] public int tokenHash;
 
         public bool isNull => type == StylePropertyType.Null;

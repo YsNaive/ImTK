@@ -139,5 +139,28 @@ namespace ImTK.UI.Style
             }
             return null;
         }
+
+        public int? GetInt(HashedString key)
+        {
+             if (TryGetProperty(key.Hash, out var prop))
+            {
+                if (prop.type == StylePropertyType.IntValue)
+                    return prop.intValue;
+                // Currently Int doesn't have token fallback from theme in ImTKTheme, but reserved for future
+            }
+            return null;
+        }
+
+        public int? GetTokenHash(HashedString key)
+        {
+             if (TryGetProperty(key.Hash, out var prop))
+            {
+                if (prop.type == StylePropertyType.Token)
+                {
+                    return prop.tokenHash;
+                }
+            }
+            return null;
+        }
     }
 }

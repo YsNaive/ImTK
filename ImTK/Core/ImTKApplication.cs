@@ -187,6 +187,10 @@ namespace ImTK.Core
         {
                 EnforceFrameOrder(ApplicationState.LogicUpdate);
 
+                // --- Font System Resolution ---
+                // We resolve fonts here at the beginning of the frame before any logic or GUI rendering
+                ImTK.UI.ImTKFontManager.ResolveFont();
+
                 Time.Update(rawDeltaTime);
 
                 SetState(ApplicationState.LogicUpdate);
