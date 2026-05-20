@@ -8,6 +8,9 @@
 ## [Unreleased]
 
 ### Added (新增)
+- 實作了全新語意化的 14-token `ColorFamily` 系統，並重構 `ImTKTheme.ApplyToImGui` 映射。
+- 替 `Window` 元件新增 `TitleBarColor`, `TitleBarActiveColor`, `TitleBarCollapsedColor` 等專屬樣式映射。
+- 撰寫 `ThemeAndStyleMapping.md` 設計文檔定義樣式映射與色彩約束。
 - 新增 `ImTKTheme.GlobalTheme` 全域主題管理系統，取代了以往各個 `Window` 獨立硬塞預設樣式表的邏輯。
 - 在 `ImTKTheme` 的 `ColorFamily` 擴充了 `hoverBackground` 與 `selectedBackground`，實現更細緻的互動狀態著色。
 - `ImTK.Sample` 中新增 `ThemeMenu`，支援透過上方選單列切換深色/淺色主題。
