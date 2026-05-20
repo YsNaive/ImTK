@@ -114,6 +114,9 @@ namespace ImTK.Core
 
                 s_log.Info($"ImTK Framework Version {Version} Initializing...");
 
+                // --- Dispatcher Initialization ---
+                ImTK.Event.ImTKDispatcher.InitializeMainThread();
+
                 // --- Reflection Phase 1: ImTKModules ---
                 SetState(ApplicationState.InitializeSelf);
 
@@ -272,6 +275,9 @@ namespace ImTK.Core
                     catch (Exception ex) { s_log.Error(ex, $"Exception thrown during LateUpdate by {obj.GetType().Name}"); }
                 }
 
+                // Process main thread dispatcher queue
+                ImTK.Event.ImTKDispatcher.ProcessQueue();
+
                 // Process pending collections and Enable/Disable state changes
                 ProcessPendingQueuesAndStateChanges();
 
@@ -285,6 +291,9 @@ namespace ImTK.Core
 
                 s_log.Info("Application closing. Teardown initiated...");
                 SetState(ApplicationState.Close);
+
+                // Clear event bus subscriptions
+                ImTK.Event.ImTKEventBus.ClearAll();
 
                 s_log.Debug($"Disabling and destroying active ImTKObjects ({s_objects.Count}).");
                 // Disable all objects and modules

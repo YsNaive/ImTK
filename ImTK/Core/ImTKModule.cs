@@ -10,6 +10,8 @@ namespace ImTK.Core
         internal bool m_enabled = true;
         internal bool m_activeInHierarchy = true;
 
+        private readonly System.Collections.Generic.List<System.Action> m_eventUnsubscribers = new System.Collections.Generic.List<System.Action>();
+
         /// <summary>
         /// Controls whether this module participates in the update and render loops.
         /// Changing this value defers the actual OnEnable/OnDisable trigger to the LateUpdate phase.
@@ -25,6 +27,16 @@ namespace ImTK.Core
         /// Child classes MUST NOT define public or parameterized constructors.
         /// </summary>
         protected ImTKModule() { }
+
+        /// <summary>
+        /// Safely subscribes to a global application event.
+        /// The subscription is automatically cleared when this module is disabled.
+        /// </summary>
+        protected void SubscribeEvent<T>(System.Action<T> handler) where T : ImTK.Event.IImTKEvent
+        {
+            System.Action unsub = ImTK.Event.ImTKEventBus.GlobalSubscribe(handler);
+            m_eventUnsubscribers.Add(unsub);
+        }
 
         // --- Initialization Phase ---
 
@@ -54,7 +66,15 @@ namespace ImTK.Core
         // --- State Changes & Teardown ---
 
         protected internal virtual void OnEnable() { }
-        protected internal virtual void OnDisable() { }
+
+        protected internal virtual void OnDisable()
+        {
+            foreach (var unsub in m_eventUnsubscribers)
+            {
+                unsub?.Invoke();
+            }
+            m_eventUnsubscribers.Clear();
+        }
 
         /// <summary>
         /// Triggered when the entire application is closing.

@@ -5,6 +5,5 @@ namespace ImTK.UI
         object previousValueObj { get; }
         object newValueObj { get; }
         bool isInternalChange { get; }
-        bool bubbles { get; }
     }
 }

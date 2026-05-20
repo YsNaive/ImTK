@@ -35,8 +35,8 @@ ImGui 的渲染指令與 OpenGL 的資源配置嚴格綁定於「主執行緒 (M
 *   **實作約束**：所有事件資料實體必須實作空介面 `IImTKEvent`，作為路由的憑證。
 
 ```csharp
-// 事件定義範例
-public struct FileLoadedEvent : IImTKEvent
+// App 事件定義範例 (建議使用 OnXXXEvent 命名)
+public struct OnFileLoadedEvent : IImTKEvent
 {
     public string FilePath;
     public byte[] Data;
@@ -98,7 +98,7 @@ public class MyUIWindow : ImTKObject
     public override void OnEnable()
     {
         // 隨意使用 Lambda，不怕提早回收，也不用存 Token
-        SubscribeEvent<FileLoadedEvent>(e => {
+        SubscribeEvent<OnFileLoadedEvent>(e => {
             this.StatusText = $"Loaded: {e.FilePath}";
         });
     }
@@ -109,7 +109,32 @@ public class MyUIWindow : ImTKObject
 
 ---
 
-## 5. 總結
+## 5. 雙系統架構與命名規範 (Dual System Architecture & Naming Conventions)
+
+由於 ImTK 同時存在處理 UI 互動的區域事件系統（`VisualElement` 專屬），以及處理跨模組通訊的全域事件系統（`ImTKEventBus`），為了避免開發者混淆，專案採用了嚴格的語意區分與命名規範：
+
+### 5.1 命名區分
+*   **UI 事件 (UI Events)**：
+    *   **命名規範**：`XXXEvent` (例如：`ClickEvent`, `ValueChangedEvent`)
+    *   **特性**：綁定於 `VisualElement` 的邏輯樹，支援由下往上的**冒泡 (Bubbling)**，可在中途攔截 (`StopPropagation`)。
+    *   **訂閱方式**：只能透過 `VisualElement.RegisterCallback<T>`。
+*   **App 全域事件 (App Events)**：
+    *   **命名規範**：`OnXXXEvent` (例如：`OnFileLoadedEvent`, `OnDatabaseUpdatedEvent`)
+    *   **特性**：全域廣播，扁平結構，保證在主執行緒執行。無冒泡或捕獲階段。
+    *   **訂閱方式**：只能透過 `ImTKObject/ImTKModule` 的 `SubscribeEvent<T>` 代理方法。
+
+### 5.2 關於 UI 事件「捕獲階段 (Capture Phase)」的設計決策
+傳統 UI 框架（如 HTML DOM, UGUI）具有從 Root 到 Target 的事件捕獲階段。但在 ImTK 中，我們**刻意放棄了實作 Capture 階段**，原因在於：
+ImTK 的 UI 底層基於 ImGui（Immediate Mode）。當事件觸發時（如按鈕被點擊），ImGui 內部已經完成了渲染與狀態轉移（例如按鈕顯示為按下狀態）。即使我們在事件系統的捕獲階段攔截了該事件，也**無法阻止 ImGui 的視覺反饋**，這會導致視覺與邏輯脫節。
+因此，若要在 ImTK 中實作全域的輸入攔截，請利用 `ImGui.BeginDisabled()` 或隱形的 `ImGui.InvisibleButton` 於 `OnGuiRender` 階段處理，這才是順應 Immediate Mode 哲學的正確做法。
+
+### 5.3 關於鍵盤事件 (KeyEvent) 的設計決策
+由於 ImGui 內部已經維護了一套完整的 Focus 與 Input 狀態機，將全域鍵盤事件（如 Ctrl+S）硬塞入 `UIEvent` 或 `ImTKEventBus` 系統中，會增加巨大的複雜度，並容易與 ImGui 原本的行為產生衝突。
+基於 YAGNI 原則，目前我們建議開發者**維持現狀，直接在 `OnGuiRender` 中調用原生 ImGui API (`ImGui.IsKeyPressed` 等) 來處理鍵盤事件**。若未來遇到嚴重的快捷鍵衝突痛點，我們再重新評估全域 Input Module 的設計。
+
+---
+
+## 6. 總結
 
 透過將 `ImTKDispatcher` 與基於 `ImTKObject/Module` 生命週期的「自動解綁機制」結合，
 ImTK 的 Event Bus 達成了 **型別安全 (Type-Safe)**、**執行緒安全 (Thread-Safe)** 與 **零負擔防洩漏 (Zero-Boilerplate Leak Proof)** 的三大目標。
