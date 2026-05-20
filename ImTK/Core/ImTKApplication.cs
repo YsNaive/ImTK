@@ -178,9 +178,6 @@ namespace ImTK.Core
                     module.OnGraphicsSetup();
                 }
 
-                // Initial font resolution before the first frame begins
-                ImTK.UI.ImTKFontManager.ResolveFont();
-
                 SetState(ApplicationState.Idle);
                 s_minAllowedFrameState = ApplicationState.LogicUpdate;
                 s_log.Info("Graphics setup completed. Entering runtime loop.");
