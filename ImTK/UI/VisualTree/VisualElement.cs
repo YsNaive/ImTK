@@ -94,7 +94,12 @@ namespace ImTK.UI
 
                 if (value.IsNull) return;
 
-                var prop = new StyleProperty { key = key.Hash, type = StylePropertyType.Token, tokenHash = value.Value.Hash };
+                // When style.fontFamily = "jf" is called, the implicit operator (string) puts "jf" into value.Token.
+                // If value.IsToken is true, it means it was assigned via string. We hash it to store as the font family token.
+                // If it was assigned directly as a HashedString, we take its value.
+                int hash = value.IsToken ? value.Token.Hash : value.Value.Hash;
+
+                var prop = new StyleProperty { key = key.Hash, type = StylePropertyType.Token, tokenHash = hash };
                 m_overrideStyles.Add(prop);
             }
 
@@ -345,23 +350,32 @@ namespace ImTK.UI
                     if (sizePixel.HasValue)
                     {
                         var (font, scale) = ImTKFontManager.GetFontWithScale(finalFamilyHash, sizePixel.Value);
-                        ImGui.PushFont(font);
-                        ImTKFontManager.PushFontScale(scale);
-                        m_pushedFonts++;
+                        if (font.NativePtr != null)
+                        {
+                            ImGui.PushFont(font);
+                            ImTKFontManager.PushFontScale(scale);
+                            m_pushedFonts++;
+                        }
                     }
                     else if (sizeEnum.HasValue)
                     {
                         var font = ImTKFontManager.GetFont(finalFamilyHash, (ImTK.UI.Style.FontSize)sizeEnum.Value);
-                        ImGui.PushFont(font);
-                        ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale); // Default scale for exact matched enum
-                        m_pushedFonts++;
+                        if (font.NativePtr != null)
+                        {
+                            ImGui.PushFont(font);
+                            ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale); // Default scale for exact matched enum
+                            m_pushedFonts++;
+                        }
                     }
                     else
                     {
                         var font = ImTKFontManager.GetFont(finalFamilyHash, ImTK.UI.Style.FontSize.Normal);
-                        ImGui.PushFont(font);
-                        ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale);
-                        m_pushedFonts++;
+                        if (font.NativePtr != null)
+                        {
+                            ImGui.PushFont(font);
+                            ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale);
+                            m_pushedFonts++;
+                        }
                     }
                 }
 

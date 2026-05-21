@@ -201,7 +201,11 @@ namespace ImTK.UI
             }
 
             // Absolute fallback (should generally not be reached if ResolveFont runs correctly)
-            return ImGui.GetIO().Fonts.Fonts[0];
+            var ioFonts = ImGui.GetIO().Fonts;
+            if (ioFonts.Fonts.Size > 0)
+                return ioFonts.Fonts[0];
+
+            return default; // Will cause rendering to default
         }
 
         public static (ImFontPtr font, float scale) GetFontWithScale(int familyHash, int targetSize)
