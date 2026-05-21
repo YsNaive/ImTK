@@ -1,0 +1,7 @@
+# Ignore everything in this directory
+*
+
+# Except for these specific files
+!.gitignore
+!ImTK.Sandbox.csproj
+!Program.cs
