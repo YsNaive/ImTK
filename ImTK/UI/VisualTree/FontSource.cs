@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace ImTK.UI
@@ -27,8 +28,11 @@ namespace ImTK.UI
             }
 
             string fileName = System.IO.Path.GetFileName(path);
-            bool hasExtension = System.IO.Path.HasExtension(fileName);
-            string[] extensions = hasExtension ? new string[] { "" } : new string[] { "", ".ttf", ".otf", ".ttc" };
+            string[] extensions = new string[] { "", ".ttf", ".otf", ".ttc" };
+            bool hasExtension = extensions.Any(ext => !string.IsNullOrEmpty(ext) && fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
+
+            // If it already has a valid font extension, we only search for that exact name, otherwise we try all extensions.
+            string[] searchExtensions = hasExtension ? new string[] { "" } : extensions;
 
             string[] searchDirectories = GetSystemFontDirectories();
 
@@ -36,7 +40,7 @@ namespace ImTK.UI
             {
                 if (!Directory.Exists(dir)) continue;
 
-                foreach (var ext in extensions)
+                foreach (var ext in searchExtensions)
                 {
                     string fullPath = System.IO.Path.Combine(dir, fileName + ext);
                     if (File.Exists(fullPath))

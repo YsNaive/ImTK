@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Diagnostics;
 using ImGuiNET;
 using ImTK.Log;
 using ImTK.Event;
@@ -96,6 +97,7 @@ namespace ImTK.UI
         {
             if (!s_isFontDirty) return;
 
+            var sw = Stopwatch.StartNew();
             s_log.Info("Rebuilding Font Atlas...");
             s_loadedFonts.Clear();
 
@@ -187,7 +189,8 @@ namespace ImTK.UI
             // Always build the atlas immediately before notifying the bridge
             io.Fonts.Build();
             s_isFontDirty = false;
-            s_log.Info("Font Atlas Rebuild Complete.");
+            sw.Stop();
+            s_log.Info($"Font Atlas Rebuild Complete in {sw.Elapsed.TotalSeconds:F2} seconds.");
 
             ImTKEventBus.Publish(new OnFontChangedEvent());
         }
