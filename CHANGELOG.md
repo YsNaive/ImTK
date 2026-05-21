@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+
+### Added (新增)
+- 實作了 `FontSource` 類別，封裝字型路徑與 `GlyphRanges`，支援自動偵測作業系統 (Windows, macOS, Linux) 預設字型目錄，並容錯檔名與副檔名的自動補全。
+- `ImTKTheme` 中新增了 `globalFontScale` 全域字型縮放係數。該參數會在建置 Font Atlas 時將字型像素等比例放大，且在執行期自動換算，完美實現邏輯像素與物理像素的分離。
+- `ImTKTheme` 新增了 `fontFamily` 參數，提供全域字型的統一切換入口，這修復了 ImGui DockSpace 分頁標籤 (Tabs) 無法正確吃到視窗自訂字型的 Bug。
+- 在 `ImTKFontManager` 中新增了 `OverrideDefaultFamily` API，方便開發者直接覆寫底層的 `ImGuiDefault` 系統字型，而無需自訂 Theme。
+
+### Changed (變更)
+- 修改 `ImTKFontManager.ResolveFont()` 實作，針對字型建置的過程引入了 `Stopwatch` 時間追蹤日誌。
+- 優化了 `FontSource` 的字型解析，改採副檔名字串嚴格比對 (如 `.ttf`, `.otf`)，避免路徑檔名內部含有 `.` (如 `font.v2`) 時造成的錯誤裁斷。
+
 ### Added (新增)
 - 實作了雙事件系統架構：建立全域的 `ImTKEventBus` 搭配 `ImTKDispatcher` 處理跨模組非同步廣播 (`OnXXXEvent`)。
 - 在 `ImTKObject` 與 `ImTKModule` 實作了 `SubscribeEvent<T>`，利用 `OnDisable` 生命週期自動清理註冊，防止 Memory Leak。
