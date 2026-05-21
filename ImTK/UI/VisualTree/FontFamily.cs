@@ -25,7 +25,7 @@ namespace ImTK.UI
             FontSources.Add(new FontSource(path));
         }
 
-        [Obsolete("GlyphRanges are now defined per FontSource")]
+        [Obsolete("GlyphRanges are defined per FontSource")]
         public IntPtr GlyphRanges { get; private set; }
     }
 }

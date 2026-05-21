@@ -570,7 +570,7 @@ namespace ImTK.UI
             }
         }
 
-        // ApplyTheme is removed as Theme token resolution is now dynamically handled in ComputeStyle
+        // ApplyTheme is removed as Theme token resolution is dynamically handled in ComputeStyle
 
         public NodeType GetNodeType()
         {

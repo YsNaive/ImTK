@@ -105,3 +105,10 @@ UI 元件可透過輕量的整數比對來實現零訂閱 (Zero-Subscription) �
 1.  當透過 UI 修改資源數值時，呼叫 `ImTKDatabase.MarkDirty(asset)` 或 `asset.MarkDirty()`。
 2.  資料**不會**立即寫入磁碟，以避免拖拉 Slider 時的效能衝擊與頻繁 I/O。
 3.  開發者可透過手動點擊「儲存按鈕」，或由系統模組 (`DatabaseModule`) 在 `OnClose` 時統一呼叫 `ImTKDatabase.SaveAssets()`，將所有被標記為髒的資源一次性寫回磁碟。
+
+## 4. 資源例外處理 (AssetExceptions)
+資源系統包含了一套明確的例外處理型別，以方便開發者精確捕捉各類邊界狀況：
+*   **`AssetNotFoundException`**：資源檔案不存在時拋出。
+*   **`AssetAlreadyExistsException`**：建立資源時發現檔案已存在。
+*   **`AssetTypeMismatchException`**：快取的資源型別與本次請求的泛型型別不一致。
+*   **`AssetPathInvalidException`**：路徑包含非法格式或嘗試進行路徑穿越攻擊時拋出。

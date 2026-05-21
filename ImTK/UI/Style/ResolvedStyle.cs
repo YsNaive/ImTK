@@ -46,7 +46,7 @@ namespace ImTK.UI.Style
         {
             m_properties.Clear();
 
-            // 1. Theme Fallback (handled at retrieval time now)
+            // 1. Theme Fallback (handled at retrieval time)
 
             // 2. Global Style Sheet
             ApplyStyleSheet(StyleSheet.Global);

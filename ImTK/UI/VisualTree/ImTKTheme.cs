@@ -285,7 +285,7 @@ namespace ImTK.UI
                 style.Colors[(int)ImGuiCol.TabDimmedSelected] = normalColor.selection.rgba;
 
                 style.Colors[(int)ImGuiCol.TextSelectedBg] = normalColor.selection.rgba;
-                // Note: NavHighlight doesn't exist in older ImGui versions or is named differently in the wrapper
+                // Note: NavHighlight doesn't exist in ImGui versions or is named differently in the wrapper
                 // style.Colors[(int)ImGuiCol.NavHighlight] = normalColor.accent.rgba;
 
                 // Dimensions / Layout
