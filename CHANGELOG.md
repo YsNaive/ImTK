@@ -30,6 +30,8 @@
 - 移除了 `ImTKTheme` 中的 `borderColor` 與 `checkMarkColor` 屬性，全面改用更一致的 `ColorFamily` 語義。
 
 ### Fixed (修復)
+- 引入了 `RenderingContext` 來追蹤與延遲管理依賴 ImGui 視窗狀態的操作，修復了在 `Window` 開啟時直接呼叫 `SetWindowFontScale` 導致 ImGui 出現 Debug 斷言視窗的問題。
+- 修復了 `VisualElement` 在子元件單獨設定字型大小時，因無法取得父元件字型而錯誤退回預設字型的繼承失效問題（現透過 `RenderingContext.CurrentFontFamilyHash` 解決）。
 - 修復了 `Panel` 在 `OnGuiRender` 期間直接註冊視窗 (`Window.Open`) 導致的 `[VisualElementHierarchy] Cannot modify VisualElement hierarchy during GuiRender state` 崩潰問題。現在 `RegisterWindow` 會把視窗推入 `s_windowsToAdd` 佇列，延遲至安全的 `OnLogicUpdate` 階段加入。
 - 修復了 Theme 初始化過早導致 `NullReferenceException` 的崩潰問題（將 ImGui 指標的映射延後並由 `isGlobalThemeDirty` 旗標保護）。
 - 修復了 `SampleOverviewModule` 的左右面板吃不到樣式的問題，將其封裝進 `OverviewHostElement` 並納入正規的渲染管線。
