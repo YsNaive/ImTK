@@ -38,6 +38,7 @@ namespace ImTK.UI
 
             public StyleValue<HashedString> fontFamily { set => SetStringToken(StyleKey.FontFamily, value); }
             public StyleValue<int> fontSize { set => SetInt(StyleKey.FontSize, value); }
+            public StyleValue<FontSize> fontSizeEnum { set => SetEnum(StyleKey.FontSize, value); }
 
             public Style() { }
 
@@ -67,6 +68,21 @@ namespace ImTK.UI
                 var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.IntValue };
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.intValue = value.Value;
+
+                m_overrideStyles.Add(prop);
+            }
+
+
+            public void SetEnum<TEnum>(HashedString key, StyleValue<TEnum> value) where TEnum : struct, System.Enum
+            {
+                EnsureOverrideStyles();
+                RemoveEntry(key.Hash);
+
+                if (value.IsNull) return;
+
+                var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.EnumValue };
+                if (value.IsToken) prop.tokenHash = value.Token.Hash;
+                else prop.enumValue = System.Convert.ToInt32(value.Value);
 
                 m_overrideStyles.Add(prop);
             }
@@ -319,31 +335,32 @@ namespace ImTK.UI
                 m_pushedFonts = 0;
 
                 int? familyHash = resolvedStyle.GetTokenHash(StyleKey.FontFamily);
-                int? size = resolvedStyle.GetInt(StyleKey.FontSize);
+                int? sizePixel = resolvedStyle.GetInt(StyleKey.FontSize);
+                int? sizeEnum = resolvedStyle.GetEnum(StyleKey.FontSize);
 
-                if (familyHash.HasValue || size.HasValue)
+                if (familyHash.HasValue || sizePixel.HasValue || sizeEnum.HasValue)
                 {
                     int finalFamilyHash = familyHash.HasValue ? familyHash.Value : ImTKFontManager.DefaultFontFamilyHash;
 
-                    if (size.HasValue)
+                    if (sizePixel.HasValue)
                     {
-                        var (font, scale) = ImTKFontManager.GetFontWithScale(finalFamilyHash, size.Value);
+                        var (font, scale) = ImTKFontManager.GetFontWithScale(finalFamilyHash, sizePixel.Value);
                         ImGui.PushFont(font);
-                        // ImGui.NET doesn't expose GetWindowFontScale.
-                        // WindowFontScale is mostly manipulated locally via SetWindowFontScale and resets
-                        // when the window ends, or it applies to all subsequent text in the window.
-                        // To properly nest scales across visual elements without a getter, we fallback to tracking it
-                        // by passing 1.0f on pop, which reverts to default window scale for now.
-                        // In a true deep hierarchy we'd track this via ImTK's Context or Hierarchy pass, but
-                        // since font sizing is usually uniform in a container, reverting to 1.0f is acceptable.
-                        ImGui.SetWindowFontScale(scale);
-                        m_previousFontScale = 1.0f;
+                        ImTKFontManager.PushFontScale(scale);
+                        m_pushedFonts++;
+                    }
+                    else if (sizeEnum.HasValue)
+                    {
+                        var font = ImTKFontManager.GetFont(finalFamilyHash, (ImTK.UI.Style.FontSize)sizeEnum.Value);
+                        ImGui.PushFont(font);
+                        ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale); // Default scale for exact matched enum
                         m_pushedFonts++;
                     }
                     else
                     {
                         var font = ImTKFontManager.GetFont(finalFamilyHash, ImTK.UI.Style.FontSize.Normal);
                         ImGui.PushFont(font);
+                        ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale);
                         m_pushedFonts++;
                     }
                 }
@@ -442,7 +459,7 @@ namespace ImTK.UI
                 if (m_pushedFonts > 0)
                 {
                     ImGui.PopFont();
-                    ImGui.SetWindowFontScale(m_previousFontScale); // Reset scale
+                    ImTKFontManager.PopFontScale();
                 }
 
                 m_pushedColors = 0;

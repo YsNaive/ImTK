@@ -140,6 +140,17 @@ namespace ImTK.UI.Style
             return null;
         }
 
+
+        public int? GetEnum(HashedString key)
+        {
+             if (TryGetProperty(key.Hash, out var prop))
+            {
+                if (prop.type == StylePropertyType.EnumValue)
+                    return prop.enumValue;
+            }
+            return null;
+        }
+
         public int? GetInt(HashedString key)
         {
              if (TryGetProperty(key.Hash, out var prop))

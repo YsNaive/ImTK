@@ -10,7 +10,8 @@ namespace ImTK.UI.Style
         ColorValue = 2,
         FloatValue = 3,
         Vector2Value = 4,
-        IntValue = 5
+        IntValue = 5,
+        EnumValue = 6
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 16)]
@@ -25,6 +26,7 @@ namespace ImTK.UI.Style
         [FieldOffset(8)] public Vector2 vector2Value;
         [FieldOffset(8)] public int intValue;
         [FieldOffset(8)] public int tokenHash;
+        [FieldOffset(8)] public int enumValue;
 
         public bool isNull => type == StylePropertyType.Null;
         public bool isToken => type == StylePropertyType.Token;

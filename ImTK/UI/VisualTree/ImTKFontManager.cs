@@ -27,6 +27,26 @@ namespace ImTK.UI
             RegisterFamily(DefaultFontFamilyName, new string[0]);
         }
 
+
+        private static Stack<float> s_fontScaleStack = new Stack<float>();
+
+        public static float CurrentFontScale => s_fontScaleStack.Count > 0 ? s_fontScaleStack.Peek() : 1.0f;
+
+        public static void PushFontScale(float scale)
+        {
+            s_fontScaleStack.Push(scale);
+            ImGui.SetWindowFontScale(scale);
+        }
+
+        public static void PopFontScale()
+        {
+            if (s_fontScaleStack.Count > 0)
+                s_fontScaleStack.Pop();
+
+            float previousScale = CurrentFontScale;
+            ImGui.SetWindowFontScale(previousScale);
+        }
+
         public static void MarkFontDirty()
         {
             s_isFontDirty = true;
