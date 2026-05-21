@@ -1,4 +1,4 @@
-namespace ImTK.UI.Style
+namespace ImTK.UI
 {
     /// <summary>
     /// Represents the standard predefined font sizes used by the ImTK Font System.

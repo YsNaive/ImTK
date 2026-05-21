@@ -1,6 +1,5 @@
 using System;
 using ImGuiNET;
-using ImTK.UI.Style;
 using ImTK.Core;
 
 namespace ImTK.UI

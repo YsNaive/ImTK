@@ -1,6 +1,6 @@
 using ImGuiNET;
 using ImTK.UI;
-using ImTK.UI.Style;
+
 using ImTK.Test.Framework;
 
 namespace ImTK.Test.UI.Style

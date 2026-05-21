@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using ImGuiNET;
-using ImTK.UI.Style;
 
 using System.Numerics;
 using ImTK.Core;
@@ -362,7 +361,7 @@ namespace ImTK.UI
                         }
                         else if (sizeEnum.HasValue)
                         {
-                            var font = ImTKFontManager.GetFont(finalFamilyHash, (ImTK.UI.Style.FontSize)sizeEnum.Value);
+                            var font = ImTKFontManager.GetFont(finalFamilyHash, (FontSize)sizeEnum.Value);
                             if (font.NativePtr != null)
                             {
                                 ImGui.PushFont(font);
@@ -373,7 +372,7 @@ namespace ImTK.UI
                         }
                         else
                         {
-                            var font = ImTKFontManager.GetFont(finalFamilyHash, ImTK.UI.Style.FontSize.Normal);
+                            var font = ImTKFontManager.GetFont(finalFamilyHash, FontSize.Normal);
                             if (font.NativePtr != null)
                             {
                                 ImGui.PushFont(font);
@@ -837,7 +836,7 @@ namespace ImTK.UI
 
 namespace ImTK.UI
 {
-    public class VisualElement<TStyle> : VisualElement where TStyle : ImTK.UI.Style.IVisualElementStyle, new()
+    public class VisualElement<TStyle> : VisualElement where TStyle : IVisualElementStyle, new()
     {
         public new TStyle style => (TStyle)internalStyle;
 
@@ -846,4 +845,55 @@ namespace ImTK.UI
             internalStyle = new TStyle();
         }
     }
+
+    public enum PickingMode
+        {
+            Position,
+            Ignore
+        }
+
+    public abstract class ElementFlags<TEnum> where TEnum : struct, Enum
+        {
+            public TEnum Value { get; set; }
+
+            public ElementFlags()
+            {
+                Value = default;
+            }
+
+            public ElementFlags(TEnum initialValue)
+            {
+                Value = initialValue;
+            }
+
+            protected void SetFlag(TEnum flag, bool state)
+            {
+                int mask = Convert.ToInt32(flag);
+                int current = Convert.ToInt32(Value);
+                if (state)
+                {
+                    current |= mask;
+                }
+                else
+                {
+                    current &= ~mask;
+                }
+                Value = (TEnum)Enum.ToObject(typeof(TEnum), current);
+            }
+
+            protected bool GetFlag(TEnum flag)
+            {
+                int mask = Convert.ToInt32(flag);
+                int current = Convert.ToInt32(Value);
+                return (current & mask) == mask;
+            }
+        }
+
+    public enum NodeType
+        {
+            None,
+            LogicNode,
+            PhysicsNode,
+            Invalid
+        }
 }
