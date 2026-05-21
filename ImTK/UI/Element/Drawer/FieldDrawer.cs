@@ -7,7 +7,7 @@ namespace ImTK.UI
     public abstract class FieldDrawer<T> : VisualElement, IFieldDrawer<T>
     {
         protected T m_value;
-        public string label { get; set; } = "";
+        public virtual string label { get; set; } = "";
 
         public DrawerLayoutMode layoutMode { get; set; } = DrawerLayoutMode.Inline;
 
@@ -62,16 +62,34 @@ namespace ImTK.UI
             // Base implementation does nothing.
         }
 
+        public void RegisterValueChangedCallback(Action<ValueChangedEvent<T>> callback)
+        {
+            RegisterCallback(callback);
+        }
+
+        public void UnregisterValueChangedCallback(Action<ValueChangedEvent<T>> callback)
+        {
+            UnregisterCallback(callback);
+        }
+
+        protected virtual void OnRenderLabel()
+        {
+            if (!string.IsNullOrEmpty(label))
+            {
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text(label);
+            }
+        }
+
         protected override void OnRenderLayout()
         {
             float labelWidth = theme.labelWidth;
 
             if (layoutMode == DrawerLayoutMode.Inline)
             {
+                OnRenderLabel();
                 if (!string.IsNullOrEmpty(label))
                 {
-                    ImGui.AlignTextToFramePadding();
-                    ImGui.Text(label);
                     ImGui.SameLine(labelWidth); // Force all input to start at labelWidth
                 }
 
@@ -80,11 +98,7 @@ namespace ImTK.UI
             }
             else if (layoutMode == DrawerLayoutMode.Expand)
             {
-                if (!string.IsNullOrEmpty(label))
-                {
-                    ImGui.AlignTextToFramePadding();
-                    ImGui.Text(label);
-                }
+                OnRenderLabel();
 
                 // Indent content for expand mode
                 ImGui.Indent(15.0f);

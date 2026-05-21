@@ -8,6 +8,9 @@
 ## [Unreleased]
 
 ### Added (新增)
+- 實作了基礎 UI 元件 `IntField` 與 `FloatField`，分別綁定 ImGui 的數值輸入並消除冗餘按鈕。
+- 為 `FieldDrawer<T>` 新增 `RegisterValueChangedCallback` 與 `UnregisterValueChangedCallback` 語法糖。
+- 為 `TextField` 實作自動適應高度的動態渲染，確保 `InputTextMultiline` 的流暢使用體驗。
 - 實作了 `FontSource` 類別，封裝字型路徑與 `GlyphRanges`，支援自動偵測作業系統 (Windows, macOS, Linux) 預設字型目錄，並容錯檔名與副檔名的自動補全。
 - `ImTKTheme` 中新增了 `globalFontScale` 全域字型縮放係數。該參數會在建置 Font Atlas 時將字型像素等比例放大，且在執行期自動換算，完美實現邏輯像素與物理像素的分離。
 - `ImTKTheme` 新增了 `fontFamily` 參數，提供全域字型的統一切換入口，這修復了 ImGui DockSpace 分頁標籤 (Tabs) 無法正確吃到視窗自訂字型的 Bug。
@@ -83,6 +86,10 @@
 - 新增嚴格的 `Project/NamingConventions.md` 命名規範，確立大小寫、前綴以及元件後綴的規則。
 
 ### Changed (變更)
+- 重構了 FieldDrawer 的內部架構，包含 `IntDrawer`, `FloatDrawer`, `StringDrawer`, `BoolDrawer`，全面改用元件組合 (`Composition`) 取代原生的直接渲染。
+- 於 `IntDrawer` 與 `FloatDrawer` 實作了類似 Unity Inspector 的 Hold-and-Drag 標籤拖曳互動來改變數值。
+- 更新了基礎元素的 CSS 命名以符合標準 `kebab-case` (`text-field`, `check-box` 等)。
+- 重新命名 `Drawer` 腳本檔案 (`IntField.cs` -> `IntDrawer.cs` 等) 消除與基礎 UI 元件的名稱衝突。
 - 修改 `ImTKFontManager.ResolveFont()` 實作，針對字型建置的過程引入了 `Stopwatch` 時間追蹤日誌。
 - 優化了 `FontSource` 的字型解析，改採副檔名字串嚴格比對 (如 `.ttf`, `.otf`)，避免路徑檔名內部含有 `.` (如 `font.v2`) 時造成的錯誤裁斷。
 - 重構了 UI 區域事件 (`UIEventBase`) 的冒泡機制，利用虛擬屬性 `bubbles` 遵守開閉原則 (OCP)，移除原本 `is IValueChangedEvent` 的硬編碼判斷。
