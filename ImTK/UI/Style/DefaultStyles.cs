@@ -7,9 +7,9 @@ namespace ImTK.UI.Style
     {
         public static void Register(StyleSheet sheet)
         {
-            // By utilizing ImTKTheme.ApplyToImGui(), ImGui now handles standard window, button,
+            // By utilizing ImTKTheme.ApplyToImGui(), ImGui handles standard window, button,
             // and text styling globally.
-            // This global style sheet is now reserved for future custom overrides or extensions.
+            // This global style sheet is reserved for future custom overrides or extensions.
         }
     }
 }

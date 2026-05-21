@@ -91,7 +91,7 @@ namespace ImTK.UI
             if (drawerType == null)
             {
                 // Fallback to ObjectDrawer or similar if none found?
-                // For now, if we can't find one, we might throw or return null.
+                // If we can't find one, we might throw or return null.
                 return null;
             }
 

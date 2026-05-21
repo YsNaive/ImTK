@@ -139,3 +139,13 @@ ImTK 的 UI 底層基於 ImGui（Immediate Mode）。當事件觸發時（如按
 透過將 `ImTKDispatcher` 與基於 `ImTKObject/Module` 生命週期的「自動解綁機制」結合，
 ImTK 的 Event Bus 達成了 **型別安全 (Type-Safe)**、**執行緒安全 (Thread-Safe)** 與 **零負擔防洩漏 (Zero-Boilerplate Leak Proof)** 的三大目標。
 這為後續構建複雜的 UI 框架（如 VisualElement 間的通訊）奠定了最穩固的底層基礎。
+## 4. 未提及的概念補充 (Concept Supplements)
+
+### 4.1 EventPool (事件物件池)
+`EventPool<T>` 是一個泛型的事件物件快取池。為了避免在每幀產生大量的 UI 事件導致過高的 Garbage Collection 壓力，框架內部在建立與釋放事件時皆會透過此池重用物件。
+
+### 4.2 EventDispatcherModule (事件派發模組)
+`EventDispatcherModule` 是整合進 ImTK 全域生命週期的模組，負責作為事件派發的進入點，將佇列中的非同步或延遲 UI 事件於安全的執行階段 (如 LogicUpdate) 內批次派發完畢。
+
+### 4.3 MouseEvents (滑鼠事件)
+包含了一系列與滑鼠操作高度相關的 UI 事件實作（如 `ClickEvent`）。它們繼承自底層的區域事件架構，支援事件冒泡等特性。

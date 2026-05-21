@@ -49,3 +49,17 @@ var drawer = FieldDrawerFactory.Create()
     .Build();
 ```
 Drawer 在建立後，可透過實作 `ApplyModifier(Attribute)` 來讀取修飾器的參數（如 Slider 的 min, max 值）以調整自身狀態。
+
+## 4. 未提及的概念補充 (Concept Supplements)
+
+### 4.1 CustomFieldDrawerAttribute
+`CustomFieldDrawerAttribute` 是一個自訂標籤，開發者可將其加註在實作的 Drawer 類別上，告訴系統這個 Drawer 負責處理哪種目標型別，達成自動化綁定。
+
+### 4.2 DrawerLayoutMode (排版模式)
+此列舉控制了欄位繪製時的佈局方式（如 `Inline` 行內並排顯示，或是 `Expand` 獨佔整行展開顯示），支援不同風格的表單。
+
+### 4.3 預設 Drawer 實作: StringField, IntField, ObjectDrawer
+框架內建了對常見型別的基礎支援：
+*   **StringField**：針對字串的雙向綁定輸入框。
+*   **IntField**：針對整數的輸入框。
+*   **ObjectDrawer**：預設的反射 Fallback 繪製器，能遞迴展開複雜物件內部的屬性，讓自訂類別也能快速具備 UI 編輯能力。

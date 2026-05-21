@@ -52,3 +52,6 @@ ImTK 的字型系統被設計為獨立且可動態重載的模組 (`ImTKFontMana
 
 4. **安全熱重載 (Safe Hot-Reload)**：
    若系統觸發了圖集更新 (`ImTKFontManager.MarkFontDirty()`)，核心會在下一幀 `LogicUpdate` 的最開頭重建圖集，確保與其他執行緒和 ImGui 內部狀態不衝突。完成後發送全域事件 `OnFontChangedEvent`，由底層的橋接層 (如 Silk.NET) 捕獲並通知 GPU 重建 Texture。
+
+## 4. 預設樣式表 (DefaultStyles)
+`DefaultStyles` 曾經用於註冊全域預設樣式。目前多數元件預設樣式已交由 `ImTKTheme` 與 C++ 底層直接映射處理，此類別現保留用作未來擴展或套用自訂全域 CSS-like `StyleBlock` 的進入點。
