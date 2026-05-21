@@ -4,7 +4,7 @@ using ImTK.Test.Framework;
 using ImTK.UI;
 using ImTK.Log;
 
-namespace ImTK.Test.UI
+namespace ImTK.Test.UI.Element.Menu
 {
     public class MenuSystemTest : IHeadlessTest
     {
