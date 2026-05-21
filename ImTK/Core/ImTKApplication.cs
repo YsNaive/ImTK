@@ -187,8 +187,6 @@ namespace ImTK.Core
         {
                 EnforceFrameOrder(ApplicationState.LogicUpdate);
 
-                ImTK.UI.ImTKFontManager.ResolveFont();
-
                 Time.Update(rawDeltaTime);
 
                 SetState(ApplicationState.LogicUpdate);
@@ -285,7 +283,7 @@ namespace ImTK.Core
 
                 // --- Font System Resolution ---
                 // Resolve fonts at the very end of the frame when ImGui is completely unlocked
-                // Font resolution deferred to safe ImGui phases
+                ImTK.UI.ImTKFontManager.ResolveFont();
 
                 SetState(ApplicationState.Idle);
                 s_minAllowedFrameState = ApplicationState.LogicUpdate; // Reset frame lock
