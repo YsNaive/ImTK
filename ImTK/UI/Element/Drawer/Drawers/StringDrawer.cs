@@ -7,6 +7,17 @@ namespace ImTK.UI
     {
         private TextField m_textField;
 
+        private bool m_multiline;
+        public bool multiline
+        {
+            get => m_multiline;
+            set
+            {
+                m_multiline = value;
+                UpdateTextFieldMode(this.value);
+            }
+        }
+
         public StringDrawer()
         {
             m_textField = new TextField("##" + label);
@@ -54,7 +65,7 @@ namespace ImTK.UI
         private void UpdateTextFieldMode(string val)
         {
             bool hasNewline = !string.IsNullOrEmpty(val) && val.Contains("\n");
-            if (hasNewline)
+            if (m_multiline || hasNewline)
             {
                 layoutMode = DrawerLayoutMode.Expand;
                 m_textField.multiline = true;
