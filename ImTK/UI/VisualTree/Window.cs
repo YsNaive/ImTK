@@ -176,10 +176,24 @@ namespace ImTK.UI
             return newWindow;
         }
 
+        protected virtual bool Begin(ref bool isOpenForImGui, ImGuiWindowFlags windowFlags)
+        {
+            bool isExpanded = ImGui.Begin(imguiId, ref isOpenForImGui, windowFlags);
+            RenderingContext.IsInsideWindow = true;
+            RenderingContext.FlushPendingCommands();
+            return isExpanded;
+        }
+
+        protected virtual void End()
+        {
+            ImGui.End();
+            RenderingContext.IsInsideWindow = false;
+        }
+
         protected override void OnRenderLayout()
         {
             bool isOpenForImGui = m_isOpen;
-            bool isExpanded = ImGui.Begin(imguiId, ref isOpenForImGui, flags.Value);
+            bool isExpanded = Begin(ref isOpenForImGui, flags.Value);
 
             if (isExpanded)
             {
@@ -192,7 +206,7 @@ namespace ImTK.UI
                 }
             }
 
-            ImGui.End();
+            End();
 
             if (!isOpenForImGui && m_isOpen)
             {

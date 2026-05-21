@@ -347,7 +347,7 @@ namespace ImTK.UI
                 {
                     if (familyHash.HasValue || sizePixel.HasValue || sizeEnum.HasValue)
                     {
-                        int finalFamilyHash = familyHash.HasValue ? familyHash.Value : ImTKFontManager.DefaultFontFamilyHash;
+                        int finalFamilyHash = familyHash.HasValue ? familyHash.Value : RenderingContext.CurrentFontFamilyHash;
 
                         if (sizePixel.HasValue)
                         {
@@ -355,6 +355,7 @@ namespace ImTK.UI
                             if (font.NativePtr != null)
                             {
                                 ImGui.PushFont(font);
+                                RenderingContext.PushFontState(finalFamilyHash);
                                 ImTKFontManager.PushFontScale(scale);
                                 m_pushedFonts++;
                             }
@@ -365,6 +366,7 @@ namespace ImTK.UI
                             if (font.NativePtr != null)
                             {
                                 ImGui.PushFont(font);
+                                RenderingContext.PushFontState(finalFamilyHash);
                                 ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale); // Default scale for exact matched enum
                                 m_pushedFonts++;
                             }
@@ -375,6 +377,7 @@ namespace ImTK.UI
                             if (font.NativePtr != null)
                             {
                                 ImGui.PushFont(font);
+                                RenderingContext.PushFontState(finalFamilyHash);
                                 ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale);
                                 m_pushedFonts++;
                             }
@@ -476,6 +479,7 @@ namespace ImTK.UI
                 if (m_pushedFonts > 0)
                 {
                     ImGui.PopFont();
+                    RenderingContext.PopFontState();
                     ImTKFontManager.PopFontScale();
                 }
 

@@ -45,5 +45,10 @@ ImTK 的字型系統被設計為獨立且可動態重載的模組 (`ImTKFontMana
    * **預先載入**：全域的 `ImTKTheme.GlobalTheme` 會定義各個 `FontSize` (Small, Normal, H3, H2, H1) 所對應的真實像素大小。當字型圖集建立時，會根據已註冊的 FontFamily 與這些全域大小組合，產生對應的 `ImFontPtr`。
    * **彈性縮放**：當元件在局部設定 `element.style.fontSize = 20;` 時，系統並不會即時引發耗時的字型圖集重構。相反地，它會就近尋找大於或等於 20 的預先載入字型（例如 `H3 = 24`），然後利用 `ImGui.SetWindowFontScale` 進行縮小（以保持字型銳利度）。
 
-3. **安全熱重載 (Safe Hot-Reload)**：
+3. **字型狀態繼承與渲染上下文 (RenderingContext)**：
+   為了解決 ImGui 狀態堆疊機制的限制，系統引入了 `RenderingContext`。這確保了在執行 `VisualElement.Render()` 時，字型操作 (特別是 FontScale 變化與 FontFamily 的狀態追蹤) 能在物件樹游離的情況下正確繼承：
+   * 當子元件僅設定 `FontSize` 而沒有 `FontFamily` 時，會自動回退 (Fallback) 至 `RenderingContext.CurrentFontFamilyHash` 取得當前有效的 FontFamily 指標。
+   * 會引起 ImGui 斷言衝突的指令（如需要在 Window 內執行的 `ImGui.SetWindowFontScale`），會利用 `RenderingContext.EnqueueWindowCommand` 暫存，直到 `Window.Begin` 完成後才被正確執行，避免出現錯誤的 Debug 視窗。
+
+4. **安全熱重載 (Safe Hot-Reload)**：
    若系統觸發了圖集更新 (`ImTKFontManager.MarkFontDirty()`)，核心會在下一幀 `LogicUpdate` 的最開頭重建圖集，確保與其他執行緒和 ImGui 內部狀態不衝突。完成後發送全域事件 `OnFontChangedEvent`，由底層的橋接層 (如 Silk.NET) 捕獲並通知 GPU 重建 Texture。

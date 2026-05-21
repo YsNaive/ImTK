@@ -35,7 +35,7 @@ namespace ImTK.UI
         public static void PushFontScale(float scale)
         {
             s_fontScaleStack.Push(scale);
-            ImGui.SetWindowFontScale(scale);
+            RenderingContext.EnqueueWindowCommand(() => ImGui.SetWindowFontScale(scale));
         }
 
         public static void PopFontScale()
@@ -44,7 +44,7 @@ namespace ImTK.UI
                 s_fontScaleStack.Pop();
 
             float previousScale = CurrentFontScale;
-            ImGui.SetWindowFontScale(previousScale);
+            RenderingContext.EnqueueWindowCommand(() => ImGui.SetWindowFontScale(previousScale));
         }
 
         public static void MarkFontDirty()
