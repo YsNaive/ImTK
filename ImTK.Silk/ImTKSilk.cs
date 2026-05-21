@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;
@@ -17,6 +18,7 @@ namespace ImTK.Silk
         private static GL s_gl;
         private static ImGuiController s_imguiController;
         private static ImTKSilkConstant s_config;
+        private static string s_iniFilePath;
 
         /// <summary>
         /// Initializes the Silk.NET window, ImGui context, and starts the ImTKApplication lifecycle loop.
@@ -65,6 +67,24 @@ namespace ImTK.Silk
                 () =>
                 {
                     var io = ImGui.GetIO();
+
+                    // Resolve config folder path
+                    string folderPath = Path.IsPathRooted(s_config.configFolderPath)
+                        ? s_config.configFolderPath
+                        : Path.Combine(ImTKEnvironment.LocalDataPath, s_config.configFolderPath);
+
+                    if (!Directory.Exists(folderPath))
+                    {
+                        Directory.CreateDirectory(folderPath);
+                    }
+
+                    // Store in static string to prevent GC claiming the string that ImGui holds natively
+                    s_iniFilePath = Path.Combine(folderPath, "imgui.ini");
+                    unsafe
+                    {
+                        io.NativePtr->IniFilename = (byte*)System.Runtime.InteropServices.Marshal.StringToHGlobalAnsi(s_iniFilePath);
+                    }
+
                     io.ConfigFlags |= ImGuiConfigFlags.DockingEnable; // Always enable Docking for ImTK UI Architecture
                     if (s_config.enableViewports)
                     {

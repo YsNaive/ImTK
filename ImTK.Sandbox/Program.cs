@@ -1,5 +1,6 @@
 using System;
 using ImTK.Silk;
+using ImTK.Core;
 
 namespace ImTK.Sandbox
 {
@@ -10,9 +11,11 @@ namespace ImTK.Sandbox
             var log = new ImTK.Log.LogContext("Sandbox");
             log.Info("Starting ImTK Sandbox Application...");
 
+            ImTKEnvironment.ApplicationName = "ImTK.Sandbox";
             var config = new ImTKSilkConstant
             {
                 windowTitle = "ImTK Sandbox",
+                configFolderPath = ImTKEnvironment.LocalDataPath,
                 windowWidth = 1280,
                 windowHeight = 800
             };
