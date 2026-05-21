@@ -1,16 +1,16 @@
 using System;
 using ImGuiNET;
-
 using ImTK.Core;
 
 namespace ImTK.UI
 {
-    public class TextField : VisualElement<TextField.Style>
+    public class CheckBox : VisualElement<CheckBox.Style>
     {
         public new class StyleKey : VisualElement.StyleKey
         {
             public static readonly HashedString HoverColor = new HashedString("HoverColor");
             public static readonly HashedString ActiveColor = new HashedString("ActiveColor");
+            public static readonly HashedString CheckMarkColor = new HashedString("CheckMarkColor");
         }
 
         public new class Style : VisualElement.Style
@@ -37,13 +37,23 @@ namespace ImTK.UI
                 }
             }
 
+            public StyleValue<Color>? checkMarkColor
+            {
+                get => GetOverrideColor(StyleKey.CheckMarkColor);
+                set
+                {
+                    if (value.HasValue) SetColor(StyleKey.CheckMarkColor, value.Value);
+                    else Clear(StyleKey.CheckMarkColor);
+                }
+            }
+
             public override void PushToImGui(ResolvedStyle resolvedStyle)
             {
                 base.PushToImGui(resolvedStyle);
 
                 m_pushedColors = 0;
 
-                // TextField Background maps to FrameBg, not WindowBg/ChildBg
+                // CheckBox Background maps to FrameBg, not WindowBg/ChildBg
                 Color? bgColor = resolvedStyle.GetColor(VisualElement.StyleKey.BackgroundColor);
                 if (bgColor.HasValue)
                 {
@@ -64,6 +74,13 @@ namespace ImTK.UI
                     ImGui.PushStyleColor(ImGuiCol.FrameBgActive, activeColor.Value.u32);
                     m_pushedColors++;
                 }
+
+                Color? checkMarkColor = resolvedStyle.GetColor(StyleKey.CheckMarkColor);
+                if (checkMarkColor.HasValue)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.CheckMark, checkMarkColor.Value.u32);
+                    m_pushedColors++;
+                }
             }
 
             public override void PopFromImGui()
@@ -79,48 +96,44 @@ namespace ImTK.UI
 
         public string label { get; set; }
 
-        public uint maxLength { get; set; }
-
-        private string m_value;
-        public string value
+        private bool m_value;
+        public bool value
         {
             get => m_value;
             set => SetValue(value);
         }
 
-        public event Action<ValueChangedEvent<string>> onValueChanged
+        public event Action<ValueChangedEvent<bool>> onValueChanged
         {
             add => RegisterCallback(value);
             remove => UnregisterCallback(value);
         }
 
-        public TextField(string label = "", string defaultValue = "", uint maxLength = 1024)
+        public CheckBox(string label = "", bool defaultValue = false)
         {
             this.label = label;
-            m_value = defaultValue ?? string.Empty;
-            this.maxLength = maxLength;
-            classList.Add("TextField");
+            m_value = defaultValue;
+            classList.Add("CheckBox");
         }
 
-        public void SetValueWithoutNotify(string newValue)
+        public void SetValueWithoutNotify(bool newValue)
         {
-            m_value = newValue ?? string.Empty;
+            m_value = newValue;
         }
 
-        private void SetValue(string newValue)
+        private void SetValue(bool newValue)
         {
-            newValue = newValue ?? string.Empty;
             if (m_value == newValue) return;
 
-            var evt = ValueChangedEvent<string>.GetPooled(m_value, newValue);
+            var evt = ValueChangedEvent<bool>.GetPooled(m_value, newValue);
             m_value = newValue;
             SendEvent(evt);
         }
 
         protected override void OnRenderSelf()
         {
-            string currentValue = m_value;
-            if (ImGui.InputText(label, ref currentValue, maxLength))
+            bool currentValue = m_value;
+            if (ImGui.Checkbox(label, ref currentValue))
             {
                 SetValue(currentValue);
             }
