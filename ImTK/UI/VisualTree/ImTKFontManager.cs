@@ -92,7 +92,7 @@ namespace ImTK.UI
 
                     ImFontPtr baseFont = default;
 
-                    if (familyHash == DefaultFontFamilyHash || family.FontPaths.Count == 0)
+                    if (family.FontPaths.Count == 0)
                     {
                         var config = ImGuiNative.ImFontConfig_ImFontConfig();
                         config->SizePixels = sizePixels;
