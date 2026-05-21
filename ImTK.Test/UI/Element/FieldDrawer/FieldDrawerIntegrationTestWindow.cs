@@ -3,7 +3,7 @@ using ImTK.Log;
 using ImTK.Core;
 using ImGuiNET;
 
-namespace ImTK.Test.UI
+namespace ImTK.Test.UI.Element.FieldDrawer
 {
     public class TestPersonData
     {

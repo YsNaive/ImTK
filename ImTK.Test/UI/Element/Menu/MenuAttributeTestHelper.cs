@@ -5,7 +5,7 @@ using ImTK.Core;
 using ImTK.Log;
 using ImTK.UI;
 
-namespace ImTK.Test.UI
+namespace ImTK.Test.UI.Element.Menu
 {
     /// <summary>
     /// 用於在 Integration Test UI 啟動時，手動驗證 MainMenuAttribute 與版面的輔助類別。

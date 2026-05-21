@@ -2,7 +2,7 @@ using ImTK.UI;
 using ImTK.Test.Framework;
 using System;
 
-namespace ImTK.Test.UI
+namespace ImTK.Test.UI.Element.FieldDrawer
 {
     public class FieldDrawerTest : IHeadlessTest
     {
