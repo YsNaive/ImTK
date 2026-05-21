@@ -170,7 +170,7 @@ namespace ImTK.UI
             ImGuiWindowFlags windowFlags = ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground;
 
             int globalFontFamilyHash = ImTKTheme.GlobalTheme.fontFamilyHash;
-            var font = ImTKFontManager.GetFont(globalFontFamilyHash, ImTK.UI.Style.FontSize.Normal);
+            var font = ImTKFontManager.GetFont(globalFontFamilyHash, FontSize.Normal);
             bool pushedFont = false;
 
             unsafe

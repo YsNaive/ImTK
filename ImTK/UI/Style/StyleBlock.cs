@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using ImTK.Core;
 
-namespace ImTK.UI.Style
+namespace ImTK.UI
 {
     public class StyleBlock
     {

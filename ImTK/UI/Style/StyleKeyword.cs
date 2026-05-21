@@ -1,4 +1,4 @@
-namespace ImTK.UI.Style
+namespace ImTK.UI
 {
     public enum StyleKeyword
     {

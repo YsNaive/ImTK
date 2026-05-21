@@ -1,7 +1,7 @@
 using ImGuiNET;
 using ImTK.Core;
 
-namespace ImTK.UI.Style
+namespace ImTK.UI
 {
     public static class DefaultStyles
     {

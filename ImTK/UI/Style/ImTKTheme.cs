@@ -177,18 +177,18 @@ namespace ImTK.UI
         internal int fontFamilyHash => GetHash(Tokens.FontFamily, ImTKFontManager.DefaultFontFamilyHash);
 
         // --- Font System ---
-        private Dictionary<ImTK.UI.Style.FontSize, float> m_fontSizes = new Dictionary<ImTK.UI.Style.FontSize, float>
+        private Dictionary<FontSize, float> m_fontSizes = new Dictionary<FontSize, float>
         {
-            { ImTK.UI.Style.FontSize.Small, 14f },
-            { ImTK.UI.Style.FontSize.Normal, 18f },
-            { ImTK.UI.Style.FontSize.H3, 24f },
-            { ImTK.UI.Style.FontSize.H2, 32f },
-            { ImTK.UI.Style.FontSize.H1, 48f }
+            { FontSize.Small, 14f },
+            { FontSize.Normal, 18f },
+            { FontSize.H3, 24f },
+            { FontSize.H2, 32f },
+            { FontSize.H1, 48f }
         };
 
-        internal IReadOnlyDictionary<ImTK.UI.Style.FontSize, float> GetFontSizes() => m_fontSizes;
+        internal IReadOnlyDictionary<FontSize, float> GetFontSizes() => m_fontSizes;
 
-        private void SetFontSizeInternal(ImTK.UI.Style.FontSize sizeEnum, float pixelSize)
+        private void SetFontSizeInternal(FontSize sizeEnum, float pixelSize)
         {
             if (m_fontSizes[sizeEnum] != pixelSize)
             {
@@ -197,11 +197,11 @@ namespace ImTK.UI
             }
         }
 
-        public float fontSizeSmall { get => m_fontSizes[ImTK.UI.Style.FontSize.Small]; set => SetFontSizeInternal(ImTK.UI.Style.FontSize.Small, value); }
-        public float fontSizeNormal { get => m_fontSizes[ImTK.UI.Style.FontSize.Normal]; set => SetFontSizeInternal(ImTK.UI.Style.FontSize.Normal, value); }
-        public float fontSizeH3 { get => m_fontSizes[ImTK.UI.Style.FontSize.H3]; set => SetFontSizeInternal(ImTK.UI.Style.FontSize.H3, value); }
-        public float fontSizeH2 { get => m_fontSizes[ImTK.UI.Style.FontSize.H2]; set => SetFontSizeInternal(ImTK.UI.Style.FontSize.H2, value); }
-        public float fontSizeH1 { get => m_fontSizes[ImTK.UI.Style.FontSize.H1]; set => SetFontSizeInternal(ImTK.UI.Style.FontSize.H1, value); }
+        public float fontSizeSmall { get => m_fontSizes[FontSize.Small]; set => SetFontSizeInternal(FontSize.Small, value); }
+        public float fontSizeNormal { get => m_fontSizes[FontSize.Normal]; set => SetFontSizeInternal(FontSize.Normal, value); }
+        public float fontSizeH3 { get => m_fontSizes[FontSize.H3]; set => SetFontSizeInternal(FontSize.H3, value); }
+        public float fontSizeH2 { get => m_fontSizes[FontSize.H2]; set => SetFontSizeInternal(FontSize.H2, value); }
+        public float fontSizeH1 { get => m_fontSizes[FontSize.H1]; set => SetFontSizeInternal(FontSize.H1, value); }
 
         // --- Syntax Highlight Wrapper ---
         public class SyntaxTheme

@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Numerics;
 
-namespace ImTK.UI.Style
+namespace ImTK.UI
 {
     public enum StylePropertyType : byte
     {

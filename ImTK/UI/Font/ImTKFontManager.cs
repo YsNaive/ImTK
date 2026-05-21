@@ -5,7 +5,6 @@ using System.Diagnostics;
 using ImGuiNET;
 using ImTK.Log;
 using ImTK.Event;
-using ImTK.UI.Style;
 
 namespace ImTK.UI
 {
