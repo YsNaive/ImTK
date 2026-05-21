@@ -343,38 +343,41 @@ namespace ImTK.UI
                 int? sizePixel = resolvedStyle.GetInt(StyleKey.FontSize);
                 int? sizeEnum = resolvedStyle.GetEnum(StyleKey.FontSize);
 
-                if (familyHash.HasValue || sizePixel.HasValue || sizeEnum.HasValue)
+                unsafe
                 {
-                    int finalFamilyHash = familyHash.HasValue ? familyHash.Value : ImTKFontManager.DefaultFontFamilyHash;
+                    if (familyHash.HasValue || sizePixel.HasValue || sizeEnum.HasValue)
+                    {
+                        int finalFamilyHash = familyHash.HasValue ? familyHash.Value : ImTKFontManager.DefaultFontFamilyHash;
 
-                    if (sizePixel.HasValue)
-                    {
-                        var (font, scale) = ImTKFontManager.GetFontWithScale(finalFamilyHash, sizePixel.Value);
-                        if (font.NativePtr != null)
+                        if (sizePixel.HasValue)
                         {
-                            ImGui.PushFont(font);
-                            ImTKFontManager.PushFontScale(scale);
-                            m_pushedFonts++;
+                            var (font, scale) = ImTKFontManager.GetFontWithScale(finalFamilyHash, sizePixel.Value);
+                            if (font.NativePtr != null)
+                            {
+                                ImGui.PushFont(font);
+                                ImTKFontManager.PushFontScale(scale);
+                                m_pushedFonts++;
+                            }
                         }
-                    }
-                    else if (sizeEnum.HasValue)
-                    {
-                        var font = ImTKFontManager.GetFont(finalFamilyHash, (ImTK.UI.Style.FontSize)sizeEnum.Value);
-                        if (font.NativePtr != null)
+                        else if (sizeEnum.HasValue)
                         {
-                            ImGui.PushFont(font);
-                            ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale); // Default scale for exact matched enum
-                            m_pushedFonts++;
+                            var font = ImTKFontManager.GetFont(finalFamilyHash, (ImTK.UI.Style.FontSize)sizeEnum.Value);
+                            if (font.NativePtr != null)
+                            {
+                                ImGui.PushFont(font);
+                                ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale); // Default scale for exact matched enum
+                                m_pushedFonts++;
+                            }
                         }
-                    }
-                    else
-                    {
-                        var font = ImTKFontManager.GetFont(finalFamilyHash, ImTK.UI.Style.FontSize.Normal);
-                        if (font.NativePtr != null)
+                        else
                         {
-                            ImGui.PushFont(font);
-                            ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale);
-                            m_pushedFonts++;
+                            var font = ImTKFontManager.GetFont(finalFamilyHash, ImTK.UI.Style.FontSize.Normal);
+                            if (font.NativePtr != null)
+                            {
+                                ImGui.PushFont(font);
+                                ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale);
+                                m_pushedFonts++;
+                            }
                         }
                     }
                 }

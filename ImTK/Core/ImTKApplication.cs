@@ -17,8 +17,16 @@ namespace ImTK.Core
         /// <summary>
         /// Gets the current version of the ImTK framework (e.g., "0.1.0-alpha").
         /// </summary>
-        public static string Version { get; } = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "Unknown";
-
+        public static string Version
+        {
+            get
+            {
+                string ret = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+                ret = ret?.Substring(0, ret.LastIndexOf('+'));
+                ret ??= "Unknow";
+                return ret;
+            }
+        }
         public static ApplicationState CurrentState { get; private set; } = ApplicationState.Uninitialized;
 
         // Module storage
