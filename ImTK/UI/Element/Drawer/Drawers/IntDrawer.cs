@@ -3,7 +3,7 @@ using ImGuiNET;
 namespace ImTK.UI
 {
     [CustomFieldDrawer(typeof(int), allowInheritType: false)]
-    public class IntField : FieldDrawer<int>
+    public class IntDrawer : FieldDrawer<int>
     {
         protected override void OnRenderSelf()
         {

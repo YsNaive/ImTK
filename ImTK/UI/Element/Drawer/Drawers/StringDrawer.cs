@@ -6,7 +6,7 @@ using System;
 namespace ImTK.UI
 {
     [CustomFieldDrawer(typeof(string), allowInheritType: false)]
-    public class StringField : FieldDrawer<string>
+    public class StringDrawer : FieldDrawer<string>
     {
         private const int MAX_STRING_LENGTH = 1024;
         private byte[] m_buffer = new byte[MAX_STRING_LENGTH];

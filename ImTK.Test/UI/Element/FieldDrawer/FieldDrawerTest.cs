@@ -64,7 +64,7 @@ namespace ImTK.Test.UI.Element.FieldDrawer
 
         private void TestCircularUpdateProtection()
         {
-            var drawer = new IntField();
+            var drawer = new IntDrawer();
             drawer.value = 10;
             EventDispatcher.ProcessQueue();
 
@@ -84,7 +84,7 @@ namespace ImTK.Test.UI.Element.FieldDrawer
 
         private void TestLayoutMode()
         {
-            var drawer = new IntField();
+            var drawer = new IntDrawer();
             drawer.layoutMode = DrawerLayoutMode.Expand;
             ImTKAssert.AreEqual(DrawerLayoutMode.Expand, drawer.layoutMode, "LayoutMode should be modifiable.");
 
@@ -112,7 +112,7 @@ namespace ImTK.Test.UI.Element.FieldDrawer
 
         private void TestSetValueWithoutNotify()
         {
-            var drawer = new IntField();
+            var drawer = new IntDrawer();
             drawer.value = 5;
             EventDispatcher.ProcessQueue(); // Clear queue
 
@@ -128,7 +128,7 @@ namespace ImTK.Test.UI.Element.FieldDrawer
 
         private void TestSetValueWithChanged()
         {
-            var drawer = new IntField();
+            var drawer = new IntDrawer();
             drawer.value = 5;
             EventDispatcher.ProcessQueue(); // Ensure initial set event is cleared
 

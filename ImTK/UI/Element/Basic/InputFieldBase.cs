@@ -4,16 +4,16 @@ using ImTK.Core;
 
 namespace ImTK.UI
 {
-    public class CheckBox : VisualElement<CheckBox.Style>
+    public abstract class InputFieldBase<TValue, TStyle> : VisualElement<TStyle>
+        where TStyle : InputFieldBase<TValue, TStyle>.InputFieldStyle, new()
     {
         public new class StyleKey : VisualElement.StyleKey
         {
             public static readonly HashedString HoverColor = new HashedString("HoverColor");
             public static readonly HashedString ActiveColor = new HashedString("ActiveColor");
-            public static readonly HashedString CheckMarkColor = new HashedString("CheckMarkColor");
         }
 
-        public new class Style : VisualElement.Style
+        public abstract class InputFieldStyle : VisualElement.Style
         {
             private int m_pushedColors = 0;
 
@@ -37,23 +37,13 @@ namespace ImTK.UI
                 }
             }
 
-            public StyleValue<Color>? checkMarkColor
-            {
-                get => GetOverrideColor(StyleKey.CheckMarkColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.CheckMarkColor, value.Value);
-                    else Clear(StyleKey.CheckMarkColor);
-                }
-            }
-
             public override void PushToImGui(ResolvedStyle resolvedStyle)
             {
                 base.PushToImGui(resolvedStyle);
 
                 m_pushedColors = 0;
 
-                // CheckBox Background maps to FrameBg, not WindowBg/ChildBg
+                // InputField Background maps to FrameBg, not WindowBg/ChildBg
                 Color? bgColor = resolvedStyle.GetColor(VisualElement.StyleKey.BackgroundColor);
                 if (bgColor.HasValue)
                 {
@@ -74,13 +64,6 @@ namespace ImTK.UI
                     ImGui.PushStyleColor(ImGuiCol.FrameBgActive, activeColor.Value.u32);
                     m_pushedColors++;
                 }
-
-                Color? checkMarkColor = resolvedStyle.GetColor(StyleKey.CheckMarkColor);
-                if (checkMarkColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.CheckMark, checkMarkColor.Value.u32);
-                    m_pushedColors++;
-                }
             }
 
             public override void PopFromImGui()
@@ -96,47 +79,44 @@ namespace ImTK.UI
 
         public string label { get; set; }
 
-        private bool m_value;
-        public bool value
+        private TValue m_value;
+        public TValue value
         {
             get => m_value;
             set => SetValue(value);
         }
 
-        public event Action<ValueChangedEvent<bool>> onValueChanged
+        public event Action<ValueChangedEvent<TValue>> onValueChanged
         {
             add => RegisterCallback(value);
             remove => UnregisterCallback(value);
         }
 
-        public CheckBox(string label = "", bool defaultValue = false)
+        protected InputFieldBase(string label = "", TValue defaultValue = default)
         {
             this.label = label;
-            m_value = defaultValue;
-            classList.Add("check-box");
+            m_value = SanitizeValue(defaultValue);
         }
 
-        public void SetValueWithoutNotify(bool newValue)
+        public void SetValueWithoutNotify(TValue newValue)
         {
-            m_value = newValue;
+            m_value = SanitizeValue(newValue);
         }
 
-        private void SetValue(bool newValue)
+        protected void SetValue(TValue newValue)
         {
-            if (m_value == newValue) return;
+            newValue = SanitizeValue(newValue);
+            if (System.Collections.Generic.EqualityComparer<TValue>.Default.Equals(m_value, newValue))
+                return;
 
-            var evt = ValueChangedEvent<bool>.GetPooled(m_value, newValue);
+            var evt = ValueChangedEvent<TValue>.GetPooled(m_value, newValue);
             m_value = newValue;
             SendEvent(evt);
         }
 
-        protected override void OnRenderSelf()
+        protected virtual TValue SanitizeValue(TValue value)
         {
-            bool currentValue = m_value;
-            if (ImGui.Checkbox(label, ref currentValue))
-            {
-                SetValue(currentValue);
-            }
+            return value;
         }
     }
 }
