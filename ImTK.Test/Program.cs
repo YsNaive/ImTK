@@ -1,5 +1,6 @@
 using System;
 using ImTK.Silk;
+using ImTK.Core;
 
 namespace ImTK.Test
 {
@@ -26,9 +27,11 @@ namespace ImTK.Test
                 log.Info("All headless tests passed. Launching UI...");
             }
 
+            ImTKEnvironment.ApplicationName = "ImTK.Test";
             var config = new ImTKSilkConstant
             {
                 windowTitle = "ImTK Integration Test",
+                configFolderPath = ImTKEnvironment.LocalDataPath,
                 windowWidth = 1024,
                 windowHeight = 768
             };
