@@ -24,7 +24,7 @@ namespace ImTK.UI
 
         static ImTKFontManager()
         {
-            RegisterFamily(DefaultFontFamilyName, new string[0]);
+            RegisterFamily(DefaultFontFamilyName, new FontSource[0]);
         }
 
 
@@ -52,7 +52,7 @@ namespace ImTK.UI
             s_isFontDirty = true;
         }
 
-        public static void RegisterFamily(string name, string[] paths, IntPtr glyphRanges = default)
+        public static void RegisterFamily(string name, params FontSource[] sources)
         {
             int hash = new ImTK.Core.HashedString(name).Hash;
             if (s_fontFamilies.ContainsKey(hash))
@@ -60,14 +60,29 @@ namespace ImTK.UI
                 s_log.Warning($"FontFamily '{name}' already registered. Overwriting.");
             }
 
-            var family = new FontFamily(name, glyphRanges);
-            foreach (var path in paths)
+            var family = new FontFamily(name);
+            foreach (var source in sources)
             {
-                family.AddFallback(path);
+                family.AddSource(source);
             }
 
             s_fontFamilies[hash] = family;
             s_isFontDirty = true;
+        }
+
+        public static void RegisterFamily(string name, string[] paths, IntPtr glyphRanges = default)
+        {
+            FontSource[] sources = new FontSource[paths.Length];
+            for (int i = 0; i < paths.Length; i++)
+            {
+                sources[i] = new FontSource(paths[i], glyphRanges);
+            }
+            RegisterFamily(name, sources);
+        }
+
+        public static void OverrideDefaultFamily(params FontSource[] sources)
+        {
+            RegisterFamily(DefaultFontFamilyName, sources);
         }
 
         public static IntPtr GetGlyphRangesChineseFull() => ImGui.GetIO().Fonts.GetGlyphRangesChineseFull();
@@ -108,11 +123,11 @@ namespace ImTK.UI
                 foreach (var sizeKvp in sortedSizes)
                 {
                     var fontSizeEnum = sizeKvp.Key;
-                    float sizePixels = sizeKvp.Value;
+                    float sizePixels = sizeKvp.Value * ImTKTheme.GlobalTheme.globalFontScale;
 
                     ImFontPtr baseFont = default;
 
-                    if (family.FontPaths.Count == 0)
+                    if (family.FontSources.Count == 0)
                     {
                         var config = ImGuiNative.ImFontConfig_ImFontConfig();
                         config->SizePixels = sizePixels;
@@ -122,11 +137,11 @@ namespace ImTK.UI
                     else
                     {
                         bool first = true;
-                        foreach (var path in family.FontPaths)
+                        foreach (var source in family.FontSources)
                         {
-                            if (!File.Exists(path))
+                            if (string.IsNullOrEmpty(source.ResolvedPath) || !File.Exists(source.ResolvedPath))
                             {
-                                s_log.Warning($"Font file not found: {path}. Skipping.");
+                                s_log.Warning($"Font file not found: {source.Path}. Skipping.");
                                 continue;
                             }
 
@@ -136,17 +151,15 @@ namespace ImTK.UI
                                 config->MergeMode = 1;
                             }
 
-                            IntPtr ranges = family.GlyphRanges;
-                            // Need to handle IntPtr to char* conversion properly if needed, but ImGui.NET handles IntPtr directly
-                            // However, we must use the unsafe variant if we have config
+                            IntPtr ranges = source.GlyphRanges;
                             ImFontPtr font;
                             if (ranges != IntPtr.Zero)
                             {
-                                font = io.Fonts.AddFontFromFileTTF(path, sizePixels, config, ranges);
+                                font = io.Fonts.AddFontFromFileTTF(source.ResolvedPath, sizePixels, config, ranges);
                             }
                             else
                             {
-                                font = io.Fonts.AddFontFromFileTTF(path, sizePixels, config);
+                                font = io.Fonts.AddFontFromFileTTF(source.ResolvedPath, sizePixels, config);
                             }
 
                             if (first && font.NativePtr != null)
@@ -211,40 +224,44 @@ namespace ImTK.UI
         public static (ImFontPtr font, float scale) GetFontWithScale(int familyHash, int targetSize)
         {
             var sizes = ImTKTheme.GlobalTheme.GetFontSizes();
+            float globalScale = ImTKTheme.GlobalTheme.globalFontScale;
+            float scaledTargetSize = targetSize * globalScale;
 
             FontSize bestEnum = FontSize.Normal;
-            int bestSizeDiff = int.MaxValue;
-            float bestSizePixels = sizes[FontSize.Normal];
+            float bestSizeDiff = float.MaxValue;
+            float bestSizePixels = sizes[FontSize.Normal] * globalScale;
 
             foreach(var kvp in sizes)
             {
-                int diff = (int)kvp.Value - targetSize;
+                float currentScaledSize = kvp.Value * globalScale;
+                float diff = currentScaledSize - scaledTargetSize;
                 // Prefer slightly larger fonts for downscaling rather than upscaling (which causes blur)
                 if(diff >= 0 && diff < bestSizeDiff)
                 {
                     bestSizeDiff = diff;
                     bestEnum = kvp.Key;
-                    bestSizePixels = kvp.Value;
+                    bestSizePixels = currentScaledSize;
                 }
             }
 
             // If all fonts are smaller than target, pick the largest one available
-            if(bestSizeDiff == int.MaxValue)
+            if(bestSizeDiff == float.MaxValue)
             {
                 float maxSize = -1;
                 foreach(var kvp in sizes)
                 {
-                    if(kvp.Value > maxSize)
+                    float currentScaledSize = kvp.Value * globalScale;
+                    if(currentScaledSize > maxSize)
                     {
-                        maxSize = kvp.Value;
+                        maxSize = currentScaledSize;
                         bestEnum = kvp.Key;
-                        bestSizePixels = kvp.Value;
+                        bestSizePixels = currentScaledSize;
                     }
                 }
             }
 
             ImFontPtr font = GetFont(familyHash, bestEnum);
-            float scale = (float)targetSize / bestSizePixels;
+            float scale = scaledTargetSize / bestSizePixels;
 
             return (font, scale);
         }

@@ -152,7 +152,21 @@ namespace ImTK.UI
         public Vector2 itemInnerSpacing { get => GetVector2(Tokens.ItemInnerSpacing, new Vector2(4, 4)); set => SetVector2(Tokens.ItemInnerSpacing, value); }
         public float borderWidth { get => GetFloat(Tokens.BorderWidth, 1f); set => SetFloat(Tokens.BorderWidth, value); }
         public float borderRadius { get => GetFloat(Tokens.BorderRadius, 3f); set => SetFloat(Tokens.BorderRadius, value); }
-        public float disabledAlpha { get => GetFloat(Tokens.DisabledAlpha, 0.6f); set => SetFloat(Tokens.DisabledAlpha, value); }
+                public float disabledAlpha { get => GetFloat(Tokens.DisabledAlpha, 0.6f); set => SetFloat(Tokens.DisabledAlpha, value); }
+
+        private float m_globalFontScale = 1.0f;
+        public float globalFontScale
+        {
+            get => m_globalFontScale;
+            set
+            {
+                if (m_globalFontScale != value)
+                {
+                    m_globalFontScale = value;
+                    ImTKFontManager.MarkFontDirty();
+                }
+            }
+        }
                 private string m_fontFamily = "ImGuiDefault";
         public string fontFamily
         {
