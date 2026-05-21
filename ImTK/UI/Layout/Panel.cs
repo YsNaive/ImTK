@@ -169,6 +169,20 @@ namespace ImTK.UI
 
             ImGuiWindowFlags windowFlags = ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground;
 
+            int globalFontFamilyHash = ImTKTheme.GlobalTheme.fontFamilyHash;
+            var font = ImTKFontManager.GetFont(globalFontFamilyHash, ImTK.UI.Style.FontSize.Normal);
+            bool pushedFont = false;
+
+            unsafe
+            {
+                if (font.NativePtr != null)
+                {
+                    ImGui.PushFont(font);
+                    RenderingContext.PushFontState(globalFontFamilyHash);
+                    pushedFont = true;
+                }
+            }
+
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
             ImGui.Begin("MainDockSpaceWindow", windowFlags);
             ImGui.PopStyleVar();
@@ -188,6 +202,12 @@ namespace ImTK.UI
             catch (Exception ex)
             {
                 s_log.Error(ex, $"Exception in Render of WindowHostElement");
+            }
+
+            if (pushedFont)
+            {
+                ImGui.PopFont();
+                RenderingContext.PopFontState();
             }
         }
 

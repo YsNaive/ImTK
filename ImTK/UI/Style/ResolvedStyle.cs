@@ -171,6 +171,10 @@ namespace ImTK.UI.Style
                     return prop.tokenHash;
                 }
             }
+            if (m_element.theme != null && m_element.theme.TryGetHashToken(key.Hash, out int themeHash))
+            {
+                return themeHash;
+            }
             return null;
         }
     }
