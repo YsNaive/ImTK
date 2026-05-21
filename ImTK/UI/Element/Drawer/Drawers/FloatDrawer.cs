@@ -3,24 +3,24 @@ using ImGuiNET;
 
 namespace ImTK.UI
 {
-    [CustomFieldDrawer(typeof(int), allowInheritType: false)]
-    public class IntDrawer : FieldDrawer<int>
+    [CustomFieldDrawer(typeof(float), allowInheritType: false)]
+    public class FloatDrawer : FieldDrawer<float>
     {
-        private IntField m_intField;
+        private FloatField m_floatField;
 
         public float mouseStep { get; set; } = -1f;
 
-        public int step
+        public float step
         {
-            get => m_intField.step;
-            set => m_intField.step = value;
+            get => m_floatField.step;
+            set => m_floatField.step = value;
         }
 
-        public IntDrawer()
+        public FloatDrawer()
         {
-            m_intField = new IntField("##" + label);
-            m_intField.onValueChanged += OnIntFieldValueChanged;
-            hierarchy.Add(m_intField);
+            m_floatField = new FloatField("##" + label);
+            m_floatField.onValueChanged += OnFloatFieldValueChanged;
+            hierarchy.Add(m_floatField);
         }
 
         public override string label
@@ -29,30 +29,30 @@ namespace ImTK.UI
             set
             {
                 base.label = value;
-                if (m_intField != null)
+                if (m_floatField != null)
                 {
-                    m_intField.label = "##" + value;
+                    m_floatField.label = "##" + value;
                 }
             }
         }
 
-        public override void SetValueWithoutNotify(int newValue)
+        public override void SetValueWithoutNotify(float newValue)
         {
             base.SetValueWithoutNotify(newValue);
-            m_intField.SetValueWithoutNotify(newValue);
+            m_floatField.SetValueWithoutNotify(newValue);
         }
 
-        public override int value
+        public override float value
         {
             get => base.value;
             set
             {
                 base.value = value;
-                m_intField.SetValueWithoutNotify(value);
+                m_floatField.SetValueWithoutNotify(value);
             }
         }
 
-        private void OnIntFieldValueChanged(ValueChangedEvent<int> evt)
+        private void OnFloatFieldValueChanged(ValueChangedEvent<float> evt)
         {
             SetValueWithChanged(evt.newValue);
         }
@@ -84,15 +84,15 @@ namespace ImTK.UI
                     float currentStep = mouseStep;
                     if (currentStep < 0)
                     {
-                        // Dynamic step based on value magnitude, minimum 1
-                        currentStep = Math.Max(1f, Math.Abs(value) * 0.01f);
+                        // Dynamic step based on value magnitude, minimum 0.01
+                        currentStep = Math.Max(0.01f, Math.Abs(value) * 0.01f);
                     }
 
-                    int newValue = value + (int)Math.Round(delta * currentStep);
+                    float newValue = value + delta * currentStep;
                     if (newValue != value)
                     {
                         value = newValue; // this triggers SetValueWithChanged logic internally via setter
-                        m_intField.SetValueWithoutNotify(newValue);
+                        m_floatField.SetValueWithoutNotify(newValue);
                     }
                 }
             }

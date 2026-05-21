@@ -15,6 +15,8 @@ namespace ImTK.UI
         }
 
         public int precision { get; set; } = 3;
+        public float step { get; set; } = 0f;
+        public float stepFast { get; set; } = 0f;
 
         public FloatField(string label = "", float defaultValue = 0f, int precision = 3)
             : base(label, defaultValue)
@@ -27,7 +29,7 @@ namespace ImTK.UI
         {
             float currentValue = value;
             string format = $"%.{precision}f";
-            if (ImGui.InputFloat(label, ref currentValue, 0f, 0f, format))
+            if (ImGui.InputFloat(label, ref currentValue, step, stepFast, format))
             {
                 SetValue(currentValue);
             }

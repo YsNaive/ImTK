@@ -15,6 +15,8 @@ namespace ImTK.UI
         }
 
         public uint maxLength { get; set; }
+        public bool multiline { get; set; } = false;
+        public System.Numerics.Vector2 size { get; set; } = new System.Numerics.Vector2(0, 0);
 
         public TextField(string label = "", string defaultValue = "", uint maxLength = 1024)
             : base(label, defaultValue)
@@ -31,7 +33,18 @@ namespace ImTK.UI
         protected override void OnRenderSelf()
         {
             string currentValue = value;
-            if (ImGui.InputText(label, ref currentValue, maxLength))
+            bool changed = false;
+
+            if (multiline)
+            {
+                changed = ImGui.InputTextMultiline(label, ref currentValue, maxLength, size);
+            }
+            else
+            {
+                changed = ImGui.InputText(label, ref currentValue, maxLength);
+            }
+
+            if (changed)
             {
                 SetValue(currentValue);
             }

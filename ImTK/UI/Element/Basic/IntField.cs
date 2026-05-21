@@ -14,6 +14,9 @@ namespace ImTK.UI
         {
         }
 
+        public int step { get; set; } = 0;
+        public int stepFast { get; set; } = 100;
+
         public IntField(string label = "", int defaultValue = 0)
             : base(label, defaultValue)
         {
@@ -23,7 +26,7 @@ namespace ImTK.UI
         protected override void OnRenderSelf()
         {
             int currentValue = value;
-            if (ImGui.InputInt(label, ref currentValue, 0))
+            if (ImGui.InputInt(label, ref currentValue, step, stepFast))
             {
                 SetValue(currentValue);
             }
