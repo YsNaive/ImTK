@@ -13,10 +13,12 @@ namespace ImTK.UI
         private Dictionary<int, Color> m_colorTokens = new Dictionary<int, Color>();
         private Dictionary<int, float> m_floatTokens = new Dictionary<int, float>();
         private Dictionary<int, Vector2> m_vector2Tokens = new Dictionary<int, Vector2>();
+        private Dictionary<int, int> m_hashTokens = new Dictionary<int, int>();
 
         public void SetColorToken(HashedString token, Color color) => m_colorTokens[token.Hash] = color;
         public void SetFloatToken(HashedString token, float value) => m_floatTokens[token.Hash] = value;
         public void SetVector2Token(HashedString token, Vector2 value) => m_vector2Tokens[token.Hash] = value;
+        public void SetHashToken(HashedString token, int value) => m_hashTokens[token.Hash] = value;
 
         public bool TryGetColorToken(int tokenHash, out Color color)
         {
@@ -42,6 +44,14 @@ namespace ImTK.UI
             return false;
         }
 
+        public bool TryGetHashToken(int tokenHash, out int value)
+        {
+            if (m_hashTokens.TryGetValue(tokenHash, out value)) return true;
+            if (parent != null) return parent.TryGetHashToken(tokenHash, out value);
+            value = default;
+            return false;
+        }
+
         internal Color GetColor(HashedString token, Color fallback = default) => TryGetColorToken(token.Hash, out Color c) ? c : fallback;
         internal void SetColor(HashedString token, Color value) => SetColorToken(token, value);
 
@@ -50,6 +60,9 @@ namespace ImTK.UI
 
         internal Vector2 GetVector2(HashedString token, Vector2 fallback = default) => TryGetVector2Token(token.Hash, out Vector2 v) ? v : fallback;
         internal void SetVector2(HashedString token, Vector2 value) => SetVector2Token(token, value);
+
+        internal int GetHash(HashedString token, int fallback = 0) => TryGetHashToken(token.Hash, out int h) ? h : fallback;
+        internal void SetHash(HashedString token, int value) => SetHashToken(token, value);
 
         // --- Cached Token Keys ---
         public static class Tokens
@@ -63,6 +76,7 @@ namespace ImTK.UI
             public static readonly HashedString BorderWidth = new HashedString("--border-width");
             public static readonly HashedString BorderRadius = new HashedString("--border-radius");
             public static readonly HashedString DisabledAlpha = new HashedString("--disabled-alpha");
+            public static readonly HashedString FontFamily = new HashedString("--font-family");
 
             public static class Syntax
             {
@@ -139,6 +153,14 @@ namespace ImTK.UI
         public float borderWidth { get => GetFloat(Tokens.BorderWidth, 1f); set => SetFloat(Tokens.BorderWidth, value); }
         public float borderRadius { get => GetFloat(Tokens.BorderRadius, 3f); set => SetFloat(Tokens.BorderRadius, value); }
         public float disabledAlpha { get => GetFloat(Tokens.DisabledAlpha, 0.6f); set => SetFloat(Tokens.DisabledAlpha, value); }
+                private string m_fontFamily = "ImGuiDefault";
+        public string fontFamily
+        {
+            get => m_fontFamily;
+            set { m_fontFamily = value; SetHash(Tokens.FontFamily, new HashedString(value).Hash); ImTKFontManager.MarkFontDirty(); }
+        }
+
+        internal int fontFamilyHash => GetHash(Tokens.FontFamily, ImTKFontManager.DefaultFontFamilyHash);
 
         // --- Font System ---
         private Dictionary<ImTK.UI.Style.FontSize, float> m_fontSizes = new Dictionary<ImTK.UI.Style.FontSize, float>

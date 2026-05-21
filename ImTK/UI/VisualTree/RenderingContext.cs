@@ -20,7 +20,7 @@ namespace ImTK.UI
                 {
                     return s_fontFamilyHashStack.Peek();
                 }
-                return ImTKFontManager.DefaultFontFamilyHash;
+                return ImTKTheme.GlobalTheme.fontFamilyHash;
             }
         }
 
