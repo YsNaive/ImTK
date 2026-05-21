@@ -61,22 +61,43 @@ namespace ImTK.UI
         {
             if (string.IsNullOrEmpty(label)) return;
 
-            // Draw label
-            ImGui.AlignTextToFramePadding();
-            ImGui.Text(label);
+            // To avoid ImGui's layout engine adding extra ItemSpacing.Y due to rendering
+            // multiple items in succession on the Y axis, we need to carefully overlap them.
 
-            // Create an invisible button over the label for interaction
-            var min = ImGui.GetItemRectMin();
-            var max = ImGui.GetItemRectMax();
-            ImGui.SetCursorScreenPos(min);
-            ImGui.InvisibleButton("##drag_" + label, new System.Numerics.Vector2(max.X - min.X, max.Y - min.Y));
+            // Calculate text size to size the invisible button appropriately
+            var textSize = ImGui.CalcTextSize(label);
+
+            // Align cursor for the text to match the input field height
+            ImGui.AlignTextToFramePadding();
+
+            // Save starting position
+            var startPos = ImGui.GetCursorScreenPos();
+
+            // Optional: allow subsequent items to overlap this button
+            ImGui.SetNextItemAllowOverlap();
+
+            // Draw the invisible button first to claim the space and allow interaction
+            ImGui.InvisibleButton("##drag_" + label, new System.Numerics.Vector2(textSize.X, textSize.Y));
+
+            // Cache active state immediately for the InvisibleButton, as we draw Text next
+            bool isDragActive = ImGui.IsItemActive();
 
             if (ImGui.IsItemHovered())
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEW);
             }
 
-            if (ImGui.IsItemActive() && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
+            // Save the end position so we can restore the layout cursor properly after text
+            var endPos = ImGui.GetCursorScreenPos();
+
+            // Move cursor back and draw the text
+            ImGui.SetCursorScreenPos(startPos);
+            ImGui.Text(label);
+
+            // Move cursor back to where it should be for the next layout item
+            ImGui.SetCursorScreenPos(endPos);
+
+            if (isDragActive && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
             {
                 float delta = ImGui.GetIO().MouseDelta.X;
                 if (delta != 0)
