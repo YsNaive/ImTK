@@ -7,6 +7,7 @@ namespace ImTK.UI
         object value { get; set; }
         string label { get; set; }
         float? labelWidth { get; set; }
+        ImTK.Core.Rect? overrideRenderRect { get; set; }
         void ApplyModifier(Attribute modifier);
     }
 
