@@ -48,13 +48,17 @@ namespace ImTK.UI
             float frameHeight = ImGuiNET.ImGui.GetFrameHeight();
             System.Numerics.Vector2 startPos = ImGuiNET.ImGui.GetCursorScreenPos();
 
+            // Submit a Dummy to allocate the space and advance the ImGui layout engine safely
+            ImGuiNET.ImGui.Dummy(new System.Numerics.Vector2(availableWidth, frameHeight));
+
+            // The cursor has advanced to the next line. We don't need to manually reset it to the next line at the end.
+            // The absolute layout rendering of our child components will just draw over the Dummy area.
             m_xDrawer.overrideRenderRect = new ImTK.Core.Rect(startPos.X + childWidth * 0 + itemSpacing * 0, startPos.Y, childWidth, frameHeight);
             m_xDrawer.Render();
 
             m_yDrawer.overrideRenderRect = new ImTK.Core.Rect(startPos.X + childWidth * 1 + itemSpacing * 1, startPos.Y, childWidth, frameHeight);
             m_yDrawer.Render();
 
-            ImGuiNET.ImGui.SetCursorScreenPos(new System.Numerics.Vector2(startPos.X, startPos.Y + frameHeight + ImGuiNET.ImGui.GetStyle().ItemSpacing.Y));
         }
     }
 }
