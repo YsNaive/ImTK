@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace ImTK.UI
 {
     [CustomFieldDrawer(typeof(object), allowInheritType: true)]
-    public class ObjectDrawer : FieldDrawer<object>
+    public class ObjectDrawer : FoldoutDrawer<object>
     {
         private bool m_initialized = false;
         private Dictionary<VisualElement, MemberInfo> m_memberMap = new Dictionary<VisualElement, MemberInfo>();

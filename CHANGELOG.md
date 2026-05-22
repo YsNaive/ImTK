@@ -8,6 +8,9 @@
 ## [Unreleased]
 
 ### Added (新增)
+- 實作了 `FoldoutDrawer<T>` 作為可折疊的內容抽屜基底類別，利用 ImDrawList 自定義繪製三角形圖示，並支援整行可點擊的 hover 視覺反饋。
+- 將 `ObjectDrawer` 的繼承基底改為 `FoldoutDrawer<object>`，使得物件屬性面板能天然支援展開與折疊。
+- 替 `FieldDrawer<T>` 新增預設圖示佔位空間 (`OnRenderIcon`)，以此取代繁瑣的 Indent Level 縮排邏輯，達成統一且天然的排版對齊 (`[icon][label][content]`)。
 - 實作了基礎 UI 元件 `IntField` 與 `FloatField`，分別綁定 ImGui 的數值輸入並消除冗餘按鈕。
 - 為 `FieldDrawer<T>` 新增 `RegisterValueChangedCallback` 與 `UnregisterValueChangedCallback` 語法糖。
 - 為 `TextField` 實作自動適應高度的動態渲染，確保 `InputTextMultiline` 的流暢使用體驗。
