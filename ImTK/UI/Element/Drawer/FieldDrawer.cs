@@ -11,6 +11,13 @@ namespace ImTK.UI
         protected T m_value;
         public virtual string label { get; set; } = "";
 
+        private float? m_labelWidth = null;
+        public float? labelWidth
+        {
+            get => m_labelWidth ?? theme.labelWidth;
+            set => m_labelWidth = value;
+        }
+
         public DrawerLayoutMode layoutMode { get; set; } = DrawerLayoutMode.Inline;
 
         object IFieldDrawer.value
@@ -83,22 +90,22 @@ namespace ImTK.UI
             }
         }
 
-        protected virtual void OnRenderIcon(ImDrawListPtr drawList, ImRect iconRect)
+        protected virtual void OnRenderIcon(ImDrawListPtr drawList, Rect iconRect)
         {
             // Base implementation does nothing, leaves empty space.
         }
 
         protected override void OnRenderLayout()
         {
-            float labelWidth = theme.labelWidth;
+            float currentLabelWidth = labelWidth.Value;
             float frameHeight = ImGui.GetFrameHeight();
             float iconSize = frameHeight * 0.8f;
             float yOffset = (frameHeight - iconSize) * 0.5f;
 
             Vector2 cursorPos = ImGui.GetCursorScreenPos();
-            ImRect iconRect = new ImRect(
+            Rect iconRect = new Rect(
                 new Vector2(cursorPos.X, cursorPos.Y + yOffset),
-                new Vector2(cursorPos.X + iconSize, cursorPos.Y + yOffset + iconSize)
+                new Vector2(iconSize, iconSize)
             );
 
             ImGui.Dummy(new Vector2(iconSize, frameHeight));
@@ -112,10 +119,10 @@ namespace ImTK.UI
                 if (!string.IsNullOrEmpty(label))
                 {
                     float currentX = ImGui.GetCursorPosX();
-                    float targetX = labelWidth;
+                    float targetX = currentLabelWidth;
                     if (currentX < targetX)
                     {
-                        ImGui.SameLine(targetX); // Force all input to start at labelWidth
+                        ImGui.SameLine(targetX); // Force all input to start at currentLabelWidth
                     }
                     else
                     {

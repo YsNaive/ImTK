@@ -11,7 +11,7 @@ namespace ImTK.UI
     public class MainMenuModule : ImTKModule
     {
         private MenuView m_rootMenu;
-        private ImRect m_reservedRect;
+        private Rect m_reservedRect;
         private static readonly LogContext s_log = new LogContext("MainMenuModule");
 
         protected MainMenuModule()
@@ -105,15 +105,15 @@ namespace ImTK.UI
             }
         }
 
-        private ImRect RequireMenuArea(ImRect available)
+        private Rect RequireMenuArea(Rect available)
         {
             float menuHeight = ImGui.GetFrameHeight() * 1.25f; // 上下 padding 0.125
 
             // 記錄自己取得的空間，供 OnGuiRender 繪製使用
-            m_reservedRect = new ImRect(available.min, new Vector2(available.max.X, available.min.Y + menuHeight));
+            m_reservedRect = new Rect(available.x, available.y, available.width, menuHeight);
 
             // 回傳剩餘空間給 Panel
-            return new ImRect(new Vector2(available.min.X, available.min.Y + menuHeight), available.max);
+            return new Rect(available.x, available.y + menuHeight, available.width, available.height - menuHeight);
         }
 
         protected internal override void OnGuiRender()
@@ -125,8 +125,8 @@ namespace ImTK.UI
             float padding = frameHeight * 0.125f;
 
             // 在保留的區域內開啟無邊框視窗，位置往下推 padding，高度只取 frameHeight
-            ImGui.SetNextWindowPos(new Vector2(m_reservedRect.min.X, m_reservedRect.min.Y + padding));
-            ImGui.SetNextWindowSize(new Vector2(m_reservedRect.max.X - m_reservedRect.min.X, frameHeight));
+            ImGui.SetNextWindowPos(new Vector2(m_reservedRect.x, m_reservedRect.y + padding));
+            ImGui.SetNextWindowSize(new Vector2(m_reservedRect.width, frameHeight));
 
             ImGuiWindowFlags windowFlags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoBackground;
 
