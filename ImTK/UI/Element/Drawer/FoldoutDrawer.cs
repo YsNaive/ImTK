@@ -26,11 +26,13 @@ namespace ImTK.UI
                 drawList.AddTriangleFilled(new System.Numerics.Vector2(iconRect.min.X + padding, iconRect.min.Y + padding), new System.Numerics.Vector2(iconRect.max.X - padding, (iconRect.min.Y + iconRect.max.Y) / 2), new System.Numerics.Vector2(iconRect.min.X + padding, iconRect.max.Y - padding), color);
             }
 
+            var prevCursorPos = ImGui.GetCursorScreenPos();
             ImGui.SetCursorScreenPos(iconRect.min);
             if (ImGui.InvisibleButton($"###foldout_btn_{this.GetHashCode()}", new System.Numerics.Vector2(iconRect.max.X - iconRect.min.X, iconRect.max.Y - iconRect.min.Y)))
             {
                 isExpanded = !isExpanded;
             }
+            ImGui.SetCursorScreenPos(prevCursorPos);
 
             if (ImGui.IsItemHovered())
             {
@@ -56,11 +58,16 @@ namespace ImTK.UI
         {
             float labelWidth = theme.labelWidth;
             float frameHeight = ImGui.GetFrameHeight();
+            float iconSize = frameHeight * 0.8f;
+            float yOffset = (frameHeight - iconSize) * 0.5f;
 
             System.Numerics.Vector2 cursorPos = ImGui.GetCursorScreenPos();
-            ImRect iconRect = new ImRect(cursorPos, new System.Numerics.Vector2(cursorPos.X + frameHeight, cursorPos.Y + frameHeight));
+            ImRect iconRect = new ImRect(
+                new System.Numerics.Vector2(cursorPos.X, cursorPos.Y + yOffset),
+                new System.Numerics.Vector2(cursorPos.X + iconSize, cursorPos.Y + yOffset + iconSize)
+            );
 
-            ImGui.Dummy(new System.Numerics.Vector2(frameHeight, frameHeight));
+            ImGui.Dummy(new System.Numerics.Vector2(iconSize, frameHeight));
             OnRenderIcon(ImGui.GetWindowDrawList(), iconRect);
 
             if (layoutMode == DrawerLayoutMode.Inline)
@@ -95,7 +102,7 @@ namespace ImTK.UI
                 ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
                 OnRenderLabel();
 
-                float indent = frameHeight + ImGui.GetStyle().ItemInnerSpacing.X;
+                float indent = iconSize + ImGui.GetStyle().ItemInnerSpacing.X;
                 ImGui.Indent(indent);
                 ImGui.SetNextItemWidth(-1);
 

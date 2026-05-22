@@ -92,11 +92,16 @@ namespace ImTK.UI
         {
             float labelWidth = theme.labelWidth;
             float frameHeight = ImGui.GetFrameHeight();
+            float iconSize = frameHeight * 0.8f;
+            float yOffset = (frameHeight - iconSize) * 0.5f;
 
             Vector2 cursorPos = ImGui.GetCursorScreenPos();
-            ImRect iconRect = new ImRect(cursorPos, new Vector2(cursorPos.X + frameHeight, cursorPos.Y + frameHeight));
+            ImRect iconRect = new ImRect(
+                new Vector2(cursorPos.X, cursorPos.Y + yOffset),
+                new Vector2(cursorPos.X + iconSize, cursorPos.Y + yOffset + iconSize)
+            );
 
-            ImGui.Dummy(new Vector2(frameHeight, frameHeight));
+            ImGui.Dummy(new Vector2(iconSize, frameHeight));
             OnRenderIcon(ImGui.GetWindowDrawList(), iconRect);
 
             if (layoutMode == DrawerLayoutMode.Inline)
@@ -131,7 +136,7 @@ namespace ImTK.UI
                 OnRenderLabel();
 
                 // Indent content for expand mode
-                float indent = frameHeight + ImGui.GetStyle().ItemInnerSpacing.X;
+                float indent = iconSize + ImGui.GetStyle().ItemInnerSpacing.X;
                 ImGui.Indent(indent);
                 ImGui.SetNextItemWidth(-1);
                 base.OnRenderLayout();

@@ -144,7 +144,7 @@ namespace ImTK.UI
 
 
         // --- Global Shared Properties ---
-        public float labelWidth { get => GetFloat(Tokens.LabelWidth, 120f); set => SetFloat(Tokens.LabelWidth, value); }
+        public float labelWidth { get => GetFloat(Tokens.LabelWidth, 180f); set => SetFloat(Tokens.LabelWidth, value); }
         public float edgePadding { get => GetFloat(Tokens.EdgePadding, 10f); set => SetFloat(Tokens.EdgePadding, value); }
 
         public Vector2 padding { get => GetVector2(Tokens.Padding, new Vector2(4, 3)); set => SetVector2(Tokens.Padding, value); }
@@ -438,7 +438,7 @@ namespace ImTK.UI
                     s_defaultDark.syntax.codeTextColor = new Color(0.85f, 0.85f, 0.85f, 1.0f);
 
                     // Global Properties
-                    s_defaultDark.labelWidth = 120.0f;
+                    s_defaultDark.labelWidth = 180.0f;
                     s_defaultDark.edgePadding = 10.0f;
                     s_defaultDark.padding = new Vector2(4, 3);
                     s_defaultDark.itemSpacing = new Vector2(8, 4);
@@ -555,7 +555,7 @@ namespace ImTK.UI
                     s_defaultLight.syntax.codeTextColor = new Color(0.1f, 0.1f, 0.1f, 1.0f);
 
                     // Global Properties
-                    s_defaultLight.labelWidth = 120.0f;
+                    s_defaultLight.labelWidth = 180.0f;
                     s_defaultLight.edgePadding = 10.0f;
                     s_defaultLight.padding = new Vector2(4, 3);
                     s_defaultLight.itemSpacing = new Vector2(8, 4);
