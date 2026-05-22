@@ -12,12 +12,12 @@ namespace ImTK.UI
             set => layoutMode = value ? DrawerLayoutMode.Expand : DrawerLayoutMode.Inline;
         }
 
-        protected override void OnRenderIcon(ImDrawListPtr drawList, ImRect iconRect)
+        protected override void OnRenderIcon(ImDrawListPtr drawList, Rect iconRect)
         {
             uint color = ImGui.GetColorU32(ImGuiCol.Text);
-            System.Numerics.Vector2 center = new System.Numerics.Vector2((iconRect.min.X + iconRect.max.X) * 0.5f, (iconRect.min.Y + iconRect.max.Y) * 0.5f);
+            System.Numerics.Vector2 center = iconRect.center;
 
-            float radius = (iconRect.max.X - iconRect.min.X) * 0.5f * 0.7f;
+            float radius = iconRect.width * 0.5f * 0.7f;
 
             if (isExpanded)
             {
@@ -46,15 +46,15 @@ namespace ImTK.UI
 
         protected override void OnRenderLayout()
         {
-            float labelWidth = theme.labelWidth;
+            float currentLabelWidth = labelWidth.Value;
             float frameHeight = ImGui.GetFrameHeight();
             float iconSize = frameHeight * 0.8f;
             float yOffset = (frameHeight - iconSize) * 0.5f;
 
             System.Numerics.Vector2 cursorPos = ImGui.GetCursorScreenPos();
-            ImRect iconRect = new ImRect(
+            Rect iconRect = new Rect(
                 new System.Numerics.Vector2(cursorPos.X, cursorPos.Y + yOffset),
-                new System.Numerics.Vector2(cursorPos.X + iconSize, cursorPos.Y + yOffset + iconSize)
+                new System.Numerics.Vector2(iconSize, iconSize)
             );
 
             float headerWidth = ImGui.GetContentRegionAvail().X;
@@ -88,7 +88,7 @@ namespace ImTK.UI
                 if (!string.IsNullOrEmpty(label))
                 {
                     float currentX = ImGui.GetCursorPosX();
-                    float targetX = labelWidth;
+                    float targetX = currentLabelWidth;
                     if (currentX < targetX)
                     {
                         ImGui.SameLine(targetX);
