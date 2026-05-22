@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using ImGuiNET;
+using ImTK.Core;
 
 namespace ImTK.UI
 {
@@ -81,16 +83,43 @@ namespace ImTK.UI
             }
         }
 
+        protected virtual void OnRenderIcon(ImDrawListPtr drawList, ImRect iconRect)
+        {
+            // Base implementation does nothing, leaves empty space.
+        }
+
         protected override void OnRenderLayout()
         {
             float labelWidth = theme.labelWidth;
+            float frameHeight = ImGui.GetFrameHeight();
+
+            Vector2 cursorPos = ImGui.GetCursorScreenPos();
+            ImRect iconRect = new ImRect(cursorPos, new Vector2(cursorPos.X + frameHeight, cursorPos.Y + frameHeight));
+
+            ImGui.Dummy(new Vector2(frameHeight, frameHeight));
+            OnRenderIcon(ImGui.GetWindowDrawList(), iconRect);
 
             if (layoutMode == DrawerLayoutMode.Inline)
             {
+                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
                 OnRenderLabel();
+
                 if (!string.IsNullOrEmpty(label))
                 {
-                    ImGui.SameLine(labelWidth); // Force all input to start at labelWidth
+                    float currentX = ImGui.GetCursorPosX();
+                    float targetX = labelWidth;
+                    if (currentX < targetX)
+                    {
+                        ImGui.SameLine(targetX); // Force all input to start at labelWidth
+                    }
+                    else
+                    {
+                        ImGui.SameLine();
+                    }
+                }
+                else
+                {
+                    ImGui.SameLine();
                 }
 
                 ImGui.SetNextItemWidth(-1); // Take remaining width
@@ -98,13 +127,15 @@ namespace ImTK.UI
             }
             else if (layoutMode == DrawerLayoutMode.Expand)
             {
+                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
                 OnRenderLabel();
 
                 // Indent content for expand mode
-                ImGui.Indent(15.0f);
+                float indent = frameHeight + ImGui.GetStyle().ItemInnerSpacing.X;
+                ImGui.Indent(indent);
                 ImGui.SetNextItemWidth(-1);
                 base.OnRenderLayout();
-                ImGui.Unindent(15.0f);
+                ImGui.Unindent(indent);
             }
         }
     }
