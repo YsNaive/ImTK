@@ -115,7 +115,7 @@ namespace ImTK.UI
                     Vector2 endPos = ImGui.GetCursorScreenPos();
                     float usedX = endPos.X - startPos.X;
 
-                    float remainingWidth = Math.Max(0, rect.width - usedX - ImGui.GetStyle().ItemInnerSpacing.X);
+                    float remainingWidth = Math.Max(0, rect.width - usedX);
                     ImGui.SetNextItemWidth(remainingWidth);
                 }
                 else

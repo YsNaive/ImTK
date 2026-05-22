@@ -40,83 +40,21 @@ namespace ImTK.UI
             }
         }
 
-        protected override void OnRenderLayout()
+        protected override void OnRenderSelf()
         {
-            float currentLabelWidth = labelWidth.Value;
-            float frameHeight = ImGui.GetFrameHeight();
-            float iconSize = frameHeight * 0.8f;
-            float yOffset = (frameHeight - iconSize) * 0.5f;
+            float availableWidth = ImGuiNET.ImGui.GetContentRegionAvail().X;
+            float itemSpacing = ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X;
+            float childWidth = (availableWidth - itemSpacing * 1) / 2.0f;
+            float frameHeight = ImGuiNET.ImGui.GetFrameHeight();
+            System.Numerics.Vector2 startPos = ImGuiNET.ImGui.GetCursorScreenPos();
 
-            Vector2 cursorPos = ImGui.GetCursorScreenPos();
-            Rect iconRect = new Rect(
-                new Vector2(cursorPos.X, cursorPos.Y + yOffset),
-                new Vector2(iconSize, iconSize)
-            );
+            m_xDrawer.overrideRenderRect = new ImTK.Core.Rect(startPos.X + childWidth * 0 + itemSpacing * 0, startPos.Y, childWidth, frameHeight);
+            m_xDrawer.Render();
 
-            ImGui.Dummy(new Vector2(iconSize, frameHeight));
-            OnRenderIcon(ImGui.GetWindowDrawList(), iconRect);
+            m_yDrawer.overrideRenderRect = new ImTK.Core.Rect(startPos.X + childWidth * 1 + itemSpacing * 1, startPos.Y, childWidth, frameHeight);
+            m_yDrawer.Render();
 
-            if (layoutMode == DrawerLayoutMode.Inline)
-            {
-                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
-                OnRenderLabel();
-
-                if (!string.IsNullOrEmpty(label))
-                {
-                    float currentX = ImGui.GetCursorPosX();
-                    float targetX = currentLabelWidth;
-                    if (currentX < targetX)
-                    {
-                        ImGui.SameLine(targetX);
-                    }
-                    else
-                    {
-                        ImGui.SameLine();
-                    }
-                }
-                else
-                {
-                    ImGui.SameLine();
-                }
-
-                float availableWidth = ImGui.GetContentRegionAvail().X;
-                float itemSpacing = ImGui.GetStyle().ItemInnerSpacing.X;
-                float childWidth = (availableWidth - itemSpacing) / 2f;
-                Vector2 startPos = ImGui.GetCursorScreenPos();
-
-                m_xDrawer.overrideRenderRect = new Rect(startPos.X, startPos.Y, childWidth, frameHeight);
-                m_xDrawer.Render();
-
-                m_yDrawer.overrideRenderRect = new Rect(startPos.X + childWidth + itemSpacing, startPos.Y, childWidth, frameHeight);
-                m_yDrawer.Render();
-
-                // Move cursor to the next line since FloatDrawer Render with overrideRenderRect doesn't do it automatically in the same way
-                ImGui.SetCursorScreenPos(new Vector2(cursorPos.X, cursorPos.Y + frameHeight + ImGui.GetStyle().ItemSpacing.Y));
-            }
-            else if (layoutMode == DrawerLayoutMode.Expand)
-            {
-                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
-                OnRenderLabel();
-
-                float indent = iconSize + ImGui.GetStyle().ItemInnerSpacing.X;
-                ImGui.Indent(indent);
-
-                // For Expand mode, we still render them horizontally on a new line
-                float availableWidth = ImGui.GetContentRegionAvail().X;
-                float itemSpacing = ImGui.GetStyle().ItemInnerSpacing.X;
-                float childWidth = (availableWidth - itemSpacing) / 2f;
-                Vector2 startPos = ImGui.GetCursorScreenPos();
-
-                m_xDrawer.overrideRenderRect = new Rect(startPos.X, startPos.Y, childWidth, frameHeight);
-                m_xDrawer.Render();
-
-                m_yDrawer.overrideRenderRect = new Rect(startPos.X + childWidth + itemSpacing, startPos.Y, childWidth, frameHeight);
-                m_yDrawer.Render();
-
-                ImGui.SetCursorScreenPos(new Vector2(cursorPos.X, startPos.Y + frameHeight + ImGui.GetStyle().ItemSpacing.Y));
-
-                ImGui.Unindent(indent);
-            }
+            ImGuiNET.ImGui.SetCursorScreenPos(new System.Numerics.Vector2(startPos.X, startPos.Y + frameHeight + ImGuiNET.ImGui.GetStyle().ItemSpacing.Y));
         }
     }
 }
