@@ -57,7 +57,7 @@ namespace ImTK.UI
                 new System.Numerics.Vector2(cursorPos.X + iconSize, cursorPos.Y + yOffset + iconSize)
             );
 
-            float headerWidth = iconSize + ImGui.GetStyle().ItemInnerSpacing.X + labelWidth;
+            float headerWidth = ImGui.GetContentRegionAvail().X;
 
             ImGui.SetNextItemAllowOverlap();
             if (ImGui.InvisibleButton($"###foldout_btn_{this.GetHashCode()}", new System.Numerics.Vector2(headerWidth, frameHeight)))
