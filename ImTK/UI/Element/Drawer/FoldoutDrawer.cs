@@ -14,44 +14,34 @@ namespace ImTK.UI
 
         protected override void OnRenderIcon(ImDrawListPtr drawList, ImRect iconRect)
         {
-            float padding = 2.0f;
             uint color = ImGui.GetColorU32(ImGuiCol.Text);
+            System.Numerics.Vector2 center = new System.Numerics.Vector2((iconRect.min.X + iconRect.max.X) * 0.5f, (iconRect.min.Y + iconRect.max.Y) * 0.5f);
+
+            float radius = (iconRect.max.X - iconRect.min.X) * 0.5f * 0.7f;
 
             if (isExpanded)
             {
-                drawList.AddTriangleFilled(new System.Numerics.Vector2(iconRect.min.X + padding, iconRect.min.Y + padding), new System.Numerics.Vector2(iconRect.max.X - padding, iconRect.min.Y + padding), new System.Numerics.Vector2((iconRect.min.X + iconRect.max.X) / 2, iconRect.max.Y - padding), color);
+                // Down arrow
+                drawList.AddTriangleFilled(
+                    new System.Numerics.Vector2(center.X - radius, center.Y - radius * 0.5f),
+                    new System.Numerics.Vector2(center.X + radius, center.Y - radius * 0.5f),
+                    new System.Numerics.Vector2(center.X, center.Y + radius),
+                    color);
             }
             else
             {
-                drawList.AddTriangleFilled(new System.Numerics.Vector2(iconRect.min.X + padding, iconRect.min.Y + padding), new System.Numerics.Vector2(iconRect.max.X - padding, (iconRect.min.Y + iconRect.max.Y) / 2), new System.Numerics.Vector2(iconRect.min.X + padding, iconRect.max.Y - padding), color);
-            }
-
-            var prevCursorPos = ImGui.GetCursorScreenPos();
-            ImGui.SetCursorScreenPos(iconRect.min);
-            if (ImGui.InvisibleButton($"###foldout_btn_{this.GetHashCode()}", new System.Numerics.Vector2(iconRect.max.X - iconRect.min.X, iconRect.max.Y - iconRect.min.Y)))
-            {
-                isExpanded = !isExpanded;
-            }
-            ImGui.SetCursorScreenPos(prevCursorPos);
-
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                // Right arrow
+                drawList.AddTriangleFilled(
+                    new System.Numerics.Vector2(center.X - radius * 0.5f, center.Y - radius),
+                    new System.Numerics.Vector2(center.X + radius, center.Y),
+                    new System.Numerics.Vector2(center.X - radius * 0.5f, center.Y + radius),
+                    color);
             }
         }
 
         protected override void OnRenderLabel()
         {
             base.OnRenderLabel();
-
-            if (ImGui.IsItemClicked())
-            {
-                isExpanded = !isExpanded;
-            }
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
         }
 
         protected override void OnRenderLayout()
@@ -66,6 +56,26 @@ namespace ImTK.UI
                 new System.Numerics.Vector2(cursorPos.X, cursorPos.Y + yOffset),
                 new System.Numerics.Vector2(cursorPos.X + iconSize, cursorPos.Y + yOffset + iconSize)
             );
+
+            float headerWidth = iconSize + ImGui.GetStyle().ItemInnerSpacing.X + labelWidth;
+
+            ImGui.SetNextItemAllowOverlap();
+            if (ImGui.InvisibleButton($"###foldout_btn_{this.GetHashCode()}", new System.Numerics.Vector2(headerWidth, frameHeight)))
+            {
+                isExpanded = !isExpanded;
+            }
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                ImGui.GetWindowDrawList().AddRectFilled(
+                    cursorPos,
+                    new System.Numerics.Vector2(cursorPos.X + headerWidth, cursorPos.Y + frameHeight),
+                    ImGui.GetColorU32(ImGuiCol.HeaderHovered)
+                );
+            }
+
+            ImGui.SetCursorScreenPos(cursorPos);
 
             ImGui.Dummy(new System.Numerics.Vector2(iconSize, frameHeight));
             OnRenderIcon(ImGui.GetWindowDrawList(), iconRect);
