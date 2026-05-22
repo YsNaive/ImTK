@@ -67,17 +67,13 @@ namespace ImTK.UI
             // Calculate text size to size the invisible button appropriately
             var textSize = ImGui.CalcTextSize(label);
 
-            // Align cursor for the text to match the input field height
-            ImGui.AlignTextToFramePadding();
-
-            // Save starting position
-            var startPos = ImGui.GetCursorScreenPos();
-
             // Optional: allow subsequent items to overlap this button
             ImGui.SetNextItemAllowOverlap();
 
-            // Draw the invisible button first to claim the space and allow interaction
-            ImGui.InvisibleButton("##drag_" + label, new System.Numerics.Vector2(textSize.X, textSize.Y));
+            // Draw the invisible button first to claim the space and allow interaction. We use FrameHeight to match the input box height exactly.
+            float frameHeight = ImGui.GetFrameHeight();
+            var buttonPos = ImGui.GetCursorScreenPos();
+            ImGui.InvisibleButton("##drag_" + label, new System.Numerics.Vector2(textSize.X, frameHeight));
 
             // Cache active state immediately for the InvisibleButton, as we draw Text next
             bool isDragActive = ImGui.IsItemActive();
@@ -90,8 +86,9 @@ namespace ImTK.UI
             // Save the end position so we can restore the layout cursor properly after text
             var endPos = ImGui.GetCursorScreenPos();
 
-            // Move cursor back and draw the text
-            ImGui.SetCursorScreenPos(startPos);
+            // Move cursor back and draw the text vertically centered
+            float textYOffset = (frameHeight - textSize.Y) * 0.5f;
+            ImGui.SetCursorScreenPos(new System.Numerics.Vector2(buttonPos.X, buttonPos.Y + textYOffset));
             ImGui.Text(label);
 
             // Move cursor back to where it should be for the next layout item

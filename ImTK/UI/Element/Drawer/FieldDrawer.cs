@@ -20,6 +20,8 @@ namespace ImTK.UI
 
         public DrawerLayoutMode layoutMode { get; set; } = DrawerLayoutMode.Inline;
 
+        public Rect? overrideRenderRect { get; set; }
+
         object IFieldDrawer.value
         {
             get => m_value;
@@ -97,57 +99,86 @@ namespace ImTK.UI
 
         protected override void OnRenderLayout()
         {
-            float currentLabelWidth = labelWidth.Value;
-            float frameHeight = ImGui.GetFrameHeight();
-            float iconSize = frameHeight * 0.8f;
-            float yOffset = (frameHeight - iconSize) * 0.5f;
-
-            Vector2 cursorPos = ImGui.GetCursorScreenPos();
-            Rect iconRect = new Rect(
-                new Vector2(cursorPos.X, cursorPos.Y + yOffset),
-                new Vector2(iconSize, iconSize)
-            );
-
-            ImGui.Dummy(new Vector2(iconSize, frameHeight));
-            OnRenderIcon(ImGui.GetWindowDrawList(), iconRect);
-
-            if (layoutMode == DrawerLayoutMode.Inline)
+            if (overrideRenderRect.HasValue)
             {
-                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
-                OnRenderLabel();
+                Rect rect = overrideRenderRect.Value;
+                ImGui.SetCursorScreenPos(rect.position);
 
                 if (!string.IsNullOrEmpty(label))
                 {
-                    float currentX = ImGui.GetCursorPosX();
-                    float targetX = currentLabelWidth;
-                    if (currentX < targetX)
+                    Vector2 startPos = ImGui.GetCursorScreenPos();
+                    OnRenderLabel();
+
+                    // We must call SameLine BEFORE reading the cursor position to ensure we measure horizontally
+                    ImGui.SameLine();
+
+                    Vector2 endPos = ImGui.GetCursorScreenPos();
+                    float usedX = endPos.X - startPos.X;
+
+                    float remainingWidth = Math.Max(0, rect.width - usedX);
+                    ImGui.SetNextItemWidth(remainingWidth);
+                }
+                else
+                {
+                    ImGui.SetNextItemWidth(rect.width);
+                }
+
+                base.OnRenderLayout();
+            }
+            else
+            {
+                float currentLabelWidth = labelWidth.Value;
+                float frameHeight = ImGui.GetFrameHeight();
+                float iconSize = frameHeight * 0.8f;
+                float yOffset = (frameHeight - iconSize) * 0.5f;
+
+                Vector2 cursorPos = ImGui.GetCursorScreenPos();
+                Rect iconRect = new Rect(
+                    new Vector2(cursorPos.X, cursorPos.Y + yOffset),
+                    new Vector2(iconSize, iconSize)
+                );
+
+                ImGui.Dummy(new Vector2(iconSize, frameHeight));
+                OnRenderIcon(ImGui.GetWindowDrawList(), iconRect);
+
+                if (layoutMode == DrawerLayoutMode.Inline)
+                {
+                    ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
+                    OnRenderLabel();
+
+                    if (!string.IsNullOrEmpty(label))
                     {
-                        ImGui.SameLine(targetX); // Force all input to start at currentLabelWidth
+                        float currentX = ImGui.GetCursorPosX();
+                        float targetX = currentLabelWidth;
+                        if (currentX < targetX)
+                        {
+                            ImGui.SameLine(targetX); // Force all input to start at currentLabelWidth
+                        }
+                        else
+                        {
+                            ImGui.SameLine();
+                        }
                     }
                     else
                     {
                         ImGui.SameLine();
                     }
+
+                    ImGui.SetNextItemWidth(-1); // Take remaining width
+                    base.OnRenderLayout();
                 }
-                else
+                else if (layoutMode == DrawerLayoutMode.Expand)
                 {
-                    ImGui.SameLine();
+                    ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
+                    OnRenderLabel();
+
+                    // Indent content for expand mode
+                    float indent = iconSize + ImGui.GetStyle().ItemInnerSpacing.X;
+                    ImGui.Indent(indent);
+                    ImGui.SetNextItemWidth(-1);
+                    base.OnRenderLayout();
+                    ImGui.Unindent(indent);
                 }
-
-                ImGui.SetNextItemWidth(-1); // Take remaining width
-                base.OnRenderLayout();
-            }
-            else if (layoutMode == DrawerLayoutMode.Expand)
-            {
-                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
-                OnRenderLabel();
-
-                // Indent content for expand mode
-                float indent = iconSize + ImGui.GetStyle().ItemInnerSpacing.X;
-                ImGui.Indent(indent);
-                ImGui.SetNextItemWidth(-1);
-                base.OnRenderLayout();
-                ImGui.Unindent(indent);
             }
         }
     }
