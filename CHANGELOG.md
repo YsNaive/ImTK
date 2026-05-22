@@ -123,6 +123,7 @@
 - 更新 `TextField`、`CheckBox`、`MenuView` 及 `MenuItem` 的樣式映射實作，將背景色精準導向至 `FrameBg`、`PopupBg/MenuBarBg` 與 `Header`，完成全域與局部組件語義化覆寫的最終拼圖。
 
 ### Fixed (修復)
+- 修復 ImGui `SetCursorScreenPos()` 無法擴展父視窗邊界的問題 (Assertion failed)。透過預先放置 `ImGui.Dummy` 分配複合 Drawers (`Vector2`, `Rect` 等) 所需的版面空間，確保安全計算並完美支援自訂 Absolute 排版。
 - 引入了 `RenderingContext` 來追蹤與延遲管理依賴 ImGui 視窗狀態的操作，修復了在 `Window` 開啟時直接呼叫 `SetWindowFontScale` 導致 ImGui 出現 Debug 斷言視窗的問題。
 - 修復了 `VisualElement` 在子元件單獨設定字型大小時，因無法取得父元件字型而錯誤退回預設字型的繼承失效問題（現透過 `RenderingContext.CurrentFontFamilyHash` 解決）。
 - 修復了 `Panel` 在 `OnGuiRender` 期間直接註冊視窗 (`Window.Open`) 導致的 `[VisualElementHierarchy] Cannot modify VisualElement hierarchy during GuiRender state` 崩潰問題。現在 `RegisterWindow` 會把視窗推入 `s_windowsToAdd` 佇列，延遲至安全的 `OnLogicUpdate` 階段加入。
