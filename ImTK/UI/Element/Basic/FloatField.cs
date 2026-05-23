@@ -25,7 +25,7 @@ namespace ImTK.UI
             classList.Add("float-field");
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             float currentValue = value;
             string format = $"%.{precision}f";

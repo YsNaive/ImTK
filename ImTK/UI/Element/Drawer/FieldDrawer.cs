@@ -97,7 +97,9 @@ namespace ImTK.UI
             // Base implementation does nothing, leaves empty space.
         }
 
-        protected override void OnRenderLayout()
+        private float m_indentCache;
+
+        public override bool OnBeginRender()
         {
             if (overrideRenderRect.HasValue)
             {
@@ -122,8 +124,6 @@ namespace ImTK.UI
                 {
                     ImGui.SetNextItemWidth(rect.width);
                 }
-
-                base.OnRenderLayout();
             }
             else
             {
@@ -165,7 +165,6 @@ namespace ImTK.UI
                     }
 
                     ImGui.SetNextItemWidth(-1); // Take remaining width
-                    base.OnRenderLayout();
                 }
                 else if (layoutMode == DrawerLayoutMode.Expand)
                 {
@@ -173,12 +172,19 @@ namespace ImTK.UI
                     OnRenderLabel();
 
                     // Indent content for expand mode
-                    float indent = iconSize + ImGui.GetStyle().ItemInnerSpacing.X;
-                    ImGui.Indent(indent);
+                    m_indentCache = iconSize + ImGui.GetStyle().ItemInnerSpacing.X;
+                    ImGui.Indent(m_indentCache);
                     ImGui.SetNextItemWidth(-1);
-                    base.OnRenderLayout();
-                    ImGui.Unindent(indent);
                 }
+            }
+            return true;
+        }
+
+        public override void OnEndRender()
+        {
+            if (!overrideRenderRect.HasValue && layoutMode == DrawerLayoutMode.Expand)
+            {
+                ImGui.Unindent(m_indentCache);
             }
         }
     }

@@ -18,21 +18,6 @@ namespace ImTK.UI
 
         private class WindowHostElement : VisualElement
         {
-            protected override void OnRenderLayout()
-            {
-                int count = hierarchy.childCount;
-                for (int i = 0; i < count; i++)
-                {
-                    try
-                    {
-                        hierarchy.childAt(i).Render();
-                    }
-                    catch (Exception ex)
-                    {
-                        s_log.Error(ex, $"Exception in Render of window child");
-                    }
-                }
-            }
         }
 
         private static WindowHostElement s_hostElement;
@@ -189,7 +174,7 @@ namespace ImTK.UI
             {
                 if (s_hostElement != null)
                 {
-                    s_hostElement.Render();
+                    RenderEngine.RenderNode(s_hostElement);
                 }
             }
             catch (Exception ex)

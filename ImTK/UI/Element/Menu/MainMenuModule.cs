@@ -145,7 +145,7 @@ namespace ImTK.UI
                 // 因為是 MenuBar，ImGui 要求在 BeginMenuBar 之前必須處於支援 MenuBar 的 Window 中
                 // 我們在上面已經加上了 ImGuiWindowFlags.MenuBar。
                 // 呼叫 MenuView 進行內部渲染。
-                m_rootMenu.Render();
+                RenderEngine.RenderNode(m_rootMenu);
                 ImGui.End();
             }
         }

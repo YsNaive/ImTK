@@ -18,7 +18,7 @@ namespace ImTK.UI
             classList.Add("text-element");
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             if (!string.IsNullOrEmpty(m_text))
             {

@@ -138,3 +138,5 @@
 - 修正 `MainMenuModule` 在繪製 MenuBar 容器時，由於 ImGui 預設 `WindowMinSize` 大於我們給定的高度，導致產生透明 Hit-box 擋住下方 Docking 標題列滑鼠拖曳事件的問題（透過推送 `ImGuiStyleVar.WindowMinSize` 至 `0,0` 解決）。
 - 修正 `TestRunnerModule` 內的 `TestReportWindow` 統計狀態異常問題（修正 Pending 顯示判斷與顏色標示）。
 - 修正 `EventBubbleTest` 測試失敗問題：將原有的 `ImGui.Button` 替換為 `ImTK.UI.Button` 以解決在 `GuiRender` 階段因直接修改視覺樹而觸發的生命週期保護機制 (CheckSafeState)。
+- **架構重構**：將 `VisualElement.Render()` 中的防護層、樣式管理與事件走訪邏輯徹底抽離至靜態 `RenderEngine.RenderNode()`。
+- **架構重構**：移除 `VisualElement` 的 `OnRenderLayout` 與 `OnRenderSelf`，改採 `OnBeginRender`, `OnRender`, `OnEndRender` 樣板方法模式。此改動提升了元件擴充彈性，並且為未來「排版引擎 (Layout Phase)」打好基礎。

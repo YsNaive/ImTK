@@ -48,11 +48,11 @@ namespace ImTK.UI
             SetValueWithChanged(evt.newValue);
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             // Do not render anything natively here.
             // The composed m_checkBox child element will be rendered by the VisualElement hierarchy.
-            base.OnRenderSelf();
+            base.OnRender();
         }
     }
 }

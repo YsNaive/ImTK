@@ -23,7 +23,7 @@ namespace ImTK.Sample.Framework
             m_currentScenario = scenario;
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             if (m_currentScenario == null)
             {

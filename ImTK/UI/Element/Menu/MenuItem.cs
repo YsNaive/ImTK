@@ -102,7 +102,7 @@ namespace ImTK.UI
             }
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             // 根據 ImGui.MenuItem 的設計，若不傳入 selected 的 ref 值，則單純為點擊按鈕，不會有 Toggle 狀態
             // 若為單純的可點擊按鈕 (非 checkbox 形式)，則直接呼叫無 ref 的 overload

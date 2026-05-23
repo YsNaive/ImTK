@@ -20,7 +20,7 @@ namespace ImTK.UI
             classList.Add("rectint-field");
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             int[] currentValues = new int[] { value.x, value.y, value.width, value.height };
             if (ImGui.InputInt4(label, ref currentValues[0]))

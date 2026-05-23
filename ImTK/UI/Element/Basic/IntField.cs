@@ -23,7 +23,7 @@ namespace ImTK.UI
             classList.Add("int-field");
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             int currentValue = value;
             if (ImGui.InputInt(label, ref currentValue, step, stepFast))
