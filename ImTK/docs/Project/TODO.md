@@ -9,4 +9,5 @@
 * （無）
 
 ## 🔵 待處理 (To Do)
+* **[UI 系統]** 排版引擎 (Layout Phase) 開發，承接 `RenderEngine` 的初步重構，將排版與渲染雙階段徹底分離。
 * 擴充 MenuItem 的 Shortcut 功能（包含全域捷徑監聽與 ImGui 字串顯示）。

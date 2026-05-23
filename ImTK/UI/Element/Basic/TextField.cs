@@ -30,7 +30,7 @@ namespace ImTK.UI
             return value ?? string.Empty;
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             string currentValue = value;
             bool changed = false;

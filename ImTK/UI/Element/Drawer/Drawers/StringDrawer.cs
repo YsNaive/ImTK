@@ -77,11 +77,11 @@ namespace ImTK.UI
             }
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             // Do not render anything natively here.
             // The composed m_textField child element will be rendered by the VisualElement hierarchy.
-            base.OnRenderSelf();
+            base.OnRender();
         }
     }
 }

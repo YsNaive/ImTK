@@ -14,8 +14,8 @@ namespace ImTK.Sample.Framework
         private ScenarioListElement m_panelA;
         private ScenarioDetailElement m_panelB;
         private List<ISampleScenario> m_scenarios = new List<ISampleScenario>();
-        private ImRect m_panelARect;
-        private ImRect m_panelBRect;
+        private Rect m_panelARect;
+        private Rect m_panelBRect;
         private const float LEFT_PANEL_WIDTH = 350f;
         private const float BOTTOM_PANEL_HEIGHT = 250f;
 
@@ -25,10 +25,10 @@ namespace ImTK.Sample.Framework
         {
             public ScenarioListElement PanelA { get; set; }
             public ScenarioDetailElement PanelB { get; set; }
-            public ImRect PanelARect { get; set; }
-            public ImRect PanelBRect { get; set; }
+            public Rect PanelARect { get; set; }
+            public Rect PanelBRect { get; set; }
 
-            protected override void OnRenderLayout()
+            public override bool OnBeginRender()
             {
                 ImGuiWindowFlags flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings;
 
@@ -37,7 +37,7 @@ namespace ImTK.Sample.Framework
                 ImGui.SetNextWindowSize(new System.Numerics.Vector2(PanelARect.max.X - PanelARect.min.X, PanelARect.max.Y - PanelARect.min.Y));
                 if (ImGui.Begin("ImTK Sample Overview", flags))
                 {
-                    PanelA?.Render();
+                    if (PanelA != null) RenderEngine.RenderNode(PanelA);
                 }
                 ImGui.End();
 
@@ -46,9 +46,11 @@ namespace ImTK.Sample.Framework
                 ImGui.SetNextWindowSize(new System.Numerics.Vector2(PanelBRect.max.X - PanelBRect.min.X, PanelBRect.max.Y - PanelBRect.min.Y));
                 if (ImGui.Begin("Scenario Details", flags))
                 {
-                    PanelB?.Render();
+                    if (PanelB != null) RenderEngine.RenderNode(PanelB);
                 }
                 ImGui.End();
+
+                return false;
             }
         }
 
@@ -123,15 +125,15 @@ namespace ImTK.Sample.Framework
             // Reserve left panel (Panel A)
             ImTKApplication.GetModule<Panel>().RequireArea(rect =>
             {
-                m_panelARect = new ImRect(rect.min, new System.Numerics.Vector2(rect.min.X + LEFT_PANEL_WIDTH, rect.max.Y));
-                return new ImRect(new System.Numerics.Vector2(rect.min.X + LEFT_PANEL_WIDTH, rect.min.Y), rect.max);
+                m_panelARect = new Rect(rect.min, new System.Numerics.Vector2(rect.min.X + LEFT_PANEL_WIDTH, rect.max.Y));
+                return new Rect(new System.Numerics.Vector2(rect.min.X + LEFT_PANEL_WIDTH, rect.min.Y), rect.max);
             }, priority: 50);
 
             // Reserve bottom right panel (Panel B)
             ImTKApplication.GetModule<Panel>().RequireArea(rect =>
             {
-                m_panelBRect = new ImRect(new System.Numerics.Vector2(rect.min.X, rect.max.Y - BOTTOM_PANEL_HEIGHT), rect.max);
-                return new ImRect(rect.min, new System.Numerics.Vector2(rect.max.X, rect.max.Y - BOTTOM_PANEL_HEIGHT));
+                m_panelBRect = new Rect(new System.Numerics.Vector2(rect.min.X, rect.max.Y - BOTTOM_PANEL_HEIGHT), rect.max);
+                return new Rect(rect.min, new System.Numerics.Vector2(rect.max.X, rect.max.Y - BOTTOM_PANEL_HEIGHT));
             }, priority: 40);
         }
 
@@ -141,7 +143,7 @@ namespace ImTK.Sample.Framework
             {
                 m_overviewHost.PanelARect = m_panelARect;
                 m_overviewHost.PanelBRect = m_panelBRect;
-                m_overviewHost.Render();
+                RenderEngine.RenderNode(m_overviewHost);
             }
 
             // Focus Tracking

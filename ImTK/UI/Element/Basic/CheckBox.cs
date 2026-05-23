@@ -130,7 +130,7 @@ namespace ImTK.UI
             SendEvent(evt);
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             bool currentValue = m_value;
             if (ImGui.Checkbox(label, ref currentValue))

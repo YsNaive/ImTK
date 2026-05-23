@@ -44,7 +44,9 @@ namespace ImTK.UI
             base.OnRenderLabel();
         }
 
-        protected override void OnRenderLayout()
+        private float m_indentCache;
+
+        public override bool OnBeginRender()
         {
             float currentLabelWidth = labelWidth.Value;
             float frameHeight = ImGui.GetFrameHeight();
@@ -105,24 +107,26 @@ namespace ImTK.UI
 
                 ImGui.SetNextItemWidth(-1);
 
-                OnRenderSelf();
+                return false; // Do not render children inline
             }
-            else if (layoutMode == DrawerLayoutMode.Expand)
+            else // layoutMode == DrawerLayoutMode.Expand
             {
                 ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
                 OnRenderLabel();
 
-                float indent = iconSize + ImGui.GetStyle().ItemInnerSpacing.X;
-                ImGui.Indent(indent);
+                m_indentCache = iconSize + ImGui.GetStyle().ItemInnerSpacing.X;
+                ImGui.Indent(m_indentCache);
                 ImGui.SetNextItemWidth(-1);
 
-                OnRenderSelf();
-                foreach (var child in Children())
-                {
-                    child.Render();
-                }
+                return true; // Render children
+            }
+        }
 
-                ImGui.Unindent(indent);
+        public override void OnEndRender()
+        {
+            if (layoutMode == DrawerLayoutMode.Expand)
+            {
+                ImGui.Unindent(m_indentCache);
             }
         }
     }

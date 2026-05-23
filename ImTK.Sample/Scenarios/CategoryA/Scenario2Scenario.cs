@@ -22,6 +22,6 @@ namespace ImTK.Sample.Scenarios.CategoryA
     public class Scenario2Window : Window
     {
         public Scenario2Window() : base("Scenario 2 Demo") { }
-        protected override void OnRenderSelf() { ImGui.Text("Hello from Scenario 2!"); }
+        public override void OnRender() { ImGui.Text("Hello from Scenario 2!"); }
     }
 }

@@ -20,7 +20,7 @@ namespace ImTK.UI
             classList.Add("vector2int-field");
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             int[] currentValues = new int[] { value.x, value.y };
             if (ImGui.InputInt2(label, ref currentValues[0]))

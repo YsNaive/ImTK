@@ -115,7 +115,7 @@ namespace ImTK.UI
             classList.Add("Button");
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             float width = resolvedStyle.GetFloat(StyleKey.Width) ?? 0f;
             float height = resolvedStyle.GetFloat(StyleKey.Height) ?? 0f;

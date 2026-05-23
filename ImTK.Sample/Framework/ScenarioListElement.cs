@@ -55,7 +55,7 @@ namespace ImTK.Sample.Framework
             }
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             ImGui.Text("Welcome to the ImTK Sample Overview!");
             ImGui.TextWrapped("Select a scenario below to explore the capabilities of the ImTK framework.");

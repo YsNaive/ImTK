@@ -105,7 +105,7 @@ namespace ImTK.Test.Framework
             m_runner = runner;
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             if (m_tests == null) return;
 
@@ -191,7 +191,7 @@ namespace ImTK.Test.Framework
                     }
 
                     ImGui.TableNextColumn();
-                    record.runButton.Render();
+                    RenderEngine.RenderNode(record.runButton);
 
                     ImGui.TableNextColumn();
                     if (!string.IsNullOrEmpty(record.ErrorMessage))

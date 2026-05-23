@@ -489,7 +489,7 @@ namespace ImTK.UI
         }
 
         private static int s_elementCounter = 0;
-        protected readonly int m_elementId;
+        internal readonly int m_elementId;
 
         public VisualElementHierarchy hierarchy { get; }
         public virtual VisualElement contentContainer => this;
@@ -497,8 +497,8 @@ namespace ImTK.UI
         public VisualElement parent { get; internal set; }
 
         public PickingMode pickingMode { get; set; } = PickingMode.Position;
-        protected bool m_wasHovered = false;
-        protected bool m_useAutoId = true;
+        internal bool m_wasHovered = false;
+        internal bool m_useAutoId = true;
 
         private Dictionary<Type, Delegate> m_callbacks;
 
@@ -732,90 +732,16 @@ namespace ImTK.UI
             EventDispatcher.Enqueue(evt);
         }
 
-        // REMOVED 'virtual' to ensure protection. Kept 'public' temporarily for Test access, or use InternalsVisibleTo.
-        // As requested before, we'll keep it 'internal' but we need the Test module to access it.
-        /// <summary>
-        /// 觸發元件渲染的公開入口點。
-        /// 負責處理防護層邏輯 (PushID/PopID、MouseHover推導、事件分派)，並呼叫 OnRenderLayout。
-        /// 不可被覆寫，子類別應實作 OnRenderLayout 或 OnRenderSelf。
-        /// </summary>
-        public void Render()
+        public virtual bool OnBeginRender()
         {
-            if (m_isStyleDirty)
-            {
-                resolvedStyle.Compute();
-                m_isStyleDirty = false;
-            }
-
-            if (m_useAutoId)
-            {
-                ImGui.PushID(m_elementId);
-            }
-
-            if (pickingMode == PickingMode.Ignore)
-            {
-                ImGui.SetNextItemAllowOverlap();
-            }
-
-            internalStyle.PushToImGui(resolvedStyle);
-
-            OnRenderLayout();
-
-            bool isSelfHovered = false;
-
-            if (pickingMode != PickingMode.Ignore)
-            {
-                isSelfHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
-            }
-
-            bool isAnyChildHovered = false;
-            int count = hierarchy.childCount;
-            for (int i = 0; i < count; i++)
-            {
-                var child = hierarchy.childAt(i);
-                if (child.m_wasHovered)
-                {
-                    isAnyChildHovered = true;
-                }
-            }
-
-            bool isEffectivelyHovered = isSelfHovered || isAnyChildHovered;
-
-            if (isEffectivelyHovered && !m_wasHovered)
-            {
-                var evt = EventPool<MouseEnterEvent>.Get();
-                evt.source = this;
-                EventDispatcher.Enqueue(evt);
-            }
-            else if (!isEffectivelyHovered && m_wasHovered)
-            {
-                var evt = EventPool<MouseLeaveEvent>.Get();
-                evt.source = this;
-                EventDispatcher.Enqueue(evt);
-            }
-
-            m_wasHovered = isEffectivelyHovered;
-
-            internalStyle.PopFromImGui();
-
-            if (m_useAutoId)
-            {
-                ImGui.PopID();
-            }
+            return true;
         }
 
-        protected virtual void OnRenderLayout()
+        public virtual void OnRender()
         {
-            OnRenderSelf();
-
-            int count = hierarchy.childCount;
-            for (int i = 0; i < count; i++)
-            {
-                hierarchy.childAt(i).Render();
-            }
         }
 
-        protected virtual void OnRenderSelf()
+        public virtual void OnEndRender()
         {
         }
 

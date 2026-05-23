@@ -20,7 +20,7 @@ namespace ImTK.UI
             classList.Add("vector3int-field");
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             int[] currentValues = new int[] { value.x, value.y, value.z };
             if (ImGui.InputInt3(label, ref currentValues[0]))

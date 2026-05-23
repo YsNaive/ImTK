@@ -22,7 +22,7 @@ namespace ImTK.UI
             classList.Add("vector2-field");
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             System.Numerics.Vector2 currentValue = value;
             string format = $"%.{precision}f";

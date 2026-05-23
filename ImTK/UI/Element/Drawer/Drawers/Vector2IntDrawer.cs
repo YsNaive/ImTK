@@ -38,7 +38,7 @@ namespace ImTK.UI
             }
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             float availableWidth = ImGuiNET.ImGui.GetContentRegionAvail().X;
             float itemSpacing = ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X;
@@ -52,10 +52,10 @@ namespace ImTK.UI
             // The cursor has advanced to the next line. We don't need to manually reset it to the next line at the end.
             // The absolute layout rendering of our child components will just draw over the Dummy area.
             m_xDrawer.overrideRenderRect = new ImTK.Core.Rect(startPos.X + childWidth * 0 + itemSpacing * 0, startPos.Y, childWidth, frameHeight);
-            m_xDrawer.Render();
+            RenderEngine.RenderNode(m_xDrawer);
 
             m_yDrawer.overrideRenderRect = new ImTK.Core.Rect(startPos.X + childWidth * 1 + itemSpacing * 1, startPos.Y, childWidth, frameHeight);
-            m_yDrawer.Render();
+            RenderEngine.RenderNode(m_yDrawer);
 
         }
     }

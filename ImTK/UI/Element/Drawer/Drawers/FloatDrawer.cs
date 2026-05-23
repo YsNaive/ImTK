@@ -116,10 +116,10 @@ namespace ImTK.UI
             }
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
             // Do not render anything natively here.
-            base.OnRenderSelf();
+            base.OnRender();
         }
     }
 }

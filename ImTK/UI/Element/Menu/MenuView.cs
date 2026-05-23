@@ -91,20 +91,22 @@ namespace ImTK.UI
             }
         }
 
-        protected override void OnRenderLayout()
+        private bool m_menuOpenedCache;
+
+        public override bool OnBeginRender()
         {
-            bool menuOpened = false;
+            m_menuOpenedCache = false;
 
             if (isMenuBar)
             {
-                menuOpened = ImGui.BeginMenuBar();
+                m_menuOpenedCache = ImGui.BeginMenuBar();
             }
             else
             {
-                menuOpened = ImGui.BeginMenu(name);
+                m_menuOpenedCache = ImGui.BeginMenu(name);
             }
 
-            if (menuOpened)
+            if (m_menuOpenedCache)
             {
                 int previousPriority = int.MinValue;
                 bool isFirst = true;
@@ -118,14 +120,22 @@ namespace ImTK.UI
 
                     if (menuElement is VisualElement visualChild)
                     {
-                        // 呼叫內部防護層 Render，包含 PushID, PopID
-                        visualChild.Render();
+                        // Render child using RenderEngine
+                        RenderEngine.RenderNode(visualChild);
                     }
 
                     previousPriority = menuElement.priority;
                     isFirst = false;
                 }
+            }
 
+            return false; // Prevent auto child traversal since we handled it sequentially with separators
+        }
+
+        public override void OnEndRender()
+        {
+            if (m_menuOpenedCache)
+            {
                 if (isMenuBar)
                 {
                     ImGui.EndMenuBar();

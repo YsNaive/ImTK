@@ -128,9 +128,9 @@ namespace ImTK.UI
             NotifyValueChanged();
         }
 
-        protected override void OnRenderSelf()
+        public override void OnRender()
         {
-            base.OnRenderSelf();
+            base.OnRender();
 
             if (!m_initialized && m_value != null)
             {

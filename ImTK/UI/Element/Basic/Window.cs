@@ -189,25 +189,20 @@ namespace ImTK.UI
             RenderingContext.IsInsideWindow = false;
         }
 
-        protected override void OnRenderLayout()
+        private bool m_isOpenForImGuiCache;
+
+        public override bool OnBeginRender()
         {
-            bool isOpenForImGui = m_isOpen;
-            bool isExpanded = Begin(ref isOpenForImGui, flags.Value);
+            m_isOpenForImGuiCache = m_isOpen;
+            bool isExpanded = Begin(ref m_isOpenForImGuiCache, flags.Value);
+            return isExpanded;
+        }
 
-            if (isExpanded)
-            {
-                OnRenderSelf();
-
-                int count = hierarchy.childCount;
-                for (int i = 0; i < count; i++)
-                {
-                    hierarchy.childAt(i).Render();
-                }
-            }
-
+        public override void OnEndRender()
+        {
             End();
 
-            if (!isOpenForImGui && m_isOpen)
+            if (!m_isOpenForImGuiCache && m_isOpen)
             {
                 Close();
             }
