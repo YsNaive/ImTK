@@ -15,11 +15,11 @@ namespace ImTK.UI
 
         public new class Style : VisualElement.Style
         {
-            private int m_pushedColors = 0;
+
 
             public StyleValue<Color>? hoverColor
             {
-                get => GetOverrideColor(StyleKey.HoverColor);
+                get => GetPropertyColor(StyleKey.HoverColor);
                 set
                 {
                     if (value.HasValue) SetColor(StyleKey.HoverColor, value.Value);
@@ -29,7 +29,7 @@ namespace ImTK.UI
 
             public StyleValue<Color>? activeColor
             {
-                get => GetOverrideColor(StyleKey.ActiveColor);
+                get => GetPropertyColor(StyleKey.ActiveColor);
                 set
                 {
                     if (value.HasValue) SetColor(StyleKey.ActiveColor, value.Value);
@@ -39,7 +39,7 @@ namespace ImTK.UI
 
             public StyleValue<Color>? checkMarkColor
             {
-                get => GetOverrideColor(StyleKey.CheckMarkColor);
+                get => GetPropertyColor(StyleKey.CheckMarkColor);
                 set
                 {
                     if (value.HasValue) SetColor(StyleKey.CheckMarkColor, value.Value);
@@ -47,52 +47,46 @@ namespace ImTK.UI
                 }
             }
 
-            public override void PushToImGui(ResolvedStyle resolvedStyle)
+
+
+
+
+            public override void ComputeHighlevelToken(StyleProperty prop, System.Collections.Generic.IList<StyleProperty> output)
             {
-                base.PushToImGui(resolvedStyle);
-
-                m_pushedColors = 0;
-
-                // CheckBox Background maps to FrameBg, not WindowBg/ChildBg
-                Color? bgColor = resolvedStyle.GetColor(VisualElement.StyleKey.BackgroundColor);
-                if (bgColor.HasValue)
+                if (prop.category == StyleCategory.HighLevelToken)
                 {
-                    ImGui.PushStyleColor(ImGuiCol.FrameBg, bgColor.Value.u32);
-                    m_pushedColors++;
+                    if (prop.key == VisualElement.StyleKey.BackgroundColor.Hash)
+                    {
+                        prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
+                        prop.key = (int)ImGuiCol.FrameBg;
+                        output.Add(prop);
+                        return;
+                    }
+                    else if (prop.key == StyleKey.HoverColor.Hash)
+                    {
+                        prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
+                        prop.key = (int)ImGuiCol.FrameBgHovered;
+                        output.Add(prop);
+                        return;
+                    }
+                    else if (prop.key == StyleKey.ActiveColor.Hash)
+                    {
+                        prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
+                        prop.key = (int)ImGuiCol.FrameBgActive;
+                        output.Add(prop);
+                        return;
+                    }
+                    else if (prop.key == StyleKey.CheckMarkColor.Hash)
+                    {
+                        prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
+                        prop.key = (int)ImGuiCol.CheckMark;
+                        output.Add(prop);
+                        return;
+                    }
                 }
-
-                Color? hoverColor = resolvedStyle.GetColor(StyleKey.HoverColor);
-                if (hoverColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, hoverColor.Value.u32);
-                    m_pushedColors++;
-                }
-
-                Color? activeColor = resolvedStyle.GetColor(StyleKey.ActiveColor);
-                if (activeColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.FrameBgActive, activeColor.Value.u32);
-                    m_pushedColors++;
-                }
-
-                Color? checkMarkColor = resolvedStyle.GetColor(StyleKey.CheckMarkColor);
-                if (checkMarkColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.CheckMark, checkMarkColor.Value.u32);
-                    m_pushedColors++;
-                }
+                base.ComputeHighlevelToken(prop, output);
             }
-
-            public override void PopFromImGui()
-            {
-                if (m_pushedColors > 0)
-                {
-                    ImGui.PopStyleColor(m_pushedColors);
-                    m_pushedColors = 0;
-                }
-                base.PopFromImGui();
-            }
-        }
+}
 
         public string label { get; set; }
 

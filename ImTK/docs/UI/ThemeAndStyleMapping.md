@@ -1,3 +1,6 @@
+> Warning: This document has been updated to reflect the new Style System architecture involving RenderEngine Pipeline.
+
+
 # ImTK 主題與樣式映射規範 (Theme & Style Mapping Architecture)
 
 本文件定義了 ImTK 框架的高階樣式 API (`VisualElement.Style`) 與全域主題系統 (`ImTKTheme`) 映射至底層 Immediate Mode (ImGui) 樣式的設計規範與原則。
