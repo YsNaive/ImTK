@@ -311,14 +311,14 @@ namespace ImTK.Core
                 // Disable all objects and modules
                 foreach (var obj in s_objects)
                 {
-                    if (obj.m_activeInHierarchy) obj.OnDisable();
+                    if (obj.m_activeInHierarchy) obj.InternalOnDisable();
                     obj.OnDestroy();
                 }
 
                 s_log.Debug($"Disabling and closing ImTKModules ({s_modules.Count}).");
                 foreach (var module in s_modules.Values)
                 {
-                    if (module.m_activeInHierarchy) module.OnDisable();
+                    if (module.m_activeInHierarchy) module.InternalOnDisable();
                     module.OnClose();
                 }
 
@@ -343,7 +343,7 @@ namespace ImTK.Core
                         if (obj.m_enabled)
                         {
                             obj.m_activeInHierarchy = true;
-                            obj.OnEnable();
+                            obj.InternalOnEnable();
                         }
                     }
                 }
@@ -354,12 +354,12 @@ namespace ImTK.Core
                     if (module.m_enabled && !module.m_activeInHierarchy)
                     {
                         module.m_activeInHierarchy = true;
-                        module.OnEnable();
+                        module.InternalOnEnable();
                     }
                     else if (!module.m_enabled && module.m_activeInHierarchy)
                     {
                         module.m_activeInHierarchy = false;
-                        module.OnDisable();
+                        module.InternalOnDisable();
                     }
                 }
 
@@ -370,12 +370,12 @@ namespace ImTK.Core
                     if (obj.m_enabled && !obj.m_activeInHierarchy)
                     {
                         obj.m_activeInHierarchy = true;
-                        obj.OnEnable();
+                        obj.InternalOnEnable();
                     }
                     else if (!obj.m_enabled && obj.m_activeInHierarchy)
                     {
                         obj.m_activeInHierarchy = false;
-                        obj.OnDisable();
+                        obj.InternalOnDisable();
                     }
                 }
 
@@ -389,7 +389,7 @@ namespace ImTK.Core
                         if (obj.m_activeInHierarchy)
                         {
                             obj.m_activeInHierarchy = false;
-                            obj.OnDisable();
+                            obj.InternalOnDisable();
                         }
                         obj.OnDestroy();
                         s_objects.Remove(obj);

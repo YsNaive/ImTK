@@ -10,7 +10,10 @@ namespace ImTK.Core
         internal bool m_enabled = true;
         internal bool m_activeInHierarchy = true;
 
+        // 儲存取消訂閱的 Action，供 InternalOnDisable 使用
         private readonly System.Collections.Generic.List<System.Action> m_eventUnsubscribers = new System.Collections.Generic.List<System.Action>();
+        // 儲存訂閱函式（Func<Action> 執行後回傳 unsub），供 InternalOnEnable 重新訂閱
+        private readonly System.Collections.Generic.List<System.Func<System.Action>> m_subscribeActions = new System.Collections.Generic.List<System.Func<System.Action>>();
 
         /// <summary>
         /// Controls whether this module participates in the update and render loops.
@@ -30,12 +33,41 @@ namespace ImTK.Core
 
         /// <summary>
         /// Safely subscribes to a global application event.
-        /// The subscription is automatically cleared when this module is disabled.
+        /// The subscription is automatically managed by the enable/disable cycle:
+        /// it is activated on OnEnable and deactivated on OnDisable, and will be re-activated on re-enable.
+        /// Note: The actual subscription does NOT take effect until the first InternalOnEnable() call.
         /// </summary>
         protected void SubscribeEvent<T>(System.Action<T> handler) where T : ImTK.Event.IImTKEvent
         {
-            System.Action unsub = ImTK.Event.ImTKEventBus.GlobalSubscribe(handler);
-            m_eventUnsubscribers.Add(unsub);
+            // 只儲存訂閱函式，不立即呼叫 GlobalSubscribe。
+            // 實際訂閱會在 InternalOnEnable() 時才生效，與 Module 的 active 狀態同步。
+            System.Func<System.Action> subscribe = () => ImTK.Event.ImTKEventBus.GlobalSubscribe(handler);
+            m_subscribeActions.Add(subscribe);
+        }
+
+        // --- Framework-Internal Lifecycle Wrappers ---
+        // 由 ImTKApplication 呼叫，子類不應直接覆寫這些方法。
+        // 子類應覆寫 OnEnable() / OnDisable() 以實作自訂邏輯。
+
+        internal void InternalOnEnable()
+        {
+            // 重新訂閱所有已登記的事件（不可被子類 override 跳過）
+            foreach (var subscribe in m_subscribeActions)
+            {
+                m_eventUnsubscribers.Add(subscribe());
+            }
+            OnEnable();
+        }
+
+        internal void InternalOnDisable()
+        {
+            OnDisable();
+            // 取消所有訂閱（不可被子類 override 跳過）
+            foreach (var unsub in m_eventUnsubscribers)
+            {
+                unsub?.Invoke();
+            }
+            m_eventUnsubscribers.Clear();
         }
 
         // --- Initialization Phase ---
@@ -67,14 +99,7 @@ namespace ImTK.Core
 
         protected internal virtual void OnEnable() { }
 
-        protected internal virtual void OnDisable()
-        {
-            foreach (var unsub in m_eventUnsubscribers)
-            {
-                unsub?.Invoke();
-            }
-            m_eventUnsubscribers.Clear();
-        }
+        protected internal virtual void OnDisable() { }
 
         /// <summary>
         /// Triggered when the entire application is closing.

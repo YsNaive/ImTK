@@ -194,6 +194,9 @@ namespace ImTK.UI
         {
             ImTKTheme.onGlobalThemeChanged -= OnGlobalThemeChanged;
             s_hostElement = null;
+            s_windows.Clear();
+            s_windowsToAdd.Clear();
+            s_windowsToRemove.Clear();
         }
     }
 }
