@@ -142,15 +142,24 @@ namespace ImTK.UI
                 }
             }
 
+            bool fontChanged = false;
+
             if (current.m_hasFontFamily)
             {
                 if (parent == null || !parent.m_hasFontFamily || parent.m_fontFamily.tokenHash != current.m_fontFamily.tokenHash)
-                    output.TrySetProperty(current.m_fontFamily);
+                    fontChanged = true;
             }
+            
             if (current.m_hasFontSize)
             {
                 if (parent == null || !parent.m_hasFontSize || parent.m_fontSize.floatValue != current.m_fontSize.floatValue)
-                    output.TrySetProperty(current.m_fontSize);
+                    fontChanged = true;
+            }
+
+            if (fontChanged)
+            {
+                if (current.m_hasFontFamily) output.TrySetProperty(current.m_fontFamily);
+                if (current.m_hasFontSize) output.TrySetProperty(current.m_fontSize);
             }
         }
 
@@ -199,26 +208,31 @@ namespace ImTK.UI
                 else if (prop.dataType == StyleDataType.Vector2) ImGui.PushStyleVar((ImGuiStyleVar)varIdx, prop.vector2Value);
             }
 
-            if (m_hasFontFamily)
+            if (m_hasFontFamily || m_hasFontSize)
             {
-                RenderingContext.PushFontState(m_fontFamily.tokenHash);
-                var fontPtr = ImTKFontManager.GetFont(m_fontFamily.tokenHash, m_hasFontSize ? (ImTK.UI.FontSize)m_fontSize.floatValue : ImTK.UI.FontSize.Normal);
+                int familyHash = m_hasFontFamily ? m_fontFamily.tokenHash : RenderingContext.CurrentFontFamilyHash;
+                var fontSize = m_hasFontSize ? (ImTK.UI.FontSize)m_fontSize.floatValue : ImTK.UI.FontSize.Normal;
+
+                if (m_hasFontFamily)
+                {
+                    RenderingContext.PushFontState(familyHash);
+                }
+
+                var fontPtr = ImTKFontManager.GetFont(familyHash, fontSize);
                 m_fontWasPushed = fontPtr.NativePtr != null;
                 if (m_fontWasPushed)
                 {
                     ImGui.PushFont(fontPtr);
                 }
             }
-            if (m_hasFontSize) ImTKFontManager.PushFontScale(m_fontSize.floatValue);
         }
 
         public void Pop()
         {
-            if (m_hasFontSize) ImTKFontManager.PopFontScale();
-            if (m_hasFontFamily)
+            if (m_hasFontFamily || m_hasFontSize)
             {
                 if (m_fontWasPushed) ImGui.PopFont();
-                RenderingContext.PopFontState();
+                if (m_hasFontFamily) RenderingContext.PopFontState();
             }
 
             if (m_activeVars.Count > 0) ImGui.PopStyleVar(m_activeVars.Count);

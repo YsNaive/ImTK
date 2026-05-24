@@ -6,6 +6,8 @@ using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
 using ImGuiNET;
 using ImTK.Core;
+using ImTK.Event;
+using ImTK.Log;
 
 namespace ImTK.Silk
 {
@@ -14,6 +16,8 @@ namespace ImTK.Silk
     /// </summary>
     public static class ImTKSilk
     {
+        private static readonly LogContext s_log = new LogContext("ImTKSilk");
+
         private static IWindow s_window;
         private static GL s_gl;
         private static ImGuiController s_imguiController;
@@ -106,6 +110,11 @@ namespace ImTK.Silk
                 if (method != null)
                 {
                     method.Invoke(s_imguiController, null);
+                    s_log.Info("Successfully invoked RecreateFontDeviceTexture via reflection.");
+                }
+                else
+                {
+                    s_log.Error("Failed to find RecreateFontDeviceTexture method via reflection on ImGuiController!");
                 }
             }
         }

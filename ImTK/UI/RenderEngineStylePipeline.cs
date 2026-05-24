@@ -12,16 +12,35 @@ namespace ImTK.UI
             {
                 s_composedUnresolvedProperties.Clear();
 
-                if (element.localStyleSheet != null)
+                // 1. Global Sheet
+                foreach (var block in StyleSheet.Global.Blocks)
                 {
-                    foreach (var block in element.localStyleSheet.Blocks)
+                    if (element.classList.Has(block.ClassName))
+                    {
+                        foreach (var prop in block.Properties) SetComposedProperty(prop);
+                    }
+                }
+
+                // 2. Ancestor Local Sheet
+                var curr = element;
+                StyleSheet activeLocalSheet = null;
+                while (curr != null)
+                {
+                    if (curr.localStyleSheet != null)
+                    {
+                        activeLocalSheet = curr.localStyleSheet;
+                        break;
+                    }
+                    curr = curr.parent;
+                }
+
+                if (activeLocalSheet != null)
+                {
+                    foreach (var block in activeLocalSheet.Blocks)
                     {
                         if (element.classList.Has(block.ClassName))
                         {
-                            foreach (var prop in block.Properties)
-                            {
-                                SetComposedProperty(prop);
-                            }
+                            foreach (var prop in block.Properties) SetComposedProperty(prop);
                         }
                     }
                 }

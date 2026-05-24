@@ -25,6 +25,11 @@ namespace ImTK.Test.Framework
             s_log.Info("========== Starting Headless Tests ==========");
             LastResults.Clear();
 
+            if (ImGuiNET.ImGui.GetCurrentContext() == IntPtr.Zero)
+            {
+                ImGuiNET.ImGui.CreateContext();
+            }
+
             var testTypes = Assembly.GetExecutingAssembly()
                 .GetTypes()
                 .Where(t => typeof(IHeadlessTest).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
@@ -67,6 +72,7 @@ namespace ImTK.Test.Framework
                     failed++;
                     result.Passed = false;
                     result.ErrorMessage = ex.Message;
+                    Console.WriteLine($"[FAIL] {type.Name}: {ex.Message}\n{ex.StackTrace}");
                     s_log.Error($"[FAIL] {type.Name}: {ex.Message}");
                 }
 

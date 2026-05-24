@@ -152,6 +152,13 @@ namespace ImTK.UI
                                 config->MergeMode = 1;
                             }
 
+                            // Reduce oversampling for large fonts or extended glyph ranges to prevent massive texture sizes exceeding GL limits
+                            if (sizePixels >= 24f || source.GlyphRanges != IntPtr.Zero)
+                            {
+                                config->OversampleH = 1;
+                                config->OversampleV = 1;
+                            }
+
                             IntPtr ranges = source.GlyphRanges;
                             ImFontPtr font;
                             if (ranges != IntPtr.Zero)
