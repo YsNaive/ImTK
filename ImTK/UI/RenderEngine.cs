@@ -42,10 +42,9 @@ namespace ImTK.UI
             node.OnEndRender();
 
             bool isSelfHovered = false;
-
             if (node.pickingMode != PickingMode.Ignore)
             {
-                isSelfHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+                isSelfHovered = node.CheckHoverState();
             }
 
             bool isAnyChildHovered = false;

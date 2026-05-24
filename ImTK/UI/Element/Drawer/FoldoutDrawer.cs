@@ -67,7 +67,8 @@ namespace ImTK.UI
                 isExpanded = !isExpanded;
             }
 
-            if (ImGui.IsItemHovered())
+            m_isHeaderHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+            if (m_isHeaderHovered)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 ImGui.GetWindowDrawList().AddRectFilled(
@@ -128,6 +129,12 @@ namespace ImTK.UI
             {
                 ImGui.Unindent(m_indentCache);
             }
+        }
+
+        private bool m_isHeaderHovered;
+        protected internal override bool CheckHoverState()
+        {
+            return m_isHeaderHovered;
         }
     }
 }

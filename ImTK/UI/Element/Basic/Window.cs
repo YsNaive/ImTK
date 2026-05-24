@@ -196,6 +196,11 @@ namespace ImTK.UI
             }
         }
 
+        protected internal override bool CheckHoverState()
+        {
+            return ImGui.IsWindowHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        }
+
         protected virtual void OnEnable() { }
         protected virtual void OnDisable() { }
         public virtual void Update() { }

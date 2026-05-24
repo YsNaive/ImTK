@@ -20,6 +20,11 @@ namespace ImTK.UI
             classList.Add("vector3int-field");
         }
 
+                protected internal override bool CheckHoverState()
+        {
+            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        }
+
         public override void OnRender()
         {
             int[] currentValues = new int[] { value.x, value.y, value.z };

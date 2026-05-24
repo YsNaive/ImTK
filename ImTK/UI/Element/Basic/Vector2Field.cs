@@ -22,6 +22,11 @@ namespace ImTK.UI
             classList.Add("vector2-field");
         }
 
+                protected internal override bool CheckHoverState()
+        {
+            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        }
+
         public override void OnRender()
         {
             System.Numerics.Vector2 currentValue = value;

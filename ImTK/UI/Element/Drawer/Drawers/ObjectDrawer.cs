@@ -128,6 +128,11 @@ namespace ImTK.UI
             NotifyValueChanged();
         }
 
+                protected internal override bool CheckHoverState()
+        {
+            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        }
+
         public override void OnRender()
         {
             base.OnRender();

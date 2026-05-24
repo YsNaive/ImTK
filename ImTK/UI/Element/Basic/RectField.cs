@@ -22,6 +22,11 @@ namespace ImTK.UI
             classList.Add("rect-field");
         }
 
+                protected internal override bool CheckHoverState()
+        {
+            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        }
+
         public override void OnRender()
         {
             System.Numerics.Vector4 currentValues = new System.Numerics.Vector4(value.x, value.y, value.width, value.height);

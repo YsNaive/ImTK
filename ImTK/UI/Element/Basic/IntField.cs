@@ -23,6 +23,11 @@ namespace ImTK.UI
             classList.Add("int-field");
         }
 
+                protected internal override bool CheckHoverState()
+        {
+            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        }
+
         public override void OnRender()
         {
             int currentValue = value;

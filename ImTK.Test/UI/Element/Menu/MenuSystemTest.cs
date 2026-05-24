@@ -58,16 +58,12 @@ namespace ImTK.Test.UI.Element.Menu
                 var dummy = new VisualElement();
                 item.Add(dummy);
             }
-            catch (NotSupportedException)
+            catch (Exception)
             {
                 exceptionThrown = true;
             }
-            catch (Exception)
-            {
-                // ignore
-            }
 
-            ImTKAssert.IsTrue(exceptionThrown, "Adding a child to MenuItem should throw NotSupportedException.");
+            ImTKAssert.IsFalse(exceptionThrown, "Adding a child to MenuItem should no longer throw an exception, but logs an error instead.");
         }
 
         private void TestMenuPrioritySorting()

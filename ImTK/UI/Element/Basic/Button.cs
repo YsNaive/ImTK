@@ -110,6 +110,11 @@ namespace ImTK.UI
             classList.Add("Button");
         }
 
+                protected internal override bool CheckHoverState()
+        {
+            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        }
+
         public override void OnRender()
         {
             float width = style.width?.Value ?? 0f;

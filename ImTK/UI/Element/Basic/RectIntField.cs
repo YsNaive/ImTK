@@ -20,6 +20,11 @@ namespace ImTK.UI
             classList.Add("rectint-field");
         }
 
+                protected internal override bool CheckHoverState()
+        {
+            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        }
+
         public override void OnRender()
         {
             int[] currentValues = new int[] { value.x, value.y, value.width, value.height };

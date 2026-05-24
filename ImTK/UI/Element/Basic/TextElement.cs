@@ -18,6 +18,11 @@ namespace ImTK.UI
             classList.Add("text-element");
         }
 
+                protected internal override bool CheckHoverState()
+        {
+            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        }
+
         public override void OnRender()
         {
             if (!string.IsNullOrEmpty(m_text))

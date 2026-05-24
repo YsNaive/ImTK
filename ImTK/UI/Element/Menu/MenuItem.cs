@@ -96,6 +96,11 @@ namespace ImTK.UI
             }
         }
 
+                protected internal override bool CheckHoverState()
+        {
+            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        }
+
         public override void OnRender()
         {
             // 根據 ImGui.MenuItem 的設計，若不傳入 selected 的 ref 值，則單純為點擊按鈕，不會有 Toggle 狀態
@@ -132,7 +137,8 @@ namespace ImTK.UI
         {
             get
             {
-                throw new NotSupportedException($"MenuItem '{name}' is a terminal node and cannot act as a container for children.");
+                s_log.Error($"MenuItem '{name}' is a terminal node and cannot act as a container for children.");
+                return this;
             }
         }
     }

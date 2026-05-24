@@ -437,6 +437,11 @@ namespace ImTK.UI
         {
         }
 
+        protected internal virtual bool CheckHoverState()
+        {
+            return false;
+        }
+
         public virtual void HandleEvent(UIEventBase evt)
         {
             if (m_callbacks != null && m_callbacks.TryGetValue(evt.GetType(), out var callback))

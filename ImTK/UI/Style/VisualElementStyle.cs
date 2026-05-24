@@ -127,7 +127,7 @@ namespace ImTK.UI
             else if (prop.key == VisualElement.StyleKey.FontFamily.Hash)
             {
                 prop.category = StyleCategory.ImGuiStyle;
-                prop.key = "fontFamily".GetHashCode();
+                prop.key = ImGuiStyleHandler.s_fontFamilyImGuiKey.Hash;
                 prop.isInheritable = true;
             }
             else if (prop.key == VisualElement.StyleKey.FontSize.Hash)
@@ -135,7 +135,7 @@ namespace ImTK.UI
                 prop.category = StyleCategory.ImGuiStyle;
                 prop.dataType = StyleDataType.Float;
                 prop.floatValue = prop.intValue;
-                prop.key = "fontSize".GetHashCode();
+                prop.key = ImGuiStyleHandler.s_fontSizeImGuiKey.Hash;
                 prop.isInheritable = true;
             }
             else

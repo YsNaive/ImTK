@@ -8,6 +8,11 @@ namespace ImTK.UI
 {
     public class ImGuiStyleHandler
     {
+        // 這兩個是 ImGui 層級的 internal key（小寫），與 VisualElement.StyleKey 的 "FontFamily"/"FontSize" 不同。
+        // 使用 HashedString 快取 hash，避免每次使用裸字串 GetHashCode()。
+        internal static readonly HashedString s_fontFamilyImGuiKey = new HashedString("fontFamily");
+        internal static readonly HashedString s_fontSizeImGuiKey   = new HashedString("fontSize");
+
         private readonly StyleProperty[] m_colors = new StyleProperty[(int)ImGuiCol.COUNT];
         private readonly StyleProperty[] m_vars = new StyleProperty[(int)ImGuiStyleVar.COUNT];
         private StyleProperty m_fontFamily;
@@ -39,13 +44,13 @@ namespace ImTK.UI
                 if (!m_activeColors.Contains(prop.key)) m_activeColors.Add(prop.key);
                 return true;
             }
-            else if (prop.dataType == StyleDataType.HashedString && prop.key == "fontFamily".GetHashCode())
+            else if (prop.dataType == StyleDataType.HashedString && prop.key == s_fontFamilyImGuiKey.Hash)
             {
                 m_fontFamily = prop;
                 m_hasFontFamily = true;
                 return true;
             }
-            else if (prop.dataType == StyleDataType.Float && prop.key == "fontSize".GetHashCode())
+            else if (prop.dataType == StyleDataType.Float && prop.key == s_fontSizeImGuiKey.Hash)
             {
                 m_fontSize = prop;
                 m_hasFontSize = true;
@@ -120,8 +125,7 @@ namespace ImTK.UI
                     {
                         var revertProp = pProp;
                         revertProp.dataType = pProp.dataType;
-                        revertProp.floatValue = 0f;
-                        revertProp.vector2Value = System.Numerics.Vector2.Zero;
+                        GetDefaultStyleVar(varIdx, out revertProp.floatValue, out revertProp.vector2Value);
                         output.TrySetProperty(revertProp);
                     }
                 }
@@ -132,7 +136,7 @@ namespace ImTK.UI
                     if (!pProp.isInheritable && !current.m_activeColors.Contains(colIdx))
                     {
                         var revertProp = pProp;
-                        revertProp.colorValue = 0;
+                        revertProp.colorValue = ImGui.ColorConvertFloat4ToU32(ImGui.GetStyle().Colors[colIdx]);
                         output.TrySetProperty(revertProp);
                     }
                 }
@@ -147,6 +151,41 @@ namespace ImTK.UI
             {
                 if (parent == null || !parent.m_hasFontSize || parent.m_fontSize.floatValue != current.m_fontSize.floatValue)
                     output.TrySetProperty(current.m_fontSize);
+            }
+        }
+
+        private static unsafe void GetDefaultStyleVar(int varIdx, out float fVal, out Vector2 vVal)
+        {
+            fVal = 0;
+            vVal = System.Numerics.Vector2.Zero;
+            ImGuiStylePtr style = ImGui.GetStyle();
+            switch ((ImGuiStyleVar)varIdx)
+            {
+                case ImGuiStyleVar.Alpha: fVal = style.Alpha; break;
+                case ImGuiStyleVar.DisabledAlpha: fVal = style.DisabledAlpha; break;
+                case ImGuiStyleVar.WindowPadding: vVal = style.WindowPadding; break;
+                case ImGuiStyleVar.WindowRounding: fVal = style.WindowRounding; break;
+                case ImGuiStyleVar.WindowBorderSize: fVal = style.WindowBorderSize; break;
+                case ImGuiStyleVar.WindowMinSize: vVal = style.WindowMinSize; break;
+                case ImGuiStyleVar.WindowTitleAlign: vVal = style.WindowTitleAlign; break;
+                case ImGuiStyleVar.ChildRounding: fVal = style.ChildRounding; break;
+                case ImGuiStyleVar.ChildBorderSize: fVal = style.ChildBorderSize; break;
+                case ImGuiStyleVar.PopupRounding: fVal = style.PopupRounding; break;
+                case ImGuiStyleVar.PopupBorderSize: fVal = style.PopupBorderSize; break;
+                case ImGuiStyleVar.FramePadding: vVal = style.FramePadding; break;
+                case ImGuiStyleVar.FrameRounding: fVal = style.FrameRounding; break;
+                case ImGuiStyleVar.FrameBorderSize: fVal = style.FrameBorderSize; break;
+                case ImGuiStyleVar.ItemSpacing: vVal = style.ItemSpacing; break;
+                case ImGuiStyleVar.ItemInnerSpacing: vVal = style.ItemInnerSpacing; break;
+                case ImGuiStyleVar.IndentSpacing: fVal = style.IndentSpacing; break;
+                case ImGuiStyleVar.CellPadding: vVal = style.CellPadding; break;
+                case ImGuiStyleVar.ScrollbarSize: fVal = style.ScrollbarSize; break;
+                case ImGuiStyleVar.ScrollbarRounding: fVal = style.ScrollbarRounding; break;
+                case ImGuiStyleVar.GrabMinSize: fVal = style.GrabMinSize; break;
+                case ImGuiStyleVar.GrabRounding: fVal = style.GrabRounding; break;
+                case ImGuiStyleVar.TabRounding: fVal = style.TabRounding; break;
+                case ImGuiStyleVar.ButtonTextAlign: vVal = style.ButtonTextAlign; break;
+                case ImGuiStyleVar.SelectableTextAlign: vVal = style.SelectableTextAlign; break;
             }
         }
 
