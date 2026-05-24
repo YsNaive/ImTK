@@ -8,6 +8,18 @@
 ## [Unreleased]
 
 ### Added (新增)
+- **Theme 局部完整樣式隔離**：`VisualElement.theme` 現在實現真正的局部完整樣式隔離 (Full Local Style Isolation)。設定 `element.theme` 後，該元素及其子樹的所有 ImGui 顏色、StyleVar 與字型皆會切換至指定 Theme，透過既有的 `requiredStyle.Push()/Pop()` 機制在渲染時自動 Push/Pop，無需任何額外 API 呼叫。實作方式為新增 `ImTKTheme.InjectToStyleHandler()` 方法，在 `ComputeStyleRecursiveInternal` 的 `CopyFrom()` 之後、composed properties 之前注入 Theme 完整樣式。
+- **Module/Object 動態事件開關**：`ImTKModule` 與 `ImTKObject` 的事件訂閱現在與 `enabled` 狀態完全同步。新增 `InternalOnEnable()` / `InternalOnDisable()` 內部包裝方法，分別在 enable 時重建訂閱、disable 時取消訂閱，且此邏輯不可被子類 `override` 繞過。
+
+### Changed (變更)
+- **`SubscribeEvent<T>()` 延遲訂閱**：`ImTKModule` 與 `ImTKObject` 的 `SubscribeEvent<T>()` 不再立即呼叫 `ImTKEventBus.GlobalSubscribe()`，改為將訂閱函式儲存於 `m_subscribeActions`，在 `InternalOnEnable()` 時才真正生效。物件在 disabled 或尚未 active 期間不會接收任何事件。
+- **`RenderEngineStylePipeline` 效能與安全**：新增第二個靜態緩衝區 `s_translatedProps`，消除原本每個 dirty element 的 `new List<StyleProperty>()` 分配；同時新增 `#if DEBUG` 非重入守衛 `s_isComputing`，若計算路徑中意外觸發重入則立即拋出 `InvalidOperationException`；將公開方法 `ComputeStyleRecursive()` 拆分為 public entry point 與 private `ComputeStyleRecursiveInternal()`。
+- **`ImTKApplication`**：所有對 Module/Object 的 `OnEnable()`/`OnDisable()` 直接呼叫改為對應的 `InternalOnEnable()`/`InternalOnDisable()`。
+- **`VisualElement.m_theme`**：存取修飾由 `private` 改為 `internal`，供 `RenderEngine` 在計算管線中判斷是否需要注入 Theme 樣式。
+
+### Fixed (修復)
+- **B-02 `Panel` 靜態集合未清除**：`Panel.OnClose()` 新增對 `s_windows`、`s_windowsToAdd`、`s_windowsToRemove` 三個靜態集合的 `Clear()`，防止應用程式重啟時殘留舊 Window 實例導致 `InvalidOperationException`。
+
 - 實作了 Drawer 的絕對定位排版機制 (`overrideRenderRect`)，支援在 `Vector2Drawer`, `RectDrawer` 等複合 Drawer 中複用多個 `FloatDrawer` 並且完美維持單行顯示，同時改善了標籤字型的垂直對位置中。
 - 實作了 `FoldoutDrawer<T>` 作為可折疊的內容抽屜基底類別，利用 ImDrawList 自定義繪製三角形圖示，並支援整行可點擊的 hover 視覺反饋。
 - 將 `ObjectDrawer` 的繼承基底改為 `FoldoutDrawer<object>`，使得物件屬性面板能天然支援展開與折疊。

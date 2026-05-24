@@ -82,25 +82,40 @@ ImTK 借鏡了 Unity 的 `Awake` / `Start` 哲學，採用**階段分離 (Phase 
 
 ### 4.3 停用與拆卸階段 (Teardown Phase)
 
-7.  **`OnDisable()`**
-    *   **職責**：當模組/物件的 `IsActive` 屬性被設為 `false`，或動態物件被卸載時觸發。用於暫停事件訂閱或釋放暫時資源。
+7.  **`OnEnable()` / `OnDisable()`**
+    *   **職責**：當 `Module`/`Object` 的 `enabled` 屬性切換時，於 LateUpdate 階段末尾觸發的子類 hook。
+    *   **實作說明**：`ImTKApplication` 不直接呼叫 `OnEnable()`/`OnDisable()`。框架層面實際呼叫的是內部包裝方法 `InternalOnEnable()` / `InternalOnDisable()`，其執行順序為：
+        *   `InternalOnEnable()`：先執行事件重訂閱（`m_subscribeActions`），再呼叫子類的 `OnEnable()`。
+        *   `InternalOnDisable()`：先呼叫子類的 `OnDisable()`，再執行事件取消訂閱（`m_eventUnsubscribers`）。
+    *   此設計確保訂閱/取消訂閱邏輯**不可被子類 `override` 繞過**。
+    *   子類應覆寫 `OnEnable()` / `OnDisable()` 以實作自訂邏輯，`OnDisable()` 不需要手動取消事件訂閱。
 8.  **`OnClose()`** (僅 `ImTKModule`)
     *   **職責**：應用程式即將關閉時觸發。
     *   **強制規範**：必須在此徹底清洗所有非託管資源（如呼叫 OpenGL 刪除 Texture），因為隨後圖形 Context 將被銷毀。
 
 ---
 
-## 5. 集合安全與動態註冊 (Collection Safety & Pending Queue)
+## 5. 事件訂閱與動態開關 (Event Subscription & Enable/Disable Cycle)
+
+`ImTKModule` 與 `ImTKObject` 皆透過 `SubscribeEvent<T>(handler)` 方法訂閱全域事件。其行為如下：
+
+*   **延遲訂閱**：呼叫 `SubscribeEvent<T>()` 時，不會立即向 `ImTKEventBus` 訂閱。訂閱函式會被儲存於內部的 `m_subscribeActions` 列表，**直到 `InternalOnEnable()` 執行時才真正生效**。
+*   **自動管理週期**：每次 `InternalOnEnable()` 重建所有訂閱；每次 `InternalOnDisable()` 取消所有訂閱並清空 `m_eventUnsubscribers`。如此確保物件在 disabled 狀態下不會接收任何事件。
+*   **設計理由**：物件「未 active」期間本不應接收事件。延遲訂閱使 `enabled` 屬性的語意與事件接收行為完全一致。
+
+---
+
+## 6. 集合安全與動態註冊 (Collection Safety & Pending Queue)
 
 針對 `ImTKObject` 的動態註冊特性，如果在 `OnLogicUpdate` 迴圈迭代中直接修改全域清單，會引發 `Collection was modified` 崩潰。因此必須實作 **待處理佇列 (Pending Queue)** 機制：
 
 1.  **註冊請求**：當開發者呼叫 `ImTKApplication.RegisterObject(obj)` 時，物件不會立刻進入主迴圈清單，而是被加入 `m_pendingAdd` 佇列。
-2.  **註銷請求**：呼叫 `UnregisterObject(obj)` 時，物件被加入 `m_pendingRemove` 佇列，同時框架可提早呼叫其 `OnDisable()` 暫停其作用。
+2.  **註銷請求**：呼叫 `UnregisterObject(obj)` 時，物件被加入 `m_pendingRemove` 佇列。
 3.  **安全執行點**：在每幀的 `OnLateUpdate` 階段末尾（所有遍歷皆已結束），框架統一將 `m_pendingAdd` 內的物件加入主清單，並將 `m_pendingRemove` 內的物件從主清單移除。
 
 ---
 
-## 6. 架構邊界：VisualElement 的定位
+## 7. 架構邊界：VisualElement 的定位
 
 `VisualElement` 是 ImTK 負責呈現 UI 與處理佈局的基石，但 **它不繼承自 `ImTKObject`**。
 

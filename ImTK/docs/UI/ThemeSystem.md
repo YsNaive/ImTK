@@ -1,6 +1,3 @@
-> Warning: This document has been updated to reflect the new Style System architecture involving RenderEngine Pipeline.
-
-
 # 主題與樣式系統 (Theme & Style System)
 
 ImTK 的主題與樣式系統分為兩層架構：
@@ -20,8 +17,9 @@ ImTK 的主題與樣式系統分為兩層架構：
 * `dangerColor`
 
 每個 `ColorFamily` 都統一包含了以下屬性：
-* `background`, `subBackground`
-* `foreground`, `subForeground`
+* `surface`, `container`, `component`, `componentHover`, `componentActive`
+* `accent`, `accentHover`, `accentActive`
+* `selection`, `border`, `divider`
 * `text`, `subText`, `disabledText`
 
 這種設計使得元件（例如 `Button` 或 `Badge`）可以輕易地綁定整套狀態色彩，而不用逐一設定。
@@ -36,6 +34,25 @@ ImTK 的主題與樣式系統分為兩層架構：
 * `disabledAlpha` (float)
 
 這確保了專案在不同元件之間能擁有一致的留白與外觀風格。
+
+## VisualElement.theme — 局部完整樣式隔離
+
+`VisualElement.theme` 的設計意圖為**局部完整樣式隔離 (Full Local Style Isolation)**：當某個元素設定了 `m_theme`，該元素及其後代子樹會使用該 Theme 的完整 ImGui 樣式（顏色、StyleVar、字型），而非 GlobalTheme 的對應值。
+
+**實作機制（`RenderEngine.ComputeStyleRecursiveInternal`）**：
+1. 在 `resolvedStyle.CopyFrom(parent)` 之後，若 `element.m_theme != null`，呼叫 `element.m_theme.InjectToStyleHandler(element.resolvedStyle)`。
+2. `InjectToStyleHandler()` 將 `ApplyToImGui()` 等效的所有 ImGui 顏色與 StyleVar，以標記為 `isInheritable = true` 的 `StyleProperty` 形式注入 `resolvedStyle`。
+3. `Diff()` 自動計算此元素與 parent 的樣式差異，存入 `requiredStyle`。
+4. `RenderNode` 在渲染前 `Push(requiredStyle)`、渲染後 `Pop()`，完成透明的 Push/Pop 隔離。
+
+子元素無需重複注入，它們透過 `CopyFrom()` 繼承已注入的 Theme 樣式。子樹中途若有元素設定自己的 `m_theme`，則以就近原則截斷繼承。
+
+**設計分工**：
+- `element.theme` = 完整的 ImGui 樣式隔離（切換整套 Theme）
+- `element.localStyleSheet` / `StyleSheet.Global` + `element.classList` = Token 層級的局部覆蓋（CSS-like，不切換整套 Theme）
+- `element.style`（Inline Style）= 最高優先的屬性覆蓋
+
+**全域基準線**：`ImTKTheme.GlobalTheme.ApplyToImGui()` 在每幀 `isGlobalThemeDirty` 為 true 時設定全域 ImGui style 基準線。沒有本地 theme 的元素以此為基礎，本地 theme 元素則在渲染時 Push 差異覆蓋。
 
 ## 字型系統 (Font System)
 
@@ -56,5 +73,5 @@ ImTK 的字型系統被設計為獨立且可動態重載的模組 (`ImTKFontMana
 4. **安全熱重載 (Safe Hot-Reload)**：
    若系統觸發了圖集更新 (`ImTKFontManager.MarkFontDirty()`)，核心會在下一幀 `LogicUpdate` 的最開頭重建圖集，確保與其他執行緒和 ImGui 內部狀態不衝突。完成後發送全域事件 `OnFontChangedEvent`，由底層的橋接層 (如 Silk.NET) 捕獲並通知 GPU 重建 Texture。
 
-## 4. 預設樣式表 (DefaultStyles)
+## 預設樣式表 (DefaultStyles)
 `DefaultStyles` 曾經用於註冊全域預設樣式。目前多數元件預設樣式已交由 `ImTKTheme` 與 C++ 底層直接映射處理，此類別現保留用作未來擴展或套用自訂全域 CSS-like `StyleBlock` 的進入點。

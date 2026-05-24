@@ -244,7 +244,7 @@ namespace ImTK.UI
             }
         }
 
-        private ImTKTheme m_theme;
+        internal ImTKTheme m_theme;
 
         public ImTKTheme theme
         {

@@ -312,6 +312,143 @@ namespace ImTK.UI
             }
         }
 
+        /// <summary>
+        /// 將此 Theme 的完整 ImGui 樣式注入到指定的 ImGuiStyleHandler，
+        /// 供 ComputeStyleRecursive 在元素有局部 theme 時呼叫，實現局部樣式隔離。
+        /// <para>
+        /// 注入的屬性全部標記為 isInheritable = true，使子元素能透過
+        /// resolvedStyle.CopyFrom() 自動繼承 theme 樣式，無需對每個子元素重複注入。
+        /// Diff() 會自動計算出需要 Push/Pop 的差異，由 RenderNode 的既有機制處理。
+        /// </para>
+        /// <para>
+        /// 注入順序與 ApplyToImGui() 保持一致，以確保語義一致性。
+        /// 注意：ImGuiStyleVar.TabBorderSize 不在 ImGuiStyleVar 枚舉中，
+        /// 無法透過 Push/Pop 機制處理，故不在此注入（由 ApplyToImGui() 全域設定）。
+        /// </para>
+        /// </summary>
+        internal void InjectToStyleHandler(ImGuiStyleHandler handler)
+        {
+            // --- Colors ---
+            InjectColor(handler, ImGuiCol.Text,               normalColor.text);
+            InjectColor(handler, ImGuiCol.TextDisabled,       normalColor.disabledText);
+            InjectColor(handler, ImGuiCol.WindowBg,           normalColor.surface);
+            InjectColor(handler, ImGuiCol.ChildBg,            normalColor.surface);
+            InjectColor(handler, ImGuiCol.PopupBg,            normalColor.container);
+            InjectColor(handler, ImGuiCol.Border,             normalColor.border);
+
+            // BorderShadow = transparent black
+            var shadowProp = new StyleProperty
+            {
+                category = StyleCategory.ImGuiStyle,
+                key      = (int)ImGuiCol.BorderShadow,
+                dataType = StyleDataType.Color,
+                colorValue = 0u
+            };
+            shadowProp.isInheritable = true;
+            handler.TrySetProperty(shadowProp);
+
+            InjectColor(handler, ImGuiCol.FrameBg,            normalColor.component);
+            InjectColor(handler, ImGuiCol.FrameBgHovered,     normalColor.componentHover);
+            InjectColor(handler, ImGuiCol.FrameBgActive,      normalColor.componentActive);
+            InjectColor(handler, ImGuiCol.TitleBg,            normalColor.container);
+            InjectColor(handler, ImGuiCol.TitleBgActive,      normalColor.container);
+            InjectColor(handler, ImGuiCol.TitleBgCollapsed,   normalColor.container);
+            InjectColor(handler, ImGuiCol.MenuBarBg,          normalColor.container);
+            InjectColor(handler, ImGuiCol.ScrollbarBg,        normalColor.container);
+            InjectColor(handler, ImGuiCol.ScrollbarGrab,      normalColor.accent);
+            InjectColor(handler, ImGuiCol.ScrollbarGrabHovered, normalColor.accentHover);
+            InjectColor(handler, ImGuiCol.ScrollbarGrabActive,  normalColor.accentActive);
+            InjectColor(handler, ImGuiCol.CheckMark,          normalColor.accent);
+            InjectColor(handler, ImGuiCol.SliderGrab,         normalColor.accent);
+            InjectColor(handler, ImGuiCol.SliderGrabActive,   normalColor.accentActive);
+            InjectColor(handler, ImGuiCol.Button,             normalColor.component);
+            InjectColor(handler, ImGuiCol.ButtonHovered,      normalColor.componentHover);
+            InjectColor(handler, ImGuiCol.ButtonActive,       normalColor.componentActive);
+            InjectColor(handler, ImGuiCol.Header,             normalColor.component);
+            InjectColor(handler, ImGuiCol.HeaderHovered,      normalColor.componentHover);
+            InjectColor(handler, ImGuiCol.HeaderActive,       normalColor.componentActive);
+            InjectColor(handler, ImGuiCol.Separator,          normalColor.divider);
+            InjectColor(handler, ImGuiCol.SeparatorHovered,   normalColor.divider);
+            InjectColor(handler, ImGuiCol.SeparatorActive,    normalColor.divider);
+            InjectColor(handler, ImGuiCol.ResizeGrip,         normalColor.component);
+            InjectColor(handler, ImGuiCol.ResizeGripHovered,  normalColor.componentHover);
+            InjectColor(handler, ImGuiCol.ResizeGripActive,   normalColor.componentActive);
+            InjectColor(handler, ImGuiCol.Tab,                normalColor.component);
+            InjectColor(handler, ImGuiCol.TabHovered,         normalColor.componentHover);
+            InjectColor(handler, ImGuiCol.TabSelected,        normalColor.selection);
+            InjectColor(handler, ImGuiCol.TabDimmed,          normalColor.component);
+            InjectColor(handler, ImGuiCol.TabDimmedSelected,  normalColor.selection);
+            InjectColor(handler, ImGuiCol.TextSelectedBg,     normalColor.selection);
+
+            // --- Style Vars ---
+            InjectVar2(handler, ImGuiStyleVar.WindowPadding,    padding);
+            InjectVar2(handler, ImGuiStyleVar.FramePadding,     padding);
+            InjectVar2(handler, ImGuiStyleVar.ItemSpacing,      itemSpacing);
+            InjectVar2(handler, ImGuiStyleVar.ItemInnerSpacing, itemInnerSpacing);
+            InjectVar1(handler, ImGuiStyleVar.WindowRounding,   borderRadius);
+            InjectVar1(handler, ImGuiStyleVar.ChildRounding,    borderRadius);
+            InjectVar1(handler, ImGuiStyleVar.FrameRounding,    borderRadius);
+            InjectVar1(handler, ImGuiStyleVar.PopupRounding,    borderRadius);
+            InjectVar1(handler, ImGuiStyleVar.ScrollbarRounding, borderRadius);
+            InjectVar1(handler, ImGuiStyleVar.GrabRounding,     borderRadius);
+            InjectVar1(handler, ImGuiStyleVar.TabRounding,      borderRadius);
+            InjectVar1(handler, ImGuiStyleVar.WindowBorderSize, borderWidth);
+            InjectVar1(handler, ImGuiStyleVar.ChildBorderSize,  borderWidth);
+            InjectVar1(handler, ImGuiStyleVar.PopupBorderSize,  borderWidth);
+            InjectVar1(handler, ImGuiStyleVar.FrameBorderSize,  borderWidth);
+            InjectVar1(handler, ImGuiStyleVar.DisabledAlpha,    disabledAlpha);
+
+            // --- Font ---
+            var fontProp = new StyleProperty
+            {
+                category  = StyleCategory.ImGuiStyle,
+                key       = ImGuiStyleHandler.s_fontFamilyImGuiKey.Hash,
+                dataType  = StyleDataType.HashedString,
+                tokenHash = fontFamilyHash
+            };
+            fontProp.isInheritable = true;
+            handler.TrySetProperty(fontProp);
+        }
+
+        private static void InjectColor(ImGuiStyleHandler handler, ImGuiCol col, Color color)
+        {
+            var prop = new StyleProperty
+            {
+                category   = StyleCategory.ImGuiStyle,
+                key        = (int)col,
+                dataType   = StyleDataType.Color,
+                colorValue = color.u32
+            };
+            prop.isInheritable = true;
+            handler.TrySetProperty(prop);
+        }
+
+        private static void InjectVar1(ImGuiStyleHandler handler, ImGuiStyleVar styleVar, float value)
+        {
+            var prop = new StyleProperty
+            {
+                category   = StyleCategory.ImGuiStyle,
+                key        = (int)styleVar,
+                dataType   = StyleDataType.Float,
+                floatValue = value
+            };
+            prop.isInheritable = true;
+            handler.TrySetProperty(prop);
+        }
+
+        private static void InjectVar2(ImGuiStyleHandler handler, ImGuiStyleVar styleVar, Vector2 value)
+        {
+            var prop = new StyleProperty
+            {
+                category     = StyleCategory.ImGuiStyle,
+                key          = (int)styleVar,
+                dataType     = StyleDataType.Vector2,
+                vector2Value = value
+            };
+            prop.isInheritable = true;
+            handler.TrySetProperty(prop);
+        }
+
         // --- Global Theme ---
         public static bool isGlobalThemeDirty = true;
 

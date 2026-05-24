@@ -87,6 +87,15 @@ namespace ImTK.UI
                     element.resolvedStyle.CopyFrom(element.parent.resolvedStyle);
                 }
 
+                // 若此元素有局部 theme，將 theme 的完整 ImGui 樣式注入 resolvedStyle。
+                // 時機：CopyFrom 繼承父層基底之後、composed properties 之前，
+                // 使 StyleSheet / inline style 仍可覆蓋 theme 值（優先序：inline > stylesheet > theme）。
+                // 實際的 Push/Pop 隔離由既有的 Diff → requiredStyle → RenderNode 機制自動處理。
+                if (element.m_theme != null)
+                {
+                    element.m_theme.InjectToStyleHandler(element.resolvedStyle);
+                }
+
                 var theme = element.theme ?? ImTKTheme.GlobalTheme;
 
                 foreach (var composedProp in s_composedProps)
