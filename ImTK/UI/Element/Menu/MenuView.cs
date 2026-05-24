@@ -12,36 +12,27 @@ namespace ImTK.UI
     {
         public new class Style : VisualElement.Style
         {
-            private int m_pushedColors = 0;
 
-            public override void PushToImGui(ResolvedStyle resolvedStyle)
+
+
+
+
+
+            public override void ComputeHighlevelToken(StyleProperty prop, System.Collections.Generic.IList<StyleProperty> output)
             {
-                base.PushToImGui(resolvedStyle);
-
-                m_pushedColors = 0;
-
-                // MenuView's BackgroundColor maps to PopupBg (or MenuBarBg)
-                Color? bgColor = resolvedStyle.GetColor(VisualElement.StyleKey.BackgroundColor);
-                if (bgColor.HasValue)
+                if (prop.category == StyleCategory.HighLevelToken)
                 {
-                    // Since we can't easily know if it's a MenuBar inside PushToImGui without reference,
-                    // we push to both common menu backgrounds.
-                    ImGui.PushStyleColor(ImGuiCol.PopupBg, bgColor.Value.u32);
-                    ImGui.PushStyleColor(ImGuiCol.MenuBarBg, bgColor.Value.u32);
-                    m_pushedColors += 2;
+                    if (prop.key == VisualElement.StyleKey.BackgroundColor.Hash)
+                    {
+                        prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
+                        prop.key = (int)ImGuiCol.PopupBg;
+                        output.Add(prop);
+                        return;
+                    }
                 }
+                base.ComputeHighlevelToken(prop, output);
             }
-
-            public override void PopFromImGui()
-            {
-                if (m_pushedColors > 0)
-                {
-                    ImGui.PopStyleColor(m_pushedColors);
-                    m_pushedColors = 0;
-                }
-                base.PopFromImGui();
-            }
-        }
+}
 
         public string name { get; set; }
         public int priority { get; set; }

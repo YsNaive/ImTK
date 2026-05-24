@@ -29,462 +29,158 @@ namespace ImTK.UI
             public static readonly HashedString FontSize = new HashedString("FontSize");
         }
 
-        public class Style : IVisualElementStyle
+        public class Style : VisualElementStyle, IVisualElementStyle
         {
-            internal List<StyleProperty> m_overrideStyles;
-            internal int m_pushedFonts = 0;
-            internal float m_previousFontScale = 1.0f;
-
             public StyleValue<HashedString> fontFamily { set => SetStringToken(StyleKey.FontFamily, value); }
             public StyleValue<int> fontSize { set => SetInt(StyleKey.FontSize, value); }
             public StyleValue<FontSize> fontSizeEnum { set => SetEnum(StyleKey.FontSize, value); }
 
             public Style() { }
 
+            protected StyleValue<Color>? GetPropertyColor(HashedString key)
+            {
+                var p = GetProperty(key.Hash);
+                return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Color> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Color> { Value = (Color)p.colorValue });
+            }
+
+            protected StyleValue<float>? GetPropertyFloat(HashedString key)
+            {
+                var p = GetProperty(key.Hash);
+                return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<float> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<float> { Value = p.floatValue });
+            }
+
             // --- Low-level Override Setters ---
 
             public void SetColor(HashedString key, StyleValue<Color> value)
             {
-                EnsureOverrideStyles();
-                RemoveEntry(key.Hash);
-
-                if (value.IsNull) return;
-
-                var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.ColorValue };
+                if (value.IsNull) { Clear(key); return; }
+                var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Color };
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.colorValue = value.Value.u32;
-
-                m_overrideStyles.Add(prop);
+                SetProperty(prop);
             }
 
             public void SetInt(HashedString key, StyleValue<int> value)
             {
-                EnsureOverrideStyles();
-                RemoveEntry(key.Hash);
-
-                if (value.IsNull) return;
-
-                var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.IntValue };
+                if (value.IsNull) { Clear(key); return; }
+                var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Int };
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.intValue = value.Value;
-
-                m_overrideStyles.Add(prop);
+                SetProperty(prop);
             }
-
 
             public void SetEnum<TEnum>(HashedString key, StyleValue<TEnum> value) where TEnum : struct, System.Enum
             {
-                EnsureOverrideStyles();
-                RemoveEntry(key.Hash);
-
-                if (value.IsNull) return;
-
-                var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.EnumValue };
+                if (value.IsNull) { Clear(key); return; }
+                var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Enum };
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.enumValue = System.Convert.ToInt32(value.Value);
-
-                m_overrideStyles.Add(prop);
+                SetProperty(prop);
             }
 
             public void SetStringToken(HashedString key, StyleValue<HashedString> value)
             {
-                EnsureOverrideStyles();
-                RemoveEntry(key.Hash);
-
-                if (value.IsNull) return;
-
-                // When style.fontFamily = "jf" is called, the implicit operator (string) puts "jf" into value.Token.
-                // If value.IsToken is true, it means it was assigned via string. We hash it to store as the font family token.
-                // If it was assigned directly as a HashedString, we take its value.
+                if (value.IsNull) { Clear(key); return; }
                 int hash = value.IsToken ? value.Token.Hash : value.Value.Hash;
-
-                var prop = new StyleProperty { key = key.Hash, type = StylePropertyType.Token, tokenHash = hash };
-                m_overrideStyles.Add(prop);
+                var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = StyleDataType.HashedString, tokenHash = hash };
+                SetProperty(prop);
             }
 
             public void SetFloat(HashedString key, StyleValue<float> value)
             {
-                EnsureOverrideStyles();
-                RemoveEntry(key.Hash);
-
-                if (value.IsNull) return;
-
-                var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.FloatValue };
+                if (value.IsNull) { Clear(key); return; }
+                var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Float };
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.floatValue = value.Value;
-
-                m_overrideStyles.Add(prop);
+                SetProperty(prop);
             }
 
             public void SetVector2(HashedString key, StyleValue<Vector2> value)
             {
-                EnsureOverrideStyles();
-                RemoveEntry(key.Hash);
-
-                if (value.IsNull) return;
-
-                var prop = new StyleProperty { key = key.Hash, type = value.IsToken ? StylePropertyType.Token : StylePropertyType.Vector2Value };
+                if (value.IsNull) { Clear(key); return; }
+                var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Vector2 };
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.vector2Value = value.Value;
-
-                m_overrideStyles.Add(prop);
+                SetProperty(prop);
             }
-
-            // --- Low-level Override Clearers ---
 
             public void Clear(HashedString key)
             {
-                RemoveEntry(key.Hash);
+                SetProperty(new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = StyleDataType.Null });
             }
 
             // --- High-level Property Syntax Sugar ---
 
             public StyleValue<Color>? backgroundColor
             {
-                get => GetOverrideColor(StyleKey.BackgroundColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.BackgroundColor, value.Value);
-                    else Clear(StyleKey.BackgroundColor);
-                }
+                get => GetPropertyColor(StyleKey.BackgroundColor);
+                set { if (value.HasValue) SetColor(StyleKey.BackgroundColor, value.Value); else Clear(StyleKey.BackgroundColor); }
             }
 
             public StyleValue<Color>? textColor
             {
-                get => GetOverrideColor(StyleKey.TextColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.TextColor, value.Value);
-                    else Clear(StyleKey.TextColor);
-                }
+                get => GetPropertyColor(StyleKey.TextColor);
+                set { if (value.HasValue) SetColor(StyleKey.TextColor, value.Value); else Clear(StyleKey.TextColor); }
             }
 
             public StyleValue<Color>? disabledTextColor
             {
-                get => GetOverrideColor(StyleKey.DisabledTextColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.DisabledTextColor, value.Value);
-                    else Clear(StyleKey.DisabledTextColor);
-                }
-            }
-
-            public StyleValue<Color>? selectionColor
-            {
-                get => GetOverrideColor(StyleKey.SelectionColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.SelectionColor, value.Value);
-                    else Clear(StyleKey.SelectionColor);
-                }
+                get => GetPropertyColor(StyleKey.DisabledTextColor);
+                set { if (value.HasValue) SetColor(StyleKey.DisabledTextColor, value.Value); else Clear(StyleKey.DisabledTextColor); }
             }
 
             public StyleValue<Color>? borderColor
             {
-                get => GetOverrideColor(StyleKey.BorderColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.BorderColor, value.Value);
-                    else Clear(StyleKey.BorderColor);
-                }
-            }
-
-            public StyleValue<Vector2>? padding
-            {
-                get => GetOverrideVector2(StyleKey.Padding);
-                set
-                {
-                    if (value.HasValue) SetVector2(StyleKey.Padding, value.Value);
-                    else Clear(StyleKey.Padding);
-                }
-            }
-
-            public StyleValue<Vector2>? itemSpacing
-            {
-                get => GetOverrideVector2(StyleKey.ItemSpacing);
-                set
-                {
-                    if (value.HasValue) SetVector2(StyleKey.ItemSpacing, value.Value);
-                    else Clear(StyleKey.ItemSpacing);
-                }
-            }
-
-            public StyleValue<Vector2>? itemInnerSpacing
-            {
-                get => GetOverrideVector2(StyleKey.ItemInnerSpacing);
-                set
-                {
-                    if (value.HasValue) SetVector2(StyleKey.ItemInnerSpacing, value.Value);
-                    else Clear(StyleKey.ItemInnerSpacing);
-                }
+                get => GetPropertyColor(StyleKey.BorderColor);
+                set { if (value.HasValue) SetColor(StyleKey.BorderColor, value.Value); else Clear(StyleKey.BorderColor); }
             }
 
             public StyleValue<float>? borderWidth
             {
-                get => GetOverrideFloat(StyleKey.BorderWidth);
-                set
-                {
-                    if (value.HasValue) SetFloat(StyleKey.BorderWidth, value.Value);
-                    else Clear(StyleKey.BorderWidth);
-                }
+                get => GetPropertyFloat(StyleKey.BorderWidth);
+                set { if (value.HasValue) SetFloat(StyleKey.BorderWidth, value.Value); else Clear(StyleKey.BorderWidth); }
             }
 
             public StyleValue<float>? borderRadius
             {
-                get => GetOverrideFloat(StyleKey.BorderRadius);
-                set
-                {
-                    if (value.HasValue) SetFloat(StyleKey.BorderRadius, value.Value);
-                    else Clear(StyleKey.BorderRadius);
-                }
+                get => GetPropertyFloat(StyleKey.BorderRadius);
+                set { if (value.HasValue) SetFloat(StyleKey.BorderRadius, value.Value); else Clear(StyleKey.BorderRadius); }
             }
 
             public StyleValue<float>? alpha
             {
-                get => GetOverrideFloat(StyleKey.Alpha);
-                set
-                {
-                    if (value.HasValue) SetFloat(StyleKey.Alpha, value.Value);
-                    else Clear(StyleKey.Alpha);
-                }
+                get => GetPropertyFloat(StyleKey.Alpha);
+                set { if (value.HasValue) SetFloat(StyleKey.Alpha, value.Value); else Clear(StyleKey.Alpha); }
             }
 
             public StyleValue<float>? disabledAlpha
             {
-                get => GetOverrideFloat(StyleKey.DisabledAlpha);
-                set
-                {
-                    if (value.HasValue) SetFloat(StyleKey.DisabledAlpha, value.Value);
-                    else Clear(StyleKey.DisabledAlpha);
-                }
+                get => GetPropertyFloat(StyleKey.DisabledAlpha);
+                set { if (value.HasValue) SetFloat(StyleKey.DisabledAlpha, value.Value); else Clear(StyleKey.DisabledAlpha); }
             }
 
-            // --- Internal Helpers ---
-
-            protected void EnsureOverrideStyles()
+            public StyleValue<Vector2>? padding
             {
-                if (m_overrideStyles == null) m_overrideStyles = new List<StyleProperty>();
+                get { var p = GetProperty(StyleKey.Padding.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Vector2> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Vector2> { Value = p.vector2Value }); }
+                set { if (value.HasValue) SetVector2(StyleKey.Padding, value.Value); else Clear(StyleKey.Padding); }
             }
 
-            protected void RemoveEntry(int keyHash)
+            public StyleValue<Vector2>? itemSpacing
             {
-                if (m_overrideStyles == null) return;
-                for (int i = 0; i < m_overrideStyles.Count; i++)
-                {
-                    if (m_overrideStyles[i].key == keyHash)
-                    {
-                        m_overrideStyles.RemoveAt(i);
-                        return;
-                    }
-                }
+                get { var p = GetProperty(StyleKey.ItemSpacing.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Vector2> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Vector2> { Value = p.vector2Value }); }
+                set { if (value.HasValue) SetVector2(StyleKey.ItemSpacing, value.Value); else Clear(StyleKey.ItemSpacing); }
             }
 
-            protected StyleValue<Color>? GetOverrideColor(HashedString key)
+            public StyleValue<Vector2>? itemInnerSpacing
             {
-                if (m_overrideStyles == null) return null;
-                int keyHash = key.Hash;
-                for (int i = 0; i < m_overrideStyles.Count; i++)
-                {
-                    if (m_overrideStyles[i].key == keyHash)
-                    {
-                        if (m_overrideStyles[i].isToken)
-                            return new StyleValue<Color> { Keyword = StyleKeyword.Undefined };
-                        return new StyleValue<Color> { Value = (Color)m_overrideStyles[i].colorValue };
-                    }
-                }
-                return null;
+                get { var p = GetProperty(StyleKey.ItemInnerSpacing.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Vector2> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Vector2> { Value = p.vector2Value }); }
+                set { if (value.HasValue) SetVector2(StyleKey.ItemInnerSpacing, value.Value); else Clear(StyleKey.ItemInnerSpacing); }
             }
 
-            protected StyleValue<float>? GetOverrideFloat(HashedString key)
+            public StyleValue<Color>? selectionColor
             {
-                if (m_overrideStyles == null) return null;
-                int keyHash = key.Hash;
-                for (int i = 0; i < m_overrideStyles.Count; i++)
-                {
-                    if (m_overrideStyles[i].key == keyHash)
-                    {
-                        if (m_overrideStyles[i].isToken)
-                            return new StyleValue<float> { Keyword = StyleKeyword.Undefined };
-                        return new StyleValue<float> { Value = m_overrideStyles[i].floatValue };
-                    }
-                }
-                return null;
-            }
-
-            protected StyleValue<Vector2>? GetOverrideVector2(HashedString key)
-            {
-                if (m_overrideStyles == null) return null;
-                int keyHash = key.Hash;
-                for (int i = 0; i < m_overrideStyles.Count; i++)
-                {
-                    if (m_overrideStyles[i].key == keyHash)
-                    {
-                        if (m_overrideStyles[i].isToken)
-                            return new StyleValue<Vector2> { Keyword = StyleKeyword.Undefined };
-                        return new StyleValue<Vector2> { Value = m_overrideStyles[i].vector2Value };
-                    }
-                }
-                return null;
-            }
-
-            // --- IVisualElementStyle Implementation ---
-
-            private int m_pushedColors = 0;
-            private int m_pushedVars = 0;
-
-            public virtual void PushToImGui(ResolvedStyle resolvedStyle)
-            {
-                m_pushedColors = 0;
-                m_pushedVars = 0;
-                m_pushedFonts = 0;
-
-                int? familyHash = resolvedStyle.GetTokenHash(StyleKey.FontFamily);
-                int? sizePixel = resolvedStyle.GetInt(StyleKey.FontSize);
-                int? sizeEnum = resolvedStyle.GetEnum(StyleKey.FontSize);
-
-                unsafe
-                {
-                    if (familyHash.HasValue || sizePixel.HasValue || sizeEnum.HasValue)
-                    {
-                        int finalFamilyHash = familyHash.HasValue ? familyHash.Value : RenderingContext.CurrentFontFamilyHash;
-
-                        if (sizePixel.HasValue)
-                        {
-                            var (font, scale) = ImTKFontManager.GetFontWithScale(finalFamilyHash, sizePixel.Value);
-                            if (font.NativePtr != null)
-                            {
-                                ImGui.PushFont(font);
-                                RenderingContext.PushFontState(finalFamilyHash);
-                                ImTKFontManager.PushFontScale(scale);
-                                m_pushedFonts++;
-                            }
-                        }
-                        else if (sizeEnum.HasValue)
-                        {
-                            var font = ImTKFontManager.GetFont(finalFamilyHash, (FontSize)sizeEnum.Value);
-                            if (font.NativePtr != null)
-                            {
-                                ImGui.PushFont(font);
-                                RenderingContext.PushFontState(finalFamilyHash);
-                                ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale); // Default scale for exact matched enum
-                                m_pushedFonts++;
-                            }
-                        }
-                        else
-                        {
-                            var font = ImTKFontManager.GetFont(finalFamilyHash, FontSize.Normal);
-                            if (font.NativePtr != null)
-                            {
-                                ImGui.PushFont(font);
-                                RenderingContext.PushFontState(finalFamilyHash);
-                                ImTKFontManager.PushFontScale(ImTKFontManager.CurrentFontScale);
-                                m_pushedFonts++;
-                            }
-                        }
-                    }
-                }
-
-                Color? bgColor = resolvedStyle.GetColor(StyleKey.BackgroundColor);
-                if (bgColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor.Value.u32);
-                    ImGui.PushStyleColor(ImGuiCol.ChildBg, bgColor.Value.u32);
-                    m_pushedColors += 2;
-                }
-
-                Color? textColor = resolvedStyle.GetColor(StyleKey.TextColor);
-                if (textColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Text, textColor.Value.u32);
-                    m_pushedColors++;
-                }
-
-                Color? disabledTextColor = resolvedStyle.GetColor(StyleKey.DisabledTextColor);
-                if (disabledTextColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.TextDisabled, disabledTextColor.Value.u32);
-                    m_pushedColors++;
-                }
-
-                Color? selectionColor = resolvedStyle.GetColor(StyleKey.SelectionColor);
-                if (selectionColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.TextSelectedBg, selectionColor.Value.u32);
-                    m_pushedColors++;
-                }
-
-                Color? borderColor = resolvedStyle.GetColor(StyleKey.BorderColor);
-                if (borderColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Border, borderColor.Value.u32);
-                    m_pushedColors++;
-                }
-
-                float? borderRadius = resolvedStyle.GetFloat(StyleKey.BorderRadius);
-                if (borderRadius.HasValue)
-                {
-                    ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, borderRadius.Value);
-                    ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, borderRadius.Value);
-                    ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, borderRadius.Value);
-                    ImGui.PushStyleVar(ImGuiStyleVar.PopupRounding, borderRadius.Value);
-                    m_pushedVars += 4;
-                }
-
-                float? borderWidth = resolvedStyle.GetFloat(StyleKey.BorderWidth);
-                if (borderWidth.HasValue)
-                {
-                    ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, borderWidth.Value);
-                    ImGui.PushStyleVar(ImGuiStyleVar.ChildBorderSize, borderWidth.Value);
-                    ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, borderWidth.Value);
-                    ImGui.PushStyleVar(ImGuiStyleVar.PopupBorderSize, borderWidth.Value);
-                    m_pushedVars += 4;
-                }
-
-                Vector2? padding = resolvedStyle.GetVector2(StyleKey.Padding);
-                if (padding.HasValue)
-                {
-                    ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, padding.Value);
-                    ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, padding.Value);
-                    m_pushedVars += 2;
-                }
-
-                Vector2? itemSpacing = resolvedStyle.GetVector2(StyleKey.ItemSpacing);
-                if (itemSpacing.HasValue)
-                {
-                    ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, itemSpacing.Value);
-                    m_pushedVars++;
-                }
-
-                Vector2? itemInnerSpacing = resolvedStyle.GetVector2(StyleKey.ItemInnerSpacing);
-                if (itemInnerSpacing.HasValue)
-                {
-                    ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, itemInnerSpacing.Value);
-                    m_pushedVars++;
-                }
-
-                float? alpha = resolvedStyle.GetFloat(StyleKey.Alpha);
-                if (alpha.HasValue)
-                {
-                    ImGui.PushStyleVar(ImGuiStyleVar.Alpha, alpha.Value);
-                    m_pushedVars++;
-                }
-            }
-
-            public virtual void PopFromImGui()
-            {
-                if (m_pushedColors > 0) ImGui.PopStyleColor(m_pushedColors);
-                if (m_pushedVars > 0) ImGui.PopStyleVar(m_pushedVars);
-
-                if (m_pushedFonts > 0)
-                {
-                    ImGui.PopFont();
-                    RenderingContext.PopFontState();
-                    ImTKFontManager.PopFontScale();
-                }
-
-                m_pushedColors = 0;
-                m_pushedVars = 0;
-                m_pushedFonts = 0;
+                get => GetPropertyColor(StyleKey.SelectionColor);
+                set { if (value.HasValue) SetColor(StyleKey.SelectionColor, value.Value); else Clear(StyleKey.SelectionColor); }
             }
         }
 
@@ -506,7 +202,6 @@ namespace ImTK.UI
 
         public Style style => internalStyle as Style;
 
-
         public StyleClass classList { get; private set; }
 
         private StyleSheet m_localStyleSheet;
@@ -524,14 +219,15 @@ namespace ImTK.UI
         }
 
         internal bool m_isStyleDirty = true;
-        public ResolvedStyle resolvedStyle { get; }
+
+        public ImGuiStyleHandler resolvedStyle { get; } = new ImGuiStyleHandler();
+        public ImGuiStyleHandler requiredStyle { get; } = new ImGuiStyleHandler();
 
 
         public VisualElement()
         {
             m_elementId = ++s_elementCounter;
             internalStyle = new Style();
-            resolvedStyle = new ResolvedStyle(this);
             hierarchy = new VisualElementHierarchy(this);
 
             classList = new StyleClass();
@@ -541,11 +237,10 @@ namespace ImTK.UI
         public void MarkStyleDirty()
         {
             m_isStyleDirty = true;
-            // Children's cascaded styles might need update
             int count = hierarchy.childCount;
             for (int i = 0; i < count; i++)
             {
-                hierarchy.childAt(i).MarkStyleDirty();
+                hierarchy.ChildAt(i).MarkStyleDirty();
             }
         }
 
@@ -557,7 +252,7 @@ namespace ImTK.UI
             {
                 if (m_theme != null) return m_theme;
                 if (parent != null) return parent.theme;
-                return ImTKTheme.GlobalTheme; // Root fallback
+                return ImTKTheme.GlobalTheme;
             }
             set
             {
@@ -568,8 +263,6 @@ namespace ImTK.UI
                 }
             }
         }
-
-        // ApplyTheme is removed as Theme token resolution is dynamically handled in ComputeStyle
 
         public NodeType GetNodeType()
         {
@@ -584,7 +277,7 @@ namespace ImTK.UI
 
         public int childCount => contentContainer == this ? hierarchy.childCount : contentContainer.childCount;
 
-        public VisualElement childAt(int index) => contentContainer == this ? hierarchy.childAt(index) : contentContainer.childAt(index);
+        public VisualElement ChildAt(int index) => contentContainer == this ? hierarchy.ChildAt(index) : contentContainer.ChildAt(index);
 
         public void Add(VisualElement child)
         {
@@ -660,7 +353,6 @@ namespace ImTK.UI
         {
             if (!hierarchy.CheckSafeState()) return;
 
-            // Collect children to avoid modifying while iterating, just in case physical Clear has side effects
             var childrenToClear = new List<VisualElement>(contentContainer == this ? hierarchy.Children() : contentContainer.Children());
             foreach(var child in childrenToClear)
             {
@@ -758,10 +450,7 @@ namespace ImTK.UI
             return m_callbacks != null && m_callbacks.Count > 0;
         }
     }
-}
 
-namespace ImTK.UI
-{
     public class VisualElement<TStyle> : VisualElement where TStyle : IVisualElementStyle, new()
     {
         public new TStyle style => (TStyle)internalStyle;
@@ -773,53 +462,53 @@ namespace ImTK.UI
     }
 
     public enum PickingMode
-        {
-            Position,
-            Ignore
-        }
+    {
+        Position,
+        Ignore
+    }
 
     public abstract class ElementFlags<TEnum> where TEnum : struct, Enum
+    {
+        public TEnum Value { get; set; }
+
+        public ElementFlags()
         {
-            public TEnum Value { get; set; }
-
-            public ElementFlags()
-            {
-                Value = default;
-            }
-
-            public ElementFlags(TEnum initialValue)
-            {
-                Value = initialValue;
-            }
-
-            protected void SetFlag(TEnum flag, bool state)
-            {
-                int mask = Convert.ToInt32(flag);
-                int current = Convert.ToInt32(Value);
-                if (state)
-                {
-                    current |= mask;
-                }
-                else
-                {
-                    current &= ~mask;
-                }
-                Value = (TEnum)Enum.ToObject(typeof(TEnum), current);
-            }
-
-            protected bool GetFlag(TEnum flag)
-            {
-                int mask = Convert.ToInt32(flag);
-                int current = Convert.ToInt32(Value);
-                return (current & mask) == mask;
-            }
+            Value = default;
         }
+
+        public ElementFlags(TEnum initialValue)
+        {
+            Value = initialValue;
+        }
+
+        protected void SetFlag(TEnum flag, bool state)
+        {
+            int mask = Convert.ToInt32(flag);
+            int current = Convert.ToInt32(Value);
+            if (state)
+            {
+                current |= mask;
+            }
+            else
+            {
+                current &= ~mask;
+            }
+            Value = (TEnum)Enum.ToObject(typeof(TEnum), current);
+        }
+
+        protected bool GetFlag(TEnum flag)
+        {
+            int mask = Convert.ToInt32(flag);
+            int current = Convert.ToInt32(Value);
+            return (current & mask) == mask;
+        }
+    }
 
     public enum NodeType
-        {
-            None,
-            LogicNode,
-            PhysicsNode,
-            Invalid
-        }
+    {
+        None,
+        LogicNode,
+        PhysicsNode,
+        Invalid
+    }
 }

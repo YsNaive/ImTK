@@ -40,49 +40,15 @@ namespace ImTK.UI
 
         public new class Style : VisualElement.Style
         {
-            private int m_pushedColors = 0;
 
-            public override void PushToImGui(ResolvedStyle resolvedStyle)
-            {
-                base.PushToImGui(resolvedStyle);
 
-                m_pushedColors = 0;
 
-                Color? titleBarColor = resolvedStyle.GetColor(Window.StyleKey.TitleBarColor);
-                if (titleBarColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.TitleBg, titleBarColor.Value.u32);
-                    m_pushedColors++;
-                }
 
-                Color? titleBarActiveColor = resolvedStyle.GetColor(Window.StyleKey.TitleBarActiveColor);
-                if (titleBarActiveColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.TitleBgActive, titleBarActiveColor.Value.u32);
-                    m_pushedColors++;
-                }
 
-                Color? titleBarCollapsedColor = resolvedStyle.GetColor(Window.StyleKey.TitleBarCollapsedColor);
-                if (titleBarCollapsedColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.TitleBgCollapsed, titleBarCollapsedColor.Value.u32);
-                    m_pushedColors++;
-                }
-            }
-
-            public override void PopFromImGui()
-            {
-                if (m_pushedColors > 0)
-                {
-                    ImGui.PopStyleColor(m_pushedColors);
-                    m_pushedColors = 0;
-                }
-                base.PopFromImGui();
-            }
 
             public StyleValue<Color>? titleBarColor
             {
-                get => GetOverrideColor(StyleKey.TitleBarColor);
+                get => GetPropertyColor(StyleKey.TitleBarColor);
                 set
                 {
                     if (value.HasValue) SetColor(StyleKey.TitleBarColor, value.Value);
@@ -92,7 +58,7 @@ namespace ImTK.UI
 
             public StyleValue<Color>? titleBarActiveColor
             {
-                get => GetOverrideColor(StyleKey.TitleBarActiveColor);
+                get => GetPropertyColor(StyleKey.TitleBarActiveColor);
                 set
                 {
                     if (value.HasValue) SetColor(StyleKey.TitleBarActiveColor, value.Value);
@@ -102,14 +68,36 @@ namespace ImTK.UI
 
             public StyleValue<Color>? titleBarCollapsedColor
             {
-                get => GetOverrideColor(StyleKey.TitleBarCollapsedColor);
+                get => GetPropertyColor(StyleKey.TitleBarCollapsedColor);
                 set
                 {
                     if (value.HasValue) SetColor(StyleKey.TitleBarCollapsedColor, value.Value);
                     else Clear(StyleKey.TitleBarCollapsedColor);
                 }
             }
-        }
+
+            public override void ComputeHighlevelToken(StyleProperty prop, System.Collections.Generic.IList<StyleProperty> output)
+            {
+                if (prop.category == StyleCategory.HighLevelToken)
+                {
+                    if (prop.key == StyleKey.TitleBarColor.Hash)
+                    {
+                        prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
+                        prop.key = (int)ImGuiCol.TitleBg;
+                        output.Add(prop);
+                        return;
+                    }
+                    else if (prop.key == StyleKey.TitleBarActiveColor.Hash)
+                    {
+                        prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
+                        prop.key = (int)ImGuiCol.TitleBgActive;
+                        output.Add(prop);
+                        return;
+                    }
+                }
+                base.ComputeHighlevelToken(prop, output);
+            }
+}
 
         private static readonly LogContext s_log = new LogContext("Window");
 

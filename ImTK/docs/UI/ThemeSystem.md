@@ -1,3 +1,6 @@
+> Warning: This document has been updated to reflect the new Style System architecture involving RenderEngine Pipeline.
+
+
 # 主題與樣式系統 (Theme & Style System)
 
 ImTK 的主題與樣式系統分為兩層架構：

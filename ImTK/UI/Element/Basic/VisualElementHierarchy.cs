@@ -20,7 +20,7 @@ namespace ImTK.UI
 
         public int childCount => m_children.Count;
 
-        public VisualElement childAt(int index) => m_children[index];
+        public VisualElement ChildAt(int index) => m_children[index];
 
         internal bool CheckSafeState()
         {
@@ -99,7 +99,7 @@ namespace ImTK.UI
         {
             VisualElement parent { get; }
             int childCount { get; }
-            VisualElement childAt(int index);
+            VisualElement ChildAt(int index);
             void Add(VisualElement child);
             void Remove(VisualElement child);
             void Clear();

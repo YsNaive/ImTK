@@ -15,11 +15,11 @@ namespace ImTK.UI
 
         public abstract class InputFieldStyle : VisualElement.Style
         {
-            private int m_pushedColors = 0;
+
 
             public StyleValue<Color>? hoverColor
             {
-                get => GetOverrideColor(StyleKey.HoverColor);
+                get => GetPropertyColor(StyleKey.HoverColor);
                 set
                 {
                     if (value.HasValue) SetColor(StyleKey.HoverColor, value.Value);
@@ -29,7 +29,7 @@ namespace ImTK.UI
 
             public StyleValue<Color>? activeColor
             {
-                get => GetOverrideColor(StyleKey.ActiveColor);
+                get => GetPropertyColor(StyleKey.ActiveColor);
                 set
                 {
                     if (value.HasValue) SetColor(StyleKey.ActiveColor, value.Value);
@@ -37,44 +37,9 @@ namespace ImTK.UI
                 }
             }
 
-            public override void PushToImGui(ResolvedStyle resolvedStyle)
-            {
-                base.PushToImGui(resolvedStyle);
 
-                m_pushedColors = 0;
 
-                // InputField Background maps to FrameBg, not WindowBg/ChildBg
-                Color? bgColor = resolvedStyle.GetColor(VisualElement.StyleKey.BackgroundColor);
-                if (bgColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.FrameBg, bgColor.Value.u32);
-                    m_pushedColors++;
-                }
 
-                Color? hoverColor = resolvedStyle.GetColor(StyleKey.HoverColor);
-                if (hoverColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, hoverColor.Value.u32);
-                    m_pushedColors++;
-                }
-
-                Color? activeColor = resolvedStyle.GetColor(StyleKey.ActiveColor);
-                if (activeColor.HasValue)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.FrameBgActive, activeColor.Value.u32);
-                    m_pushedColors++;
-                }
-            }
-
-            public override void PopFromImGui()
-            {
-                if (m_pushedColors > 0)
-                {
-                    ImGui.PopStyleColor(m_pushedColors);
-                    m_pushedColors = 0;
-                }
-                base.PopFromImGui();
-            }
         }
 
         public string label { get; set; }

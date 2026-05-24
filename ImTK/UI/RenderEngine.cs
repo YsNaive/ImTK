@@ -4,14 +4,14 @@ using ImTK.Core;
 
 namespace ImTK.UI
 {
-    public static class RenderEngine
+    public static partial class RenderEngine
     {
         public static void RenderNode(VisualElement node)
         {
             if (node.m_isStyleDirty)
             {
-                node.resolvedStyle.Compute();
-                node.m_isStyleDirty = false;
+                // Handled recursively
+                // Handled recursively
             }
 
             if (node.m_useAutoId)
@@ -24,7 +24,7 @@ namespace ImTK.UI
                 ImGui.SetNextItemAllowOverlap();
             }
 
-            node.internalStyle.PushToImGui(node.resolvedStyle);
+            node.requiredStyle.Push();
 
             bool shouldRenderChildren = node.OnBeginRender();
 
@@ -35,7 +35,7 @@ namespace ImTK.UI
                 int count = node.hierarchy.childCount;
                 for (int i = 0; i < count; i++)
                 {
-                    RenderNode(node.hierarchy.childAt(i));
+                    RenderNode(node.hierarchy.ChildAt(i));
                 }
             }
 
@@ -52,7 +52,7 @@ namespace ImTK.UI
             int childCount = node.hierarchy.childCount;
             for (int i = 0; i < childCount; i++)
             {
-                var child = node.hierarchy.childAt(i);
+                var child = node.hierarchy.ChildAt(i);
                 if (child.m_wasHovered)
                 {
                     isAnyChildHovered = true;
@@ -76,7 +76,7 @@ namespace ImTK.UI
 
             node.m_wasHovered = isEffectivelyHovered;
 
-            node.internalStyle.PopFromImGui();
+            node.requiredStyle.Pop();
 
             if (node.m_useAutoId)
             {

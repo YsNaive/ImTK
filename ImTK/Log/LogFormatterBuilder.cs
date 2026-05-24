@@ -6,17 +6,17 @@ namespace ImTK.Log;
 
 public class LogFormatterBuilder
 {
-    private readonly List<Action<StringBuilder, LogEntry>> _actions = new();
+    private readonly List<Action<StringBuilder, LogEntry>> m_actions = new();
 
     public LogFormatterBuilder Text(string text)
     {
-        _actions.Add((sb, entry) => sb.Append(text));
+        m_actions.Add((sb, entry) => sb.Append(text));
         return this;
     }
 
     public LogFormatterBuilder Timestamp(string format = "HH:mm:ss", string prefix = "[", string postfix = "]")
     {
-        _actions.Add((sb, entry) =>
+        m_actions.Add((sb, entry) =>
         {
             if (prefix != null) sb.Append(prefix);
             sb.Append(entry.Timestamp.ToString(format));
@@ -27,7 +27,7 @@ public class LogFormatterBuilder
 
     public LogFormatterBuilder TimeSinceStartup(string format = @"hh\:mm\:ss", string prefix = "[", string postfix = "]")
     {
-        _actions.Add((sb, entry) =>
+        m_actions.Add((sb, entry) =>
         {
             if (prefix != null) sb.Append(prefix);
             var span = entry.Timestamp - ImTK.Core.Time.StartupTime;
@@ -39,7 +39,7 @@ public class LogFormatterBuilder
 
     public LogFormatterBuilder Level(string prefix = "[", string postfix = "]", int width = 7)
     {
-        _actions.Add((sb, entry) =>
+        m_actions.Add((sb, entry) =>
         {
             if (prefix != null) sb.Append(prefix);
 
@@ -63,7 +63,7 @@ public class LogFormatterBuilder
 
     public LogFormatterBuilder ContextName(string prefix = "[", string postfix = "]")
     {
-        _actions.Add((sb, entry) =>
+        m_actions.Add((sb, entry) =>
         {
             if (!string.IsNullOrEmpty(entry.ContextName))
             {
@@ -77,7 +77,7 @@ public class LogFormatterBuilder
 
     public LogFormatterBuilder Message(string prefix = null, string postfix = null)
     {
-        _actions.Add((sb, entry) =>
+        m_actions.Add((sb, entry) =>
         {
             if (prefix != null) sb.Append(prefix);
             sb.Append(entry.Message);
@@ -94,7 +94,7 @@ public class LogFormatterBuilder
     public Func<LogEntry, string> Build()
     {
         // Copy actions to array to avoid allocation during enumeration
-        var actionsArray = _actions.ToArray();
+        var actionsArray = m_actions.ToArray();
         return entry =>
         {
             var sb = new StringBuilder();
