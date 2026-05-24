@@ -149,3 +149,5 @@
 - 修正 `EventBubbleTest` 測試失敗問題：將原有的 `ImGui.Button` 替換為 `ImTK.UI.Button` 以解決在 `GuiRender` 階段因直接修改視覺樹而觸發的生命週期保護機制 (CheckSafeState)。
 - **架構重構**：將 `VisualElement.Render()` 中的防護層、樣式管理與事件走訪邏輯徹底抽離至靜態 `RenderEngine.RenderNode()`。
 - **架構重構**：移除 `VisualElement` 的 `OnRenderLayout` 與 `OnRenderSelf`，改採 `OnBeginRender`, `OnRender`, `OnEndRender` 樣板方法模式。此改動提升了元件擴充彈性，並且為未來「排版引擎 (Layout Phase)」打好基礎。
+- 修復了在 `ImTK.Sandbox` 等專案中，當掛載全字集的中文字庫 (`GetGlyphRangesChineseFull`) 時，因 5 種尺寸的字型合併導致紋理大小超出 OpenGL 上限而產生的黑畫面崩潰問題 (透過動態調降大字型與擴充字集的 `OversampleH/V` 解決)。
+- 修復了 `ImGuiStyleHandler.Diff` 在只覆寫 `FontFamily` 但繼承 `FontSize` 時，錯誤遺漏 `FontSize` 導致子節點字型大小強制退回 `FontSize.Normal` 的邏輯漏洞。
