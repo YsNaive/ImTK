@@ -44,6 +44,7 @@
 1. **全面接管佈局**：所有 ImTK 的元件佈局改由自定義的 Flexbox 引擎接管，不再依賴 ImGui 內建的流式排版。
 2. **根節點 Dummy 佔位**：為了讓 ImGui 知道我們繪製的總範圍 (影響 Bounding Box 和外部的 ScrollView)，我們在渲染開始時，必須利用 `ImGui.Dummy` 畫出一個總尺寸的透明佔位區塊。
 3. **允許重疊 (AllowOverlap)**：由於我們使用絕對座標疊加元件，在繪製背景或佔位區塊時，需呼叫 `ImGui.SetNextItemAllowOverlap()`，確保被蓋在上面的按鈕能正確被 ImGui 的 `IsItemHovered()` 偵測到。
+4. **事件與點擊偵測 (Hit-Testing)**：維持 Hybrid 方案，為避免與 ImGui 焦點機制衝突，放棄純 C# Hit-Test。對於純排版容器等節點，若未呼叫產生互動範圍的 ImGui API，引擎應根據其 `layoutRect` 自動繪製 `ImGui.Dummy` 並搭配 `SetNextItemAllowOverlap()` 作為透明感測器，藉此讀取 Hover/Click 狀態灌入 ImTK 事件系統。
 
 ---
 
@@ -67,20 +68,39 @@
 * **問題**：在 Layout Phase 呼叫 `MeasureContent` 算字體長度時，如果推入所有的樣式 (包含顏色、背景) 會浪費效能，甚至在沒有 Context 的情況下引發錯誤。
 * **解法**：在 `StyleProperty` 結構的 Flag 中新增 `LayoutAffecting` 標記。像 `FontSize`, `Padding`, `ItemSpacing` 擁有此標記。排版引擎在測量前呼叫 `resolvedStyle.Push(layoutMatterOnly: true)`，精準推送會影響佈局的屬性。
 
+### 5.3 髒標記分離與向上傳遞 (Dirty Flag Separation & Stop-Early)
+* **問題**：深層子節點的屬性變更，如何高效通知根節點重新排版？
+* **解法**：採用**狀態分離**的雙層髒標記機制：
+  1. `isMeasureDirty`：需重算大小，連帶影響父節點大小與排版。
+  2. `isArrangeDirty`：僅需重排位置，可套用快取大小跳過昂貴的 `MeasureContent`。
+* **Stop-Early 機制**：當節點標記為 Dirty 時，沿著 Parent 鏈向上通知。若發現某個 Parent 已經具有相同或更高層級的 Dirty 標記，則**立刻停止向上走訪**，確保多重變更只觸發一次最低限度的樹狀走訪。
+
 ---
 
-## 6. 對現有 API 的影響與遷移指南 (Migration Guide)
+## 6. 輕量級 Flexbox 支援範圍 (Custom Yoga-lite)
+
+放棄龐大的外部依賴 (如 Facebook Yoga)，在 C# 端完全手刻專為 ImTK 量身打造的輕量版 Flex 演算法。為求極致輕量與降低死結風險，僅支援以下核心屬性 (皆帶有 `LayoutAffecting` 標記)：
+
+* **空間與盒模型**：`Width`/`Height`, `MinWidth`/`MinHeight`, `MaxWidth`/`MaxHeight`, `Margin`, `Padding`。
+* **容器佈局**：`FlexDirection` (僅 Row/Column), `FlexWrap`, `JustifyContent` (僅 FlexStart, Center, FlexEnd, SpaceBetween), `AlignItems` (包含 Stretch)。
+* **子節點彈性**：`FlexGrow` (比例填滿), `AlignSelf` (單獨覆寫對齊)。
+* **絕對定位**：`PositionType` (Relative/Absolute), `Top`, `Bottom`, `Left`, `Right`。
+* **已捨棄功能**：不支援 `FlexShrink`, `FlexBasis`, `SpaceAround`, `Reverse` 方向及 `Baseline` 對齊。
+
+---
+
+## 7. 對現有 API 的影響與遷移指南 (Migration Guide)
 
 導入此架構後，現有程式碼需要進行以下重構與調整：
 
-### 6.1 `RenderEngine.cs`
+### 7.1 `RenderEngine.cs`
 * 將被大幅重構，拆分出 `ExecuteLayoutPhase`。
 * 現有的 `RenderNode` 將精簡，剝離所有計算空間相關的邏輯。
 
-### 6.2 `VisualElement.cs`
-* **新增屬性**：`desiredSize`, `layoutRect`, `m_isLayoutDirty`。
+### 7.2 `VisualElement.cs`
+* **新增屬性**：`desiredSize`, `layoutRect`, `isMeasureDirty`, `isArrangeDirty`。
 * **新增方法**：`CalculateLayout(LayoutConstraint)` (供框架遞迴呼叫), `MeasureContent(LayoutConstraint)` (供葉節點覆寫，計算本體尺寸)。
 * **API 職責轉移**：既有的 `OnBeginRender`, `OnRender`, `OnEndRender` 介面保留不變，但**實作內絕對禁止呼叫影響佈局的 ImGui API (如 `SameLine`)**。
 
-### 6.3 既有 UI 控制項 (`ImTK.UI.Element.Basic/`)
+### 7.3 既有 UI 控制項 (`ImTK.UI.Element.Basic/`)
 * 所有的基礎元件（如 `Button`, `TextField`, `CheckBox` 等）必須全數翻修，將原先寫在 `OnRender` 內的佈局邏輯拆除，並實作 `MeasureContent`，確保能乾淨且精確地對接新的四階段生命週期。
