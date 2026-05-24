@@ -144,7 +144,6 @@ namespace ImTK.UI
             }
 
             if (mapped) output.Add(prop);
-            else output.Add(prop);
         }
     }
 }
