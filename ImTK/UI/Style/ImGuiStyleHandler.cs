@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.Numerics;
 using ImGuiNET;
+using ImTK.Core;
 
 namespace ImTK.UI
 {
@@ -7,7 +10,6 @@ namespace ImTK.UI
     {
         private readonly StyleProperty[] m_colors = new StyleProperty[(int)ImGuiCol.COUNT];
         private readonly StyleProperty[] m_vars = new StyleProperty[(int)ImGuiStyleVar.COUNT];
-
         private StyleProperty m_fontFamily;
         private StyleProperty m_fontSize;
 
@@ -16,22 +18,12 @@ namespace ImTK.UI
         private bool m_hasFontFamily = false;
         private bool m_hasFontSize = false;
 
-        public ImGuiStyleHandler()
-        {
-            Clear();
-        }
-
         public void Clear()
         {
             m_activeColors.Clear();
             m_activeVars.Clear();
             m_hasFontFamily = false;
             m_hasFontSize = false;
-
-            for (int i = 0; i < m_colors.Length; i++) m_colors[i].dataType = StyleDataType.Null;
-            for (int i = 0; i < m_vars.Length; i++) m_vars[i].dataType = StyleDataType.Null;
-            m_fontFamily.dataType = StyleDataType.Null;
-            m_fontSize.dataType = StyleDataType.Null;
         }
 
         public bool TrySetProperty(StyleProperty prop)
@@ -89,7 +81,6 @@ namespace ImTK.UI
         {
             output.Clear();
 
-            // All properties present in 'current' that differ from 'parent' must be pushed.
             foreach (var colIdx in current.m_activeColors)
             {
                 var curProp = current.m_colors[colIdx];
@@ -116,12 +107,23 @@ namespace ImTK.UI
                 }
             }
 
-            // To handle non-inheritable properties: if the parent pushed them, but current didn't explicitly override them (thus dropping them in CopyFrom),
-            // current needs to explicitly PUSH the global default value to prevent ImGui's stack from bleeding them downwards.
-            // Since we can't easily query ImGui's default value for everything here dynamically, a robust approach is to ensure
-            // non-inheritable styles are always completely specified if an element cares about them,
-            // OR we ensure RenderEngine applies GlobalTheme defaults as a baseline.
-            // For now, the existing Diff correctly isolates the delta of what 'current' explicitly holds vs 'parent'.
+            if (parent != null)
+            {
+                // For non-inheritable properties pushed by parent, we MUST override them with default values
+                // if 'current' did not explicitly set them, because ImGui's stack leaks downward implicitly.
+                foreach (var varIdx in parent.m_activeVars)
+                {
+                    var pProp = parent.m_vars[varIdx];
+                    if (!pProp.isInheritable && !current.m_activeVars.Contains(varIdx))
+                    {
+                        var revertProp = pProp;
+                        revertProp.dataType = pProp.dataType;
+                        revertProp.floatValue = 0f;
+                        revertProp.vector2Value = System.Numerics.Vector2.Zero;
+                        output.TrySetProperty(revertProp);
+                    }
+                }
+            }
 
             if (current.m_hasFontFamily)
             {
@@ -144,10 +146,11 @@ namespace ImTK.UI
                 if (prop.dataType == StyleDataType.Float) ImGui.PushStyleVar((ImGuiStyleVar)varIdx, prop.floatValue);
                 else if (prop.dataType == StyleDataType.Vector2) ImGui.PushStyleVar((ImGuiStyleVar)varIdx, prop.vector2Value);
             }
+
             if (m_hasFontFamily)
             {
                 RenderingContext.PushFontState(m_fontFamily.tokenHash);
-                var fontPtr = ImTKFontManager.GetFont(m_fontFamily.tokenHash, ImTK.UI.FontSize.Normal);
+                var fontPtr = ImTKFontManager.GetFont(m_fontFamily.tokenHash, m_hasFontSize ? (ImTK.UI.FontSize)m_fontSize.floatValue : ImTK.UI.FontSize.Normal);
                 if (fontPtr.NativePtr != null)
                 {
                     ImGui.PushFont(fontPtr);
@@ -164,12 +167,9 @@ namespace ImTK.UI
                 ImGui.PopFont();
                 RenderingContext.PopFontState();
             }
+
             if (m_activeVars.Count > 0) ImGui.PopStyleVar(m_activeVars.Count);
             if (m_activeColors.Count > 0) ImGui.PopStyleColor(m_activeColors.Count);
         }
-
-        public float? GetFloat(ImTK.Core.HashedString key, float fallback = 0f) { return fallback; }
-        public float? GetFloat(ImTK.Core.HashedString key) { return null; }
-        public Color? GetColor(ImTK.Core.HashedString key) { return null; }
     }
 }

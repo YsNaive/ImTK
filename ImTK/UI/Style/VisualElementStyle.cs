@@ -76,6 +76,21 @@ namespace ImTK.UI
             {
                 prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
                 prop.key = (int)ImGuiStyleVar.WindowRounding;
+                output.Add(prop);
+
+                var prop2 = prop;
+                prop2.key = (int)ImGuiStyleVar.FrameRounding;
+                output.Add(prop2);
+
+                var prop3 = prop;
+                prop3.key = (int)ImGuiStyleVar.PopupRounding;
+                output.Add(prop3);
+
+                var prop4 = prop;
+                prop4.key = (int)ImGuiStyleVar.ChildRounding;
+                output.Add(prop4);
+
+                return; // return early since we output multiple
             }
             else if (prop.key == VisualElement.StyleKey.Padding.Hash)
             {

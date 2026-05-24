@@ -112,8 +112,8 @@ namespace ImTK.UI
 
         public override void OnRender()
         {
-            float width = resolvedStyle.GetFloat(StyleKey.Width) ?? 0f;
-            float height = resolvedStyle.GetFloat(StyleKey.Height) ?? 0f;
+            float width = style.width?.Value ?? 0f;
+            float height = style.height?.Value ?? 0f;
 
             if (ImGui.Button(text, new System.Numerics.Vector2(width, height)))
             {
