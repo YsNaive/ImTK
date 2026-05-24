@@ -174,6 +174,7 @@ namespace ImTK.UI
             {
                 if (s_hostElement != null)
                 {
+                    RenderEngine.ComputeStyleRecursive(s_hostElement);
                     RenderEngine.RenderNode(s_hostElement);
                 }
             }

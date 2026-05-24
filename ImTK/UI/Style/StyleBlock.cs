@@ -22,6 +22,7 @@ namespace ImTK.UI
 
             var prop = new StyleProperty
             {
+                category = StyleCategory.HighLevelToken,
                 key = key.Hash,
                 type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.ColorValue)
             };
@@ -45,6 +46,7 @@ namespace ImTK.UI
 
             var prop = new StyleProperty
             {
+                category = StyleCategory.HighLevelToken,
                 key = key.Hash,
                 type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.FloatValue)
             };
@@ -68,6 +70,7 @@ namespace ImTK.UI
 
             var prop = new StyleProperty
             {
+                category = StyleCategory.HighLevelToken,
                 key = key.Hash,
                 type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.Vector2Value)
             };
