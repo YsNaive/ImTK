@@ -4,11 +4,11 @@ namespace ImTK.Log;
 
 public class ConsoleSink : LogSinkBase
 {
-    private readonly object _lock = new object();
+    private readonly object m_lock = new object();
 
     public override string description => "Standard console output sink";
 
-    private readonly Func<LogEntry, string> _formatter = new LogFormatterBuilder()
+    private readonly Func<LogEntry, string> m_formatter = new LogFormatterBuilder()
         .TimeSinceStartup()
         .Level()
         .ContextName()
@@ -20,11 +20,11 @@ public class ConsoleSink : LogSinkBase
 
     protected override void WriteToTarget(LogEntry entry)
     {
-        lock (_lock)
+        lock (m_lock)
         {
             // TODO: Implement color formatting based on entry.Level
             // when the VisualElement Style system is developed.
-            Console.WriteLine(_formatter(entry));
+            Console.WriteLine(m_formatter(entry));
         }
     }
 }

@@ -102,7 +102,7 @@ namespace ImTK.UI
             int childCount = element.hierarchy.childCount;
             for (int i = 0; i < childCount; i++)
             {
-                ComputeStyleRecursive(element.hierarchy.childAt(i));
+                ComputeStyleRecursive(element.hierarchy.ChildAt(i));
             }
         }
 

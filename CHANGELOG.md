@@ -133,6 +133,15 @@
 - 將 `AssetManager.GetOrCreateAsset<T>` 異常捕捉範圍放寬至泛型 `Exception`，防止 IO 異常導致程式崩潰。
 - 優化 `ResolvedStyle` 樣式計算的內部結構，改為使用 `List<StyleProperty>`，消除字典查表與清理時的 GC 記憶體配置壓力。
 - 擴充 `Button.Style`，實作 `Width` 與 `Height` 參數自訂功能。
+- **Style Pipeline 重構**：重構 `RenderEngineStylePipeline` 為 4 層架構 (Data / Composition / Resolution / Pipeline)，以 `StyleProperty` 16-byte struct 作為核心資料層。
+- 修復 `Panel.OnGuiRender` 從未呼叫 `ComputeStyleRecursive` 導致所有元素 `requiredStyle` 永遠為空、樣式系統完全失效的根本問題。
+- 修復 `StyleBlock`（StyleSheet API）的 `SetColor`/`SetFloat`/`SetVector2` 未設定 `category = HighLevelToken`，導致 StyleSheet 樣式在 `TrySetProperty` 內因 bounds check 失敗而靜默丟失的問題。
+- 修復 `ImGuiStyleHandler.TrySetProperty` 中 `fontSize` 分支因排序在通用 Float 型別之後而永遠無法觸及的邏輯錯誤。
+- 修復 `ImGuiStyleHandler.Push`/`Pop` 的字型推送不對稱問題（`Pop()` 無論是否有推送字型都會呼叫 `ImGui.PopFont()`）。
+- 修復 `ImGuiStyleHandler.Diff` 遺漏非繼承性父元素顏色 revert 邏輯，導致顏色屬性在樣式切換時無法正確還原。
+- 修復 `VisualElementStyle.ComputeHighlevelToken` 的死代碼問題（`if (mapped) X; else X;` 重複分支）。
+- 修正 `ConsoleSink` 與 `LogFormatterBuilder` 的私有欄位命名（`_camelCase` → `m_camelCase` 符合命名規範）。
+- 修正 `VisualElement.childAt` 與 `VisualElementHierarchy.childAt` 公開方法命名（`camelCase` → `ChildAt` PascalCase 符合命名規範）。
 - 優化 `EventDispatcher` 階層髒標記處理邏輯，透過雙緩衝區 (Double-Buffering) 徹底消除每幀陣列複製造成的 GC 配置。
 - 修復了無頭測試中全域 `EventDispatcher` 駐列污染的架構漏洞，實作 `ClearQueue` 強制在每次測試前後隔離環境。
 - 修正 `MainMenuModule` 在繪製 MenuBar 容器時，由於 ImGui 預設 `WindowMinSize` 大於我們給定的高度，導致產生透明 Hit-box 擋住下方 Docking 標題列滑鼠拖曳事件的問題（透過推送 `ImGuiStyleVar.WindowMinSize` 至 `0,0` 解決）。

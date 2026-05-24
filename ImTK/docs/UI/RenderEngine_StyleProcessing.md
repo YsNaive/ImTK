@@ -23,7 +23,7 @@ The system caches resolved styles and differences in `ImGuiStyleHandler`.
 
 ## 4. Pipeline Execution (`RenderEngine`)
 Before rendering, if `element.m_isStyleDirty` is true, the `ComputeStyleRecursive` algorithm executes:
-1. **Compose**: Dynamically merge Theme, StyleSheet, and Inline styles into a single list based on priority.
+1. **Compose**: Dynamically merge StyleSheet (local, via `element.localStyleSheet`) and Inline styles into a single list based on priority. Higher-priority styles (inline) override lower-priority ones by key. Note: `StyleSheet.Global` is intentionally not processed in `ComputeStyleRecursive`; global default styles are expected to come from the ImGui theme baseline or a future global pass.
 2. **Inherit**: Copy `Inheritable` properties from the parent's `resolvedStyle`.
 3. **Translate**: Evaluate High-level tokens via Component overriders, fallback to `ImTKTheme` dictionary lookups for Theme tokens, and yield pure `ImGuiStyle` elements into `resolvedStyle`.
 4. **Diff**: Compare the `resolvedStyle` against the parent's `resolvedStyle` and output the exact commands needed into `requiredStyle`.

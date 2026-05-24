@@ -240,7 +240,7 @@ namespace ImTK.UI
             int count = hierarchy.childCount;
             for (int i = 0; i < count; i++)
             {
-                hierarchy.childAt(i).MarkStyleDirty();
+                hierarchy.ChildAt(i).MarkStyleDirty();
             }
         }
 
@@ -277,7 +277,7 @@ namespace ImTK.UI
 
         public int childCount => contentContainer == this ? hierarchy.childCount : contentContainer.childCount;
 
-        public VisualElement childAt(int index) => contentContainer == this ? hierarchy.childAt(index) : contentContainer.childAt(index);
+        public VisualElement ChildAt(int index) => contentContainer == this ? hierarchy.ChildAt(index) : contentContainer.ChildAt(index);
 
         public void Add(VisualElement child)
         {
