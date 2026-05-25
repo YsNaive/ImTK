@@ -10,6 +10,7 @@ namespace ImTK.UI
 
     public class VisualElement : IVisualElementHierarchy
     {
+
         public class StyleKey
         {
             public static readonly HashedString BackgroundColor = new HashedString("BackgroundColor");
@@ -55,11 +56,14 @@ namespace ImTK.UI
 
         public class Style : VisualElementStyle, IVisualElementStyle
         {
+            protected VisualElement m_owner;
+
             public StyleValue<HashedString> fontFamily { set => SetStringToken(StyleKey.FontFamily, value); }
             public StyleValue<int> fontSize { set => SetInt(StyleKey.FontSize, value); }
             public StyleValue<FontSize> fontSizeEnum { set => SetEnum(StyleKey.FontSize, value); }
 
             public Style() { }
+            public void Init(VisualElement owner) { m_owner = owner; }
 
             protected StyleValue<Color>? GetPropertyColor(HashedString key)
             {
@@ -82,6 +86,9 @@ namespace ImTK.UI
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.colorValue = value.Value.u32;
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void SetInt(HashedString key, StyleValue<int> value)
@@ -91,6 +98,9 @@ namespace ImTK.UI
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.intValue = value.Value;
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void SetEnum<TEnum>(HashedString key, StyleValue<TEnum> value) where TEnum : struct, System.Enum
@@ -100,6 +110,9 @@ namespace ImTK.UI
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.enumValue = System.Convert.ToInt32(value.Value);
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void SetStringToken(HashedString key, StyleValue<HashedString> value)
@@ -108,6 +121,9 @@ namespace ImTK.UI
                 int hash = value.IsToken ? value.Token.Hash : value.Value.Hash;
                 var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = StyleDataType.HashedString, tokenHash = hash };
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void SetFloat(HashedString key, StyleValue<float> value)
@@ -117,6 +133,9 @@ namespace ImTK.UI
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.floatValue = value.Value;
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void SetVector2(HashedString key, StyleValue<Vector2> value)
@@ -126,11 +145,17 @@ namespace ImTK.UI
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.vector2Value = value.Value;
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void Clear(HashedString key)
             {
                 SetProperty(new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = StyleDataType.Null });
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             // --- High-level Property Syntax Sugar ---
@@ -312,6 +337,14 @@ namespace ImTK.UI
         public virtual VisualElement contentContainer => this;
 
         public VisualElement parent { get; internal set; }
+        public VisualElement focusRoot { get; internal set; }
+
+        protected bool m_useNativeLayout = false;
+        public bool useNativeLayout
+        {
+            get => m_useNativeLayout;
+            set => m_useNativeLayout = value;
+        }
 
         public PickingMode pickingMode { get; set; } = PickingMode.Position;
         internal bool m_wasHovered = false;
@@ -389,6 +422,8 @@ namespace ImTK.UI
 
         protected virtual Vector2 MeasureContent(LayoutConstraint constraint)
         {
+            if (m_useNativeLayout) return Vector2.Zero;
+
             var state = resolvedLayoutState;
             bool isRow = state.flexDirection == FlexDirection.Row;
 
@@ -469,6 +504,8 @@ namespace ImTK.UI
 
         protected virtual void ArrangeContent(Rect finalAbsoluteRect)
         {
+            if (m_useNativeLayout) return;
+
             var state = resolvedLayoutState;
             bool isRow = state.flexDirection == FlexDirection.Row;
             
@@ -643,25 +680,26 @@ namespace ImTK.UI
             {
                 if (prop.category == StyleCategory.Layout)
                 {
-                    if (prop.key == StyleKey.Width.Hash) state.width = prop.floatValue;
-                    else if (prop.key == StyleKey.Height.Hash) state.height = prop.floatValue;
-                    else if (prop.key == StyleKey.MinWidth.Hash) state.minWidth = prop.floatValue;
-                    else if (prop.key == StyleKey.MaxWidth.Hash) state.maxWidth = prop.floatValue;
-                    else if (prop.key == StyleKey.MinHeight.Hash) state.minHeight = prop.floatValue;
-                    else if (prop.key == StyleKey.MaxHeight.Hash) state.maxHeight = prop.floatValue;
-                    else if (prop.key == StyleKey.Margin.Hash) state.margin = prop.vector2Value;
-                    else if (prop.key == StyleKey.FlexDirection.Hash) state.flexDirection = (FlexDirection)prop.enumValue;
-                    else if (prop.key == StyleKey.FlexWrap.Hash) state.flexWrap = (FlexWrap)prop.enumValue;
-                    else if (prop.key == StyleKey.JustifyContent.Hash) state.justifyContent = (JustifyContent)prop.enumValue;
-                    else if (prop.key == StyleKey.AlignItems.Hash) state.alignItems = (AlignItems)prop.enumValue;
-                    else if (prop.key == StyleKey.FlexGrow.Hash) state.flexGrow = prop.floatValue;
-                    else if (prop.key == StyleKey.AlignSelf.Hash) state.alignSelf = (AlignItems)prop.enumValue;
-                    else if (prop.key == StyleKey.PositionType.Hash) state.positionType = (PositionType)prop.enumValue;
-                    else if (prop.key == StyleKey.Top.Hash) state.top = prop.floatValue;
-                    else if (prop.key == StyleKey.Bottom.Hash) state.bottom = prop.floatValue;
-                    else if (prop.key == StyleKey.Left.Hash) state.left = prop.floatValue;
-                    else if (prop.key == StyleKey.Right.Hash) state.right = prop.floatValue;
-                    else if (prop.key == StyleKey.Display.Hash) state.display = (DisplayStyle)prop.enumValue;
+                    bool isNull = prop.dataType == StyleDataType.Null;
+                    if (prop.key == StyleKey.Width.Hash) state.width = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Height.Hash) state.height = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.MinWidth.Hash) state.minWidth = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.MaxWidth.Hash) state.maxWidth = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.MinHeight.Hash) state.minHeight = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.MaxHeight.Hash) state.maxHeight = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Margin.Hash) state.margin = isNull ? Vector2.Zero : prop.vector2Value;
+                    else if (prop.key == StyleKey.FlexDirection.Hash) state.flexDirection = isNull ? FlexDirection.Column : (FlexDirection)prop.enumValue;
+                    else if (prop.key == StyleKey.FlexWrap.Hash) state.flexWrap = isNull ? FlexWrap.NoWrap : (FlexWrap)prop.enumValue;
+                    else if (prop.key == StyleKey.JustifyContent.Hash) state.justifyContent = isNull ? JustifyContent.FlexStart : (JustifyContent)prop.enumValue;
+                    else if (prop.key == StyleKey.AlignItems.Hash) state.alignItems = isNull ? AlignItems.Stretch : (AlignItems)prop.enumValue;
+                    else if (prop.key == StyleKey.FlexGrow.Hash) state.flexGrow = isNull ? 0f : prop.floatValue;
+                    else if (prop.key == StyleKey.AlignSelf.Hash) state.alignSelf = isNull ? state.alignItems : (AlignItems)prop.enumValue;
+                    else if (prop.key == StyleKey.PositionType.Hash) state.positionType = isNull ? PositionType.Relative : (PositionType)prop.enumValue;
+                    else if (prop.key == StyleKey.Top.Hash) state.top = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Bottom.Hash) state.bottom = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Left.Hash) state.left = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Right.Hash) state.right = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Display.Hash) state.display = isNull ? DisplayStyle.Flex : (DisplayStyle)prop.enumValue;
                 }
             }
 
@@ -673,6 +711,7 @@ namespace ImTK.UI
         {
             m_elementId = ++s_elementCounter;
             internalStyle = new Style();
+            internalStyle.Init(this);
             hierarchy = new VisualElementHierarchy(this);
 
             classList = new StyleClass();
@@ -871,7 +910,7 @@ namespace ImTK.UI
 
         public virtual bool OnBeginRender()
         {
-            if (this.parent != null)
+            if (this.parent != null && !m_useNativeLayout)
             {
                 ImGui.SetCursorScreenPos(this.layoutRect.position);
             }
@@ -925,9 +964,11 @@ namespace ImTK.UI
     {
         public new TStyle style => (TStyle)internalStyle;
 
-        public VisualElement() : base()
+        public VisualElement()
         {
             internalStyle = new TStyle();
+            internalStyle.Init(this);
+            m_isStyleDirty = true;
         }
     }
 

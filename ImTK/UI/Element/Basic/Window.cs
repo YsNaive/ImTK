@@ -253,7 +253,7 @@ namespace ImTK.UI
 
         protected virtual void OnEnable() { }
         protected virtual void OnDisable() { }
-        public virtual void Update() { }
+        public override void Update() { }
     }
 
     internal struct WindowKey : IEquatable<WindowKey>

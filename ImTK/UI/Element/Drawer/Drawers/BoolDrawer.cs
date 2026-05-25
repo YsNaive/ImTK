@@ -1,3 +1,5 @@
+using System;
+using System.Numerics;
 using ImGuiNET;
 
 namespace ImTK.UI
@@ -7,44 +9,33 @@ namespace ImTK.UI
     {
         public BoolDrawer()
         {
+            m_contentContainer.Add(new FieldElement(this));
         }
 
-        public override string label
+        private class FieldElement : VisualElement
         {
-            get => base.label;
-            set
+            private readonly BoolDrawer m_drawer;
+            public FieldElement(BoolDrawer drawer)
             {
-                base.label = value;
+                m_drawer = drawer;
+                this.style.flexGrow = 1;
             }
-        }
 
-        public override void SetValueWithoutNotify(bool newValue)
-        {
-            base.SetValueWithoutNotify(newValue);
-        }
-
-        public override bool value
-        {
-            get => base.value;
-            set
+            protected override Vector2 MeasureContent(LayoutConstraint constraint)
             {
-                base.value = value;
+                return new Vector2(0, ImGuiNET.ImGui.GetFrameHeight());
             }
-        }
 
-                protected internal override bool CheckHoverState()
-        {
-            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
-        }
-
-        public override void OnRender()
-        {
-            bool v = value;
-            if (ImGuiNET.ImGui.Checkbox("##" + label, ref v))
+            public override void OnRender()
             {
-                SetValueWithChanged(v);
+                ImGuiNET.ImGui.SetNextItemWidth(this.layoutRect.width);
+                bool v = m_drawer.value;
+                if (ImGuiNET.ImGui.Checkbox("##" + m_drawer.label, ref v))
+                {
+                    m_drawer.SetValueWithChanged(v);
+                }
             }
-            base.OnRender();
+
         }
     }
 }

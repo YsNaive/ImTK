@@ -163,7 +163,8 @@ namespace ImTK.UI
                      prop.key == VisualElement.StyleKey.Top.Hash ||
                      prop.key == VisualElement.StyleKey.Bottom.Hash ||
                      prop.key == VisualElement.StyleKey.Left.Hash ||
-                     prop.key == VisualElement.StyleKey.Right.Hash)
+                     prop.key == VisualElement.StyleKey.Right.Hash ||
+                     prop.key == VisualElement.StyleKey.Display.Hash)
             {
                 prop.category = StyleCategory.Layout;
             }

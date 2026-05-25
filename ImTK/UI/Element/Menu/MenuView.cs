@@ -46,21 +46,98 @@ namespace ImTK.UI
         {
             this.name = name;
             this.priority = priority;
+            m_useNativeLayout = true;
             RegisterCallback<HierarchyChangedEvent>(OnHierarchyChanged);
         }
 
+        private bool m_isRebuildingHierarchy = false;
+
         private void OnHierarchyChanged(HierarchyChangedEvent evt)
         {
-            // 當子節點變動時，收集所有的 IMenuElement 並根據 priority 排序
-            m_sortedMenuElements.Clear();
+            if (m_isRebuildingHierarchy) return;
+            
+            var validElements = new List<IMenuElement>();
             foreach (var child in hierarchy.Children())
             {
-                if (child is IMenuElement menuElement)
+                if (child is IMenuElement me && !(child is MenuSeparatorElement))
                 {
-                    m_sortedMenuElements.Add(menuElement);
+                    validElements.Add(me);
                 }
             }
-            m_sortedMenuElements.Sort((a, b) => a.priority.CompareTo(b.priority));
+            validElements.Sort((a, b) => a.priority.CompareTo(b.priority));
+
+            // 檢查是否需要重建
+            bool needsRebuild = false;
+            int expectedIndex = 0;
+            int prevPriority = int.MinValue;
+            bool first = true;
+
+            foreach(var menuElement in validElements)
+            {
+                if (!first && (menuElement.priority - prevPriority) >= SEPARATOR_THRESHOLD)
+                {
+                    if (expectedIndex >= hierarchy.childCount || !(hierarchy.ChildAt(expectedIndex) is MenuSeparatorElement))
+                    {
+                        needsRebuild = true; break;
+                    }
+                    expectedIndex++;
+                }
+
+                if (expectedIndex >= hierarchy.childCount || hierarchy.ChildAt(expectedIndex) != menuElement)
+                {
+                    needsRebuild = true; break;
+                }
+                expectedIndex++;
+                prevPriority = menuElement.priority;
+                first = false;
+            }
+
+            if (expectedIndex != hierarchy.childCount) needsRebuild = true;
+
+            if (!needsRebuild) return;
+
+            m_sortedMenuElements.Clear();
+            foreach(var v in validElements) m_sortedMenuElements.Add(v);
+
+            // 如果已經不需要重建，且沒有漏掉 Separator (需要更精細檢查的話，目前簡化處理：如果數量與狀態一致則略過)
+            // 這裡簡單防護：清空物理樹再重新 Insert，並靜默處理避免再次觸發 HierarchyChanged
+            m_isRebuildingHierarchy = true;
+            try
+            {
+                // 先安全移除所有舊有的子節點
+                var oldChildren = new List<VisualElement>(hierarchy.Children());
+                foreach(var child in oldChildren)
+                {
+                    hierarchy.Remove(child, notify: false);
+                }
+
+                int previousPriority = int.MinValue;
+                bool isFirst = true;
+
+                foreach (var menuElement in m_sortedMenuElements)
+                {
+                    if (!isFirst && (menuElement.priority - previousPriority) >= SEPARATOR_THRESHOLD)
+                    {
+                        hierarchy.Insert(hierarchy.childCount, new MenuSeparatorElement(), notify: false);
+                    }
+
+                    if (menuElement is VisualElement ve)
+                    {
+                        hierarchy.Insert(hierarchy.childCount, ve, notify: false);
+                    }
+
+                    previousPriority = menuElement.priority;
+                    isFirst = false;
+                }
+
+                // 最後統一標記 dirty，這樣 RenderList 才會被重建
+                EventDispatcher.MarkHierarchyDirty(this);
+                this.GetWindow()?.MarkRenderListDirty();
+            }
+            finally
+            {
+                m_isRebuildingHierarchy = false;
+            }
         }
 
         // 為了確保只有 IMenuElement 能夠被加入，我們覆寫/隱藏 Add 與 AddRange
@@ -99,28 +176,11 @@ namespace ImTK.UI
 
             if (m_menuOpenedCache)
             {
-                int previousPriority = int.MinValue;
-                bool isFirst = true;
-
-                foreach (var menuElement in m_sortedMenuElements)
-                {
-                    if (!isFirst && (menuElement.priority - previousPriority) >= SEPARATOR_THRESHOLD)
-                    {
-                        ImGui.Separator();
-                    }
-
-                    if (menuElement is VisualElement visualChild)
-                    {
-                        // Render child using RenderEngine
-                        RenderEngine.RenderNode(visualChild);
-                    }
-
-                    previousPriority = menuElement.priority;
-                    isFirst = false;
-                }
+                // We return true here to allow RenderEngine.RenderFlat to traverse and render the children naturally!
+                return true;
             }
 
-            return false; // Prevent auto child traversal since we handled it sequentially with separators
+            return false;
         }
 
         public override void OnEndRender()

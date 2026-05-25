@@ -35,17 +35,7 @@ namespace ImTK.UI
             ComputeStyleFlat(t_tempRenderList);
         }
 
-        public static void RenderNode(VisualElement node)
-        {
-            // NOTE: Must use a local list here, NOT the thread-static t_tempRenderList.
-            // RenderNode can be called re-entrantly from within OnBeginRender()
-            // (e.g., MenuView renders its children inside OnBeginRender).
-            // Re-using a shared list would corrupt the outer RenderFlat iteration,
-            // causing Begin ops to execute without their paired End ops (missing PopID, EndMenuBar, etc.)
-            var list = new System.Collections.Generic.List<RenderOp>(16);
-            BuildRenderListRecursive(node, list);
-            RenderFlat(list);
-        }
+
 
         private static void BuildRenderListRecursive(VisualElement node, System.Collections.Generic.List<RenderOp> list)
         {
@@ -63,6 +53,14 @@ namespace ImTK.UI
 
             list.Add(new RenderOp { Element = node, Type = RenderOpType.End, SkipCount = 0 });
             list[beginIndex] = new RenderOp { Element = node, Type = RenderOpType.Begin, SkipCount = (list.Count - 1) - beginIndex - 1 };
+        }
+
+        public static void RenderFlat(VisualElement node)
+        {
+            if (t_tempRenderList == null) t_tempRenderList = new System.Collections.Generic.List<RenderOp>(32);
+            t_tempRenderList.Clear();
+            BuildRenderListRecursive(node, t_tempRenderList);
+            RenderFlat(t_tempRenderList);
         }
 
         public static void RenderFlat(System.Collections.Generic.List<RenderOp> renderList)

@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using ImGuiNET;
 
 namespace ImTK.UI
@@ -12,105 +13,54 @@ namespace ImTK.UI
 
         public IntDrawer()
         {
+            m_contentContainer.Add(new FieldElement(this));
         }
 
-        public override string label
+        protected override TextElement CreateLabelElement()
         {
-            get => base.label;
-            set
-            {
-                base.label = value;
-            }
-        }
-
-        public override void SetValueWithoutNotify(int newValue)
-        {
-            base.SetValueWithoutNotify(newValue);
-        }
-
-        public override int value
-        {
-            get => base.value;
-            set
-            {
-                base.value = value;
-            }
-        }
-
-        protected override void OnRenderLabel()
-        {
-            if (string.IsNullOrEmpty(label)) return;
-
-            // To avoid ImGui's layout engine adding extra ItemSpacing.Y due to rendering
-            // multiple items in succession on the Y axis, we need to carefully overlap them.
-
-            // Calculate text size to size the invisible button appropriately
-            var textSize = ImGui.CalcTextSize(label);
-
-            // Optional: allow subsequent items to overlap this button
-            ImGui.SetNextItemAllowOverlap();
-
-            // Draw the invisible button first to claim the space and allow interaction. We use FrameHeight to match the input box height exactly.
-            float frameHeight = ImGui.GetFrameHeight();
-            var buttonPos = ImGui.GetCursorScreenPos();
-            ImGui.InvisibleButton("##drag_" + label, new System.Numerics.Vector2(textSize.X, frameHeight));
-
-            // Cache active state immediately for the InvisibleButton, as we draw Text next
-            bool isDragActive = ImGui.IsItemActive();
-
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEW);
-            }
-
-            // Save the end position so we can restore the layout cursor properly after text
-            var endPos = ImGui.GetCursorScreenPos();
-
-            // Move cursor back and draw the text vertically centered
-            float textYOffset = (frameHeight - textSize.Y) * 0.5f;
-            ImGui.SetCursorScreenPos(new System.Numerics.Vector2(buttonPos.X, buttonPos.Y + textYOffset));
-            ImGui.Text(label);
-
-            // Move cursor back to where it should be for the next layout item
-            ImGui.SetCursorScreenPos(endPos);
-
-            if (isDragActive && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
-            {
-                float delta = ImGui.GetIO().MouseDelta.X;
-                if (delta != 0)
+            var labelObj = new NumericDragLabelElement();
+            labelObj.onDrag = (delta) => {
+                int deltaValue = 1;
+                if(this.mouseStep > 0)
                 {
-                    float currentStep = mouseStep;
-                    if (currentStep < 0)
-                    {
-                        // Dynamic step based on value magnitude, minimum 1
-                        currentStep = Math.Max(1f, Math.Abs(value) * 0.01f);
-                    }
+                    deltaValue = (int)this.mouseStep;
+                }
+                
+                int dragDelta = delta > 0 ? deltaValue : -deltaValue;
+                if (delta == 0) dragDelta = 0;
+                
+                this.SetValueWithChanged(this.value + dragDelta);
+            };
+            return labelObj;
+        }
 
-                    int newValue = value + (int)Math.Round(delta * currentStep);
-                    if (newValue != value)
-                    {
-                        value = newValue; // this triggers SetValueWithChanged logic internally via setter
-                    }
+        private class FieldElement : VisualElement
+        {
+            private readonly IntDrawer m_drawer;
+            public FieldElement(IntDrawer drawer)
+            {
+                m_drawer = drawer;
+                this.style.flexGrow = 1;
+            }
+
+            protected override Vector2 MeasureContent(LayoutConstraint constraint)
+            {
+                return new Vector2(0, ImGuiNET.ImGui.GetFrameHeight());
+            }
+
+            public override void OnRender()
+            {
+                ImGuiNET.ImGui.SetNextItemWidth(this.layoutRect.width);
+                int v = m_drawer.value;
+
+                bool changed = ImGuiNET.ImGui.InputInt("##" + m_drawer.label, ref v, m_drawer.step, m_drawer.step * 100, ImGuiNET.ImGuiInputTextFlags.None);
+
+                if (changed || ImGuiNET.ImGui.IsItemDeactivatedAfterEdit())
+                {
+                    m_drawer.SetValueWithChanged(v);
                 }
             }
-        }
 
-                protected internal override bool CheckHoverState()
-        {
-            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
-        }
-
-        public override void OnRender()
-        {
-            int v = value;
-            bool changed = ImGuiNET.ImGui.InputInt("##" + label, ref v, step, step * 100, ImGuiNET.ImGuiInputTextFlags.None);
-            
-            if (changed || ImGuiNET.ImGui.IsItemDeactivatedAfterEdit())
-            {
-                SetValueWithChanged(v);
-            }
-
-            base.OnRender();
         }
     }
 }

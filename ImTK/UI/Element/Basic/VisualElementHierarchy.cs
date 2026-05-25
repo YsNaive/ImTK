@@ -64,7 +64,37 @@ namespace ImTK.UI
             }
         }
 
-        public void Remove(VisualElement child)
+        internal void SortChildren(Comparison<VisualElement> comparison, bool notify = true)
+        {
+            if (!CheckSafeState()) return;
+            m_children.Sort(comparison);
+            if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
+            m_owner.GetWindow()?.MarkRenderListDirty();
+        }
+
+        internal void Insert(int index, VisualElement child, bool notify = true)
+        {
+            if (!CheckSafeState()) return;
+            if (child == null) throw new ArgumentNullException(nameof(child));
+
+            NodeType type = child.GetNodeType();
+            if (type == NodeType.LogicNode)
+            {
+                child.parent?.Remove(child);
+            }
+            else if (type == NodeType.PhysicsNode)
+            {
+                child.hierarchy.parent?.hierarchy.Remove(child);
+            }
+
+            m_children.Insert(index, child);
+            child.hierarchy.parent = m_owner;
+
+            if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
+            m_owner.GetWindow()?.MarkRenderListDirty();
+        }
+
+        public void Remove(VisualElement child, bool notify = true)
         {
             if (!CheckSafeState()) return;
 
@@ -74,11 +104,11 @@ namespace ImTK.UI
                 child.hierarchy.parent = null;
             }
 
-            EventDispatcher.MarkHierarchyDirty(m_owner);
+            if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
             m_owner.GetWindow()?.MarkRenderListDirty();
         }
 
-        public void Clear()
+        public void Clear(bool notify = true)
         {
             if (!CheckSafeState()) return;
 
@@ -88,7 +118,7 @@ namespace ImTK.UI
             }
             m_children.Clear();
 
-            EventDispatcher.MarkHierarchyDirty(m_owner);
+            if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
             m_owner.GetWindow()?.MarkRenderListDirty();
         }
 
@@ -96,6 +126,9 @@ namespace ImTK.UI
         {
             return m_children;
         }
+
+        void IVisualElementHierarchy.Remove(VisualElement child) => Remove(child, true);
+        void IVisualElementHierarchy.Clear() => Clear(true);
     }
 
     public interface IVisualElementHierarchy
