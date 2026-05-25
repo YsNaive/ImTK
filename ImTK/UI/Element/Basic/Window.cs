@@ -208,11 +208,11 @@ namespace ImTK.UI
 
             m_renderList.Add(new RenderOp { Element = node, Type = RenderOpType.End });
             
-            // Fast forward skipping the children + the End node itself = total nodes added after Begin
+            // Fast forward skipping the children = total nodes added after Begin excluding End
             m_renderList[beginIndex] = new RenderOp { 
                 Element = node, 
                 Type = RenderOpType.Begin, 
-                SkipCount = m_renderList.Count - 1 - beginIndex 
+                SkipCount = m_renderList.Count - 1 - beginIndex - 1
             };
         }
 
@@ -253,7 +253,6 @@ namespace ImTK.UI
 
         protected virtual void OnEnable() { }
         protected virtual void OnDisable() { }
-        public override void Update() { }
     }
 
     internal struct WindowKey : IEquatable<WindowKey>

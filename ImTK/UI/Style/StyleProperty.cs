@@ -20,7 +20,8 @@ namespace ImTK.UI
         Color = 3,
         HashedString = 4,
         Int = 5,
-        Enum = 6
+        Enum = 6,
+        Thickness = 7
     }
 
     [Flags]
@@ -31,7 +32,7 @@ namespace ImTK.UI
         LayoutAffecting = 1 << 1,
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 16)]
+    [StructLayout(LayoutKind.Explicit, Size = 24)]
     public struct StyleProperty
     {
         [FieldOffset(0)] public StyleCategory category;
@@ -46,6 +47,7 @@ namespace ImTK.UI
         [FieldOffset(8)] public int tokenHash;
         [FieldOffset(8)] public int intValue;
         [FieldOffset(8)] public int enumValue;
+        [FieldOffset(8)] public Thickness thicknessValue;
 
         public bool isResolved => category == StyleCategory.ImGuiStyle && dataType != StyleDataType.HashedString;
 
@@ -76,6 +78,7 @@ namespace ImTK.UI
                 if (dataType == StyleDataType.Vector2) return StylePropertyType.Vector2Value;
                 if (dataType == StyleDataType.Int) return StylePropertyType.IntValue;
                 if (dataType == StyleDataType.Enum) return StylePropertyType.EnumValue;
+                if (dataType == StyleDataType.Thickness) return StylePropertyType.ThicknessValue;
                 return StylePropertyType.Null;
             }
             set
@@ -89,6 +92,7 @@ namespace ImTK.UI
                     case StylePropertyType.Vector2Value: dataType = StyleDataType.Vector2; break;
                     case StylePropertyType.IntValue: dataType = StyleDataType.Int; break;
                     case StylePropertyType.EnumValue: dataType = StyleDataType.Enum; break;
+                    case StylePropertyType.ThicknessValue: dataType = StyleDataType.Thickness; break;
                 }
             }
         }
@@ -102,6 +106,7 @@ namespace ImTK.UI
         FloatValue = 3,
         Vector2Value = 4,
         IntValue = 5,
-        EnumValue = 6
+        EnumValue = 6,
+        ThicknessValue = 7
     }
 }

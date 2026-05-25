@@ -6,24 +6,32 @@ namespace ImTK.UI
 {
     public abstract class FoldoutDrawer<T> : FieldDrawer<T>
     {
-        public bool isExpanded
+        public override DrawerLayoutMode layoutMode
         {
-            get => layoutMode == DrawerLayoutMode.Expand;
+            get => base.layoutMode;
             set
             {
-                layoutMode = value ? DrawerLayoutMode.Expand : DrawerLayoutMode.Inline;
-                m_contentContainer.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+                base.layoutMode = value;
+                bool expanded = (value == DrawerLayoutMode.Expand);
+                m_contentContainer.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
                 if (m_iconElement != null)
                 {
-                    m_iconElement.type = value ? IconElement.IconType.DownArrow : IconElement.IconType.RightArrow;
+                    m_iconElement.type = expanded ? IconElement.IconType.DownArrow : IconElement.IconType.RightArrow;
                 }
             }
+        }
+
+        public virtual bool isExpanded
+        {
+            get => layoutMode == DrawerLayoutMode.Expand;
+            set => layoutMode = value ? DrawerLayoutMode.Expand : DrawerLayoutMode.Inline;
         }
 
         protected FoldoutDrawer() : base()
         {
             this.style.flexDirection = FlexDirection.Column;
             this.style.alignItems = AlignItems.Stretch;
+            m_contentContainer.style.margin = new Thickness(this.theme.indentWidth, 0, 0, 0);
             // Initially expanded? Let's say expand. Or inline means collapsed for foldout.
             isExpanded = false;
         }
@@ -62,7 +70,11 @@ namespace ImTK.UI
 
         protected override VisualElement CreateHeaderContainer()
         {
-            return new FoldoutHeaderContainer(this);
+            var container = new FoldoutHeaderContainer(this);
+            container.style.flexDirection = FlexDirection.Row;
+            container.style.alignItems = AlignItems.Center;
+            container.style.flexGrow = 1;
+            return container;
         }
 
     }

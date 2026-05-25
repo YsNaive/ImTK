@@ -72,6 +72,20 @@ namespace ImTK.UI
 
                 if (op.Type == RenderOpType.Begin)
                 {
+                    if (node.resolvedLayoutState.display == DisplayStyle.None)
+                    {
+                        if (node.m_wasHovered)
+                        {
+                            var evt = EventPool<MouseLeaveEvent>.Get();
+                            evt.source = node;
+                            EventDispatcher.Enqueue(evt);
+                            node.m_wasHovered = false;
+                        }
+                        
+                        i += op.SkipCount + 1;
+                        continue;
+                    }
+
                     if (node.m_useAutoId)
                     {
                         ImGui.PushID(node.m_elementId);

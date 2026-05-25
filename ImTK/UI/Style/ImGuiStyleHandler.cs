@@ -56,7 +56,7 @@ namespace ImTK.UI
                 m_hasFontSize = true;
                 return true;
             }
-            else if (prop.dataType == StyleDataType.Float || prop.dataType == StyleDataType.Vector2)
+            else if (prop.dataType == StyleDataType.Float || prop.dataType == StyleDataType.Vector2 || prop.dataType == StyleDataType.Thickness)
             {
                 if (prop.key < 0 || prop.key >= (int)ImGuiStyleVar.COUNT) return false;
                 m_vars[prop.key] = prop;
@@ -72,6 +72,22 @@ namespace ImTK.UI
             if (m_activeVars.Contains(varIdx))
             {
                 value = m_vars[varIdx].vector2Value;
+                return true;
+            }
+            value = default;
+            return false;
+        }
+
+        public bool HasColor(int colIdx)
+        {
+            return m_activeColors.Contains(colIdx);
+        }
+
+        public bool TryGetFloat(int varIdx, out float value)
+        {
+            if (m_activeVars.Contains(varIdx))
+            {
+                value = m_vars[varIdx].floatValue;
                 return true;
             }
             value = default;
@@ -121,6 +137,8 @@ namespace ImTK.UI
                     if (curProp.dataType == StyleDataType.Float && curProp.floatValue != pProp.floatValue)
                         output.TrySetProperty(curProp);
                     else if (curProp.dataType == StyleDataType.Vector2 && curProp.vector2Value != pProp.vector2Value)
+                        output.TrySetProperty(curProp);
+                    else if (curProp.dataType == StyleDataType.Thickness && curProp.thicknessValue != pProp.thicknessValue)
                         output.TrySetProperty(curProp);
                 }
             }
@@ -247,6 +265,12 @@ namespace ImTK.UI
                             hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.vector2Value.X);
                             hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.vector2Value.Y);
                         }
+                        else if (prop.dataType == StyleDataType.Thickness) {
+                            hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.thicknessValue.left);
+                            hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.thicknessValue.top);
+                            hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.thicknessValue.right);
+                            hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.thicknessValue.bottom);
+                        }
                     }
                 }
                 if (m_hasFontFamily) hash = hash * 23 + (uint)m_fontFamily.tokenHash;
@@ -272,6 +296,7 @@ namespace ImTK.UI
                 var prop = m_vars[varIdx];
                 if (prop.dataType == StyleDataType.Float) ImGui.PushStyleVar((ImGuiStyleVar)varIdx, prop.floatValue);
                 else if (prop.dataType == StyleDataType.Vector2) ImGui.PushStyleVar((ImGuiStyleVar)varIdx, prop.vector2Value);
+                else if (prop.dataType == StyleDataType.Thickness) ImGui.PushStyleVar((ImGuiStyleVar)varIdx, new Vector2(prop.thicknessValue.left, prop.thicknessValue.top));
             }
 
             if (m_hasFontFamily || m_hasFontSize)

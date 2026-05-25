@@ -69,6 +69,7 @@ namespace ImTK.UI
         {
             public static readonly HashedString LabelWidth = new HashedString("--label-width");
             public static readonly HashedString EdgePadding = new HashedString("--edge-padding");
+            public static readonly HashedString IndentWidth = new HashedString("--indent-width");
 
             public static readonly HashedString Padding = new HashedString("--padding");
             public static readonly HashedString ItemSpacing = new HashedString("--item-spacing");
@@ -146,6 +147,7 @@ namespace ImTK.UI
         // --- Global Shared Properties ---
         public float labelWidth { get => GetFloat(Tokens.LabelWidth, 180f); set => SetFloat(Tokens.LabelWidth, value); }
         public float edgePadding { get => GetFloat(Tokens.EdgePadding, 10f); set => SetFloat(Tokens.EdgePadding, value); }
+        public float indentWidth { get => GetFloat(Tokens.IndentWidth, 16f); set => SetFloat(Tokens.IndentWidth, value); }
 
         public Vector2 padding { get => GetVector2(Tokens.Padding, new Vector2(4, 3)); set => SetVector2(Tokens.Padding, value); }
         public Vector2 itemSpacing { get => GetVector2(Tokens.ItemSpacing, new Vector2(8, 4)); set => SetVector2(Tokens.ItemSpacing, value); }
@@ -440,6 +442,7 @@ namespace ImTK.UI
                     // Global Properties
                     s_defaultDark.labelWidth = 180.0f;
                     s_defaultDark.edgePadding = 10.0f;
+                    s_defaultDark.indentWidth = 16.0f;
                     s_defaultDark.padding = new Vector2(4, 3);
                     s_defaultDark.itemSpacing = new Vector2(8, 4);
                     s_defaultDark.itemInnerSpacing = new Vector2(4, 4);
@@ -557,6 +560,7 @@ namespace ImTK.UI
                     // Global Properties
                     s_defaultLight.labelWidth = 180.0f;
                     s_defaultLight.edgePadding = 10.0f;
+                    s_defaultLight.indentWidth = 16.0f;
                     s_defaultLight.padding = new Vector2(4, 3);
                     s_defaultLight.itemSpacing = new Vector2(8, 4);
                     s_defaultLight.itemInnerSpacing = new Vector2(4, 4);

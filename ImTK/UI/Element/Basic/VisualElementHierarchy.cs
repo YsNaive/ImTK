@@ -53,6 +53,8 @@ namespace ImTK.UI
 
             EventDispatcher.MarkHierarchyDirty(m_owner);
             m_owner.GetWindow()?.MarkRenderListDirty();
+            m_owner.MarkMeasureDirty();
+            m_owner.MarkArrangeDirty();
         }
 
         public void AddRange(IEnumerable<VisualElement> children)
@@ -70,6 +72,8 @@ namespace ImTK.UI
             m_children.Sort(comparison);
             if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
             m_owner.GetWindow()?.MarkRenderListDirty();
+            m_owner.MarkMeasureDirty();
+            m_owner.MarkArrangeDirty();
         }
 
         internal void Insert(int index, VisualElement child, bool notify = true)
@@ -92,6 +96,8 @@ namespace ImTK.UI
 
             if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
             m_owner.GetWindow()?.MarkRenderListDirty();
+            m_owner.MarkMeasureDirty();
+            m_owner.MarkArrangeDirty();
         }
 
         public void Remove(VisualElement child, bool notify = true)
@@ -106,6 +112,8 @@ namespace ImTK.UI
 
             if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
             m_owner.GetWindow()?.MarkRenderListDirty();
+            m_owner.MarkMeasureDirty();
+            m_owner.MarkArrangeDirty();
         }
 
         public void Clear(bool notify = true)
@@ -120,6 +128,8 @@ namespace ImTK.UI
 
             if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
             m_owner.GetWindow()?.MarkRenderListDirty();
+            m_owner.MarkMeasureDirty();
+            m_owner.MarkArrangeDirty();
         }
 
         public IEnumerable<VisualElement> Children()

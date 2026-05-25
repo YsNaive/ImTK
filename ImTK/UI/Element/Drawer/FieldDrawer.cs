@@ -56,7 +56,7 @@ namespace ImTK.UI
         }
 
         private DrawerLayoutMode m_layoutMode = DrawerLayoutMode.Inline;
-        public DrawerLayoutMode layoutMode
+        public virtual DrawerLayoutMode layoutMode
         {
             get => m_layoutMode;
             set
@@ -131,6 +131,19 @@ namespace ImTK.UI
         public virtual void SetValueWithoutNotify(T newValue)
         {
             _SetValue(newValue, checkEquality: true, notify: false);
+        }
+
+        void IFieldDrawer.SetValueWithoutNotify(object newValue)
+        {
+            if (newValue == null)
+            {
+                if (default(T) != null) return; // Ignore null for value types
+                SetValueWithoutNotify((T)(object)null);
+            }
+            else if (newValue is T tValue)
+            {
+                SetValueWithoutNotify(tValue);
+            }
         }
 
         public virtual void SetValueWithChanged(T newValue)

@@ -11,7 +11,8 @@ namespace ImTK.UI
         public float? minHeight;
         public float? maxHeight;
 
-        public Vector2 margin;
+        public Thickness margin;
+        public Thickness padding;
         public FlexDirection flexDirection;
         public FlexWrap flexWrap;
         public JustifyContent justifyContent;
@@ -35,7 +36,8 @@ namespace ImTK.UI
             maxWidth = null,
             minHeight = null,
             maxHeight = null,
-            margin = Vector2.Zero,
+            margin = Thickness.Zero,
+            padding = Thickness.Zero,
             flexDirection = FlexDirection.Column,
             flexWrap = FlexWrap.NoWrap,
             justifyContent = JustifyContent.FlexStart,
@@ -59,6 +61,7 @@ namespace ImTK.UI
                    minHeight == other.minHeight &&
                    maxHeight == other.maxHeight &&
                    margin.Equals(other.margin) &&
+                   padding.Equals(other.padding) &&
                    flexDirection == other.flexDirection &&
                    flexWrap == other.flexWrap &&
                    justifyContent == other.justifyContent &&
@@ -85,6 +88,7 @@ namespace ImTK.UI
             hash.Add(minHeight);
             hash.Add(maxHeight);
             hash.Add(margin);
+            hash.Add(padding);
             hash.Add(flexDirection);
             hash.Add(flexWrap);
             hash.Add(justifyContent);

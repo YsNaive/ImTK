@@ -42,13 +42,28 @@ namespace ImTK.UI
 
         public override void OnRender()
         {
-            if (m_type == IconType.DownArrow)
+            if (m_type == IconType.DownArrow || m_type == IconType.RightArrow)
             {
-                ImGui.ArrowButton("##Icon", ImGuiDir.Down);
-            }
-            else if (m_type == IconType.RightArrow)
-            {
-                ImGui.ArrowButton("##Icon", ImGuiDir.Right);
+                var drawList = ImGui.GetWindowDrawList();
+                float size = ImGui.GetFontSize() * 0.6f;
+                Vector2 center = this.layoutRect.position + this.layoutRect.size * 0.5f;
+
+                uint color = ImGui.GetColorU32(ImGuiCol.Text);
+
+                if (m_type == IconType.DownArrow)
+                {
+                    Vector2 p1 = center + new Vector2(-size * 0.5f, -size * 0.25f);
+                    Vector2 p2 = center + new Vector2(size * 0.5f, -size * 0.25f);
+                    Vector2 p3 = center + new Vector2(0, size * 0.5f);
+                    drawList.AddTriangleFilled(p1, p2, p3, color);
+                }
+                else if (m_type == IconType.RightArrow)
+                {
+                    Vector2 p1 = center + new Vector2(-size * 0.2f, -size * 0.4f);
+                    Vector2 p2 = center + new Vector2(-size * 0.2f, size * 0.4f);
+                    Vector2 p3 = center + new Vector2(size * 0.35f, 0);
+                    drawList.AddTriangleFilled(p1, p2, p3, color);
+                }
             }
         }
     }
