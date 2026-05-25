@@ -6,6 +6,11 @@ namespace ImTK.UI
 {
     public static partial class RenderEngine
     {
+        public static void ExecuteLayoutPhase(VisualElement node)
+        {
+            // Empty shell to be implemented later when Layout Engine is developed.
+        }
+
         public static void RenderNode(VisualElement node)
         {
             if (node.m_isStyleDirty)

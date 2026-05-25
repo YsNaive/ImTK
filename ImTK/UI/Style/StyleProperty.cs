@@ -27,6 +27,7 @@ namespace ImTK.UI
     {
         None = 0,
         Inheritable = 1 << 0,
+        LayoutAffecting = 1 << 1,
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 16)]

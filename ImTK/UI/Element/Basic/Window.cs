@@ -29,7 +29,7 @@ namespace ImTK.UI
         public bool noDocking { get => GetFlag(ImGuiWindowFlags.NoDocking); set => SetFlag(ImGuiWindowFlags.NoDocking, value); }
     }
 
-    public abstract class Window : VisualElement<Window.Style>
+    public abstract class Window : VisualElement<Window.Style>, IWindow
     {
         public new class StyleKey : VisualElement.StyleKey
         {

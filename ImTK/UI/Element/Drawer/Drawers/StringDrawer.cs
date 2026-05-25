@@ -5,8 +5,6 @@ namespace ImTK.UI
     [CustomFieldDrawer(typeof(string), allowInheritType: false)]
     public class StringDrawer : FieldDrawer<string>
     {
-        private TextField m_textField;
-
         private bool m_multiline;
         public bool multiline
         {
@@ -20,9 +18,6 @@ namespace ImTK.UI
 
         public StringDrawer()
         {
-            m_textField = new TextField("##" + label);
-            m_textField.onValueChanged += OnTextFieldValueChanged;
-            hierarchy.Add(m_textField);
         }
 
         public override string label
@@ -31,10 +26,6 @@ namespace ImTK.UI
             set
             {
                 base.label = value;
-                if (m_textField != null)
-                {
-                    m_textField.label = "##" + value;
-                }
             }
         }
 
@@ -42,7 +33,6 @@ namespace ImTK.UI
         {
             base.SetValueWithoutNotify(newValue);
             UpdateTextFieldMode(newValue);
-            m_textField.SetValueWithoutNotify(newValue);
         }
 
         public override string value
@@ -52,14 +42,7 @@ namespace ImTK.UI
             {
                 base.value = value;
                 UpdateTextFieldMode(value);
-                m_textField.SetValueWithoutNotify(value);
             }
-        }
-
-        private void OnTextFieldValueChanged(ValueChangedEvent<string> evt)
-        {
-            UpdateTextFieldMode(evt.newValue);
-            SetValueWithChanged(evt.newValue);
         }
 
         private void UpdateTextFieldMode(string val)
@@ -68,12 +51,10 @@ namespace ImTK.UI
             if (m_multiline || hasNewline)
             {
                 layoutMode = DrawerLayoutMode.Expand;
-                m_textField.multiline = true;
             }
             else
             {
                 layoutMode = DrawerLayoutMode.Inline;
-                m_textField.multiline = false;
             }
         }
 
@@ -84,8 +65,25 @@ namespace ImTK.UI
 
         public override void OnRender()
         {
-            // Do not render anything natively here.
-            // The composed m_textField child element will be rendered by the VisualElement hierarchy.
+            string v = value ?? string.Empty;
+            bool changed = false;
+
+            if (layoutMode == DrawerLayoutMode.Expand || m_multiline)
+            {
+                var availWidth = ImGuiNET.ImGui.GetContentRegionAvail().X;
+                float height = Math.Max(ImGuiNET.ImGui.GetFrameHeight(), ImGuiNET.ImGui.CalcTextSize(v).Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2);
+                changed = ImGuiNET.ImGui.InputTextMultiline("##" + label, ref v, 32768, new System.Numerics.Vector2(availWidth, height), ImGuiNET.ImGuiInputTextFlags.None);
+            }
+            else
+            {
+                changed = ImGuiNET.ImGui.InputText("##" + label, ref v, 32768, ImGuiNET.ImGuiInputTextFlags.None);
+            }
+
+            if (changed)
+            {
+                SetValueWithChanged(v);
+            }
+
             base.OnRender();
         }
     }

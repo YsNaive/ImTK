@@ -198,6 +198,61 @@ namespace ImTK.UI
             }
         }
 
+        public unsafe void PushFontOnly()
+        {
+            if (m_hasFontFamily || m_hasFontSize)
+            {
+                int familyHash = m_hasFontFamily ? m_fontFamily.tokenHash : RenderingContext.CurrentFontFamilyHash;
+                var fontSize = m_hasFontSize ? (ImTK.UI.FontSize)m_fontSize.floatValue : ImTK.UI.FontSize.Normal;
+
+                if (m_hasFontFamily)
+                {
+                    RenderingContext.PushFontState(familyHash);
+                }
+
+                var fontPtr = ImTKFontManager.GetFont(familyHash, fontSize);
+                m_fontWasPushed = fontPtr.NativePtr != null;
+                if (m_fontWasPushed)
+                {
+                    ImGui.PushFont(fontPtr);
+                }
+            }
+        }
+
+        public uint GetLayoutHash()
+        {
+            unchecked
+            {
+                uint hash = 17;
+                foreach (var varIdx in m_activeVars)
+                {
+                    var prop = m_vars[varIdx];
+                    if ((prop.flags & StyleFlags.LayoutAffecting) != 0)
+                    {
+                        hash = hash * 23 + (uint)varIdx;
+                        hash = hash * 23 + (uint)prop.dataType;
+                        if (prop.dataType == StyleDataType.Float) hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.floatValue);
+                        else if (prop.dataType == StyleDataType.Vector2) {
+                            hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.vector2Value.X);
+                            hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.vector2Value.Y);
+                        }
+                    }
+                }
+                if (m_hasFontFamily) hash = hash * 23 + (uint)m_fontFamily.tokenHash;
+                if (m_hasFontSize) hash = hash * 23 + BitConverter.SingleToUInt32Bits(m_fontSize.floatValue);
+                return hash;
+            }
+        }
+
+        public void PopFontOnly()
+        {
+            if (m_hasFontFamily || m_hasFontSize)
+            {
+                if (m_fontWasPushed) ImGui.PopFont();
+                if (m_hasFontFamily) RenderingContext.PopFontState();
+            }
+        }
+
         public unsafe void Push()
         {
             foreach (var colIdx in m_activeColors) ImGui.PushStyleColor((ImGuiCol)colIdx, m_colors[colIdx].colorValue);

@@ -6,21 +6,12 @@ namespace ImTK.UI
     [CustomFieldDrawer(typeof(int), allowInheritType: false)]
     public class IntDrawer : FieldDrawer<int>
     {
-        private IntField m_intField;
-
         public float mouseStep { get; set; } = -1f;
 
-        public int step
-        {
-            get => m_intField.step;
-            set => m_intField.step = value;
-        }
+        public int step { get; set; } = 0;
 
         public IntDrawer()
         {
-            m_intField = new IntField("##" + label);
-            m_intField.onValueChanged += OnIntFieldValueChanged;
-            hierarchy.Add(m_intField);
         }
 
         public override string label
@@ -29,17 +20,12 @@ namespace ImTK.UI
             set
             {
                 base.label = value;
-                if (m_intField != null)
-                {
-                    m_intField.label = "##" + value;
-                }
             }
         }
 
         public override void SetValueWithoutNotify(int newValue)
         {
             base.SetValueWithoutNotify(newValue);
-            m_intField.SetValueWithoutNotify(newValue);
         }
 
         public override int value
@@ -48,13 +34,7 @@ namespace ImTK.UI
             set
             {
                 base.value = value;
-                m_intField.SetValueWithoutNotify(value);
             }
-        }
-
-        private void OnIntFieldValueChanged(ValueChangedEvent<int> evt)
-        {
-            SetValueWithChanged(evt.newValue);
         }
 
         protected override void OnRenderLabel()
@@ -110,7 +90,6 @@ namespace ImTK.UI
                     if (newValue != value)
                     {
                         value = newValue; // this triggers SetValueWithChanged logic internally via setter
-                        m_intField.SetValueWithoutNotify(newValue);
                     }
                 }
             }
@@ -123,7 +102,14 @@ namespace ImTK.UI
 
         public override void OnRender()
         {
-            // Do not render anything natively here.
+            int v = value;
+            bool changed = ImGuiNET.ImGui.InputInt("##" + label, ref v, step, step * 100, ImGuiNET.ImGuiInputTextFlags.None);
+            
+            if (changed || ImGuiNET.ImGui.IsItemDeactivatedAfterEdit())
+            {
+                SetValueWithChanged(v);
+            }
+
             base.OnRender();
         }
     }

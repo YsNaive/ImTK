@@ -220,6 +220,60 @@ namespace ImTK.UI
 
         internal bool m_isStyleDirty = true;
 
+        internal bool m_isMeasureDirty = true;
+        internal bool m_isArrangeDirty = true;
+        internal Vector2 m_desiredSize;
+        public Rect layoutRect { get; internal set; }
+        internal LayoutConstraint m_lastConstraint;
+
+        internal void MarkMeasureDirty()
+        {
+            if (m_isMeasureDirty) return;
+            m_isMeasureDirty = true;
+            if (this is IWindow) return;
+            parent?.MarkMeasureDirty();
+        }
+
+        internal void MarkArrangeDirty()
+        {
+            if (m_isArrangeDirty) return;
+            m_isArrangeDirty = true;
+            if (this is IWindow) return;
+            parent?.MarkArrangeDirty();
+        }
+
+        public void Measure(LayoutConstraint constraint)
+        {
+            if (!m_isMeasureDirty && m_lastConstraint == constraint)
+                return;
+
+            m_lastConstraint = constraint;
+            resolvedStyle.PushFontOnly();
+            m_desiredSize = MeasureContent(constraint);
+            resolvedStyle.PopFontOnly();
+
+            m_isMeasureDirty = false;
+        }
+
+        protected virtual Vector2 MeasureContent(LayoutConstraint constraint)
+        {
+            return Vector2.Zero;
+        }
+
+        public void Arrange(Rect finalAbsoluteRect)
+        {
+            if (!m_isArrangeDirty && this.layoutRect == finalAbsoluteRect && !m_isMeasureDirty)
+                return;
+
+            this.layoutRect = finalAbsoluteRect;
+            ArrangeContent(finalAbsoluteRect);
+            m_isArrangeDirty = false;
+        }
+
+        protected virtual void ArrangeContent(Rect finalAbsoluteRect)
+        {
+        }
+
         public ImGuiStyleHandler resolvedStyle { get; } = new ImGuiStyleHandler();
         public ImGuiStyleHandler requiredStyle { get; } = new ImGuiStyleHandler();
 

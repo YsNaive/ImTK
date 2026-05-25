@@ -53,6 +53,8 @@ namespace ImTK.UI
                     }
                 }
 
+                uint oldLayoutHash = element.resolvedStyle.GetLayoutHash();
+
                 element.resolvedStyle.Clear();
                 if (element.parent != null)
                 {
@@ -115,6 +117,13 @@ namespace ImTK.UI
                 }
 
                 ImGuiStyleHandler.Diff(element.parent?.resolvedStyle, element.resolvedStyle, element.requiredStyle);
+                
+                uint newLayoutHash = element.resolvedStyle.GetLayoutHash();
+                if (oldLayoutHash != newLayoutHash)
+                {
+                    element.MarkMeasureDirty();
+                }
+
                 element.m_isStyleDirty = false;
             }
 

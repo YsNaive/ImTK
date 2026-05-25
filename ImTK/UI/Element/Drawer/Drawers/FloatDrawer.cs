@@ -6,21 +6,12 @@ namespace ImTK.UI
     [CustomFieldDrawer(typeof(float), allowInheritType: false)]
     public class FloatDrawer : FieldDrawer<float>
     {
-        private FloatField m_floatField;
-
         public float mouseStep { get; set; } = -1f;
 
-        public float step
-        {
-            get => m_floatField.step;
-            set => m_floatField.step = value;
-        }
+        public float step { get; set; } = 0f;
 
         public FloatDrawer()
         {
-            m_floatField = new FloatField("##" + label);
-            m_floatField.onValueChanged += OnFloatFieldValueChanged;
-            hierarchy.Add(m_floatField);
         }
 
         public override string label
@@ -29,17 +20,12 @@ namespace ImTK.UI
             set
             {
                 base.label = value;
-                if (m_floatField != null)
-                {
-                    m_floatField.label = "##" + value;
-                }
             }
         }
 
         public override void SetValueWithoutNotify(float newValue)
         {
             base.SetValueWithoutNotify(newValue);
-            m_floatField.SetValueWithoutNotify(newValue);
         }
 
         public override float value
@@ -48,13 +34,7 @@ namespace ImTK.UI
             set
             {
                 base.value = value;
-                m_floatField.SetValueWithoutNotify(value);
             }
-        }
-
-        private void OnFloatFieldValueChanged(ValueChangedEvent<float> evt)
-        {
-            SetValueWithChanged(evt.newValue);
         }
 
         protected override void OnRenderLabel()
@@ -110,7 +90,6 @@ namespace ImTK.UI
                     if (newValue != value)
                     {
                         value = newValue; // this triggers SetValueWithChanged logic internally via setter
-                        m_floatField.SetValueWithoutNotify(newValue);
                     }
                 }
             }
@@ -123,7 +102,14 @@ namespace ImTK.UI
 
         public override void OnRender()
         {
-            // Do not render anything natively here.
+            float v = value;
+            bool changed = ImGuiNET.ImGui.InputFloat("##" + label, ref v, step, step * 100f, "%.3f", ImGuiNET.ImGuiInputTextFlags.None);
+            
+            if (changed || ImGuiNET.ImGui.IsItemDeactivatedAfterEdit())
+            {
+                SetValueWithChanged(v);
+            }
+
             base.OnRender();
         }
     }
