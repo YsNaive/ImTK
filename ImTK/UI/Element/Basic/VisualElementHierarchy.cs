@@ -52,6 +52,7 @@ namespace ImTK.UI
             child.hierarchy.parent = m_owner;
 
             EventDispatcher.MarkHierarchyDirty(m_owner);
+            m_owner.GetWindow()?.MarkRenderListDirty();
         }
 
         public void AddRange(IEnumerable<VisualElement> children)
@@ -74,6 +75,7 @@ namespace ImTK.UI
             }
 
             EventDispatcher.MarkHierarchyDirty(m_owner);
+            m_owner.GetWindow()?.MarkRenderListDirty();
         }
 
         public void Clear()
@@ -87,6 +89,7 @@ namespace ImTK.UI
             m_children.Clear();
 
             EventDispatcher.MarkHierarchyDirty(m_owner);
+            m_owner.GetWindow()?.MarkRenderListDirty();
         }
 
         public IEnumerable<VisualElement> Children()

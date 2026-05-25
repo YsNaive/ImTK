@@ -7,6 +7,7 @@ using ImTK.Core;
 
 namespace ImTK.UI
 {
+
     public class VisualElement : IVisualElementHierarchy
     {
         public class StyleKey
@@ -27,6 +28,29 @@ namespace ImTK.UI
 
             public static readonly HashedString FontFamily = new HashedString("FontFamily");
             public static readonly HashedString FontSize = new HashedString("FontSize");
+
+            // --- Layout Properties ---
+            public static readonly HashedString Width = new HashedString("Width");
+            public static readonly HashedString Height = new HashedString("Height");
+            public static readonly HashedString MinWidth = new HashedString("MinWidth");
+            public static readonly HashedString MaxWidth = new HashedString("MaxWidth");
+            public static readonly HashedString MinHeight = new HashedString("MinHeight");
+            public static readonly HashedString MaxHeight = new HashedString("MaxHeight");
+
+            public static readonly HashedString Margin = new HashedString("Margin");
+            public static readonly HashedString FlexDirection = new HashedString("FlexDirection");
+            public static readonly HashedString FlexWrap = new HashedString("FlexWrap");
+            public static readonly HashedString JustifyContent = new HashedString("JustifyContent");
+            public static readonly HashedString AlignItems = new HashedString("AlignItems");
+            public static readonly HashedString FlexGrow = new HashedString("FlexGrow");
+            public static readonly HashedString AlignSelf = new HashedString("AlignSelf");
+            
+            public static readonly HashedString PositionType = new HashedString("PositionType");
+            public static readonly HashedString Top = new HashedString("Top");
+            public static readonly HashedString Bottom = new HashedString("Bottom");
+            public static readonly HashedString Left = new HashedString("Left");
+            public static readonly HashedString Right = new HashedString("Right");
+            public static readonly HashedString Display = new HashedString("Display");
         }
 
         public class Style : VisualElementStyle, IVisualElementStyle
@@ -182,6 +206,103 @@ namespace ImTK.UI
                 get => GetPropertyColor(StyleKey.SelectionColor);
                 set { if (value.HasValue) SetColor(StyleKey.SelectionColor, value.Value); else Clear(StyleKey.SelectionColor); }
             }
+
+            // --- High-level Layout Properties ---
+            public StyleValue<float>? width
+            {
+                get => GetPropertyFloat(StyleKey.Width);
+                set { if (value.HasValue) SetFloat(StyleKey.Width, value.Value); else Clear(StyleKey.Width); }
+            }
+            public StyleValue<float>? height
+            {
+                get => GetPropertyFloat(StyleKey.Height);
+                set { if (value.HasValue) SetFloat(StyleKey.Height, value.Value); else Clear(StyleKey.Height); }
+            }
+            public StyleValue<float>? minWidth
+            {
+                get => GetPropertyFloat(StyleKey.MinWidth);
+                set { if (value.HasValue) SetFloat(StyleKey.MinWidth, value.Value); else Clear(StyleKey.MinWidth); }
+            }
+            public StyleValue<float>? maxWidth
+            {
+                get => GetPropertyFloat(StyleKey.MaxWidth);
+                set { if (value.HasValue) SetFloat(StyleKey.MaxWidth, value.Value); else Clear(StyleKey.MaxWidth); }
+            }
+            public StyleValue<float>? minHeight
+            {
+                get => GetPropertyFloat(StyleKey.MinHeight);
+                set { if (value.HasValue) SetFloat(StyleKey.MinHeight, value.Value); else Clear(StyleKey.MinHeight); }
+            }
+            public StyleValue<float>? maxHeight
+            {
+                get => GetPropertyFloat(StyleKey.MaxHeight);
+                set { if (value.HasValue) SetFloat(StyleKey.MaxHeight, value.Value); else Clear(StyleKey.MaxHeight); }
+            }
+            public StyleValue<Vector2>? margin
+            {
+                get { var p = GetProperty(StyleKey.Margin.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Vector2> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Vector2> { Value = p.vector2Value }); }
+                set { if (value.HasValue) SetVector2(StyleKey.Margin, value.Value); else Clear(StyleKey.Margin); }
+            }
+            public StyleValue<FlexDirection>? flexDirection
+            {
+                get { var p = GetProperty(StyleKey.FlexDirection.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<FlexDirection> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<FlexDirection> { Value = (FlexDirection)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.FlexDirection, value.Value); else Clear(StyleKey.FlexDirection); }
+            }
+            public StyleValue<FlexWrap>? flexWrap
+            {
+                get { var p = GetProperty(StyleKey.FlexWrap.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<FlexWrap> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<FlexWrap> { Value = (FlexWrap)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.FlexWrap, value.Value); else Clear(StyleKey.FlexWrap); }
+            }
+            public StyleValue<JustifyContent>? justifyContent
+            {
+                get { var p = GetProperty(StyleKey.JustifyContent.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<JustifyContent> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<JustifyContent> { Value = (JustifyContent)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.JustifyContent, value.Value); else Clear(StyleKey.JustifyContent); }
+            }
+            public StyleValue<AlignItems>? alignItems
+            {
+                get { var p = GetProperty(StyleKey.AlignItems.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<AlignItems> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<AlignItems> { Value = (AlignItems)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.AlignItems, value.Value); else Clear(StyleKey.AlignItems); }
+            }
+            public StyleValue<float>? flexGrow
+            {
+                get => GetPropertyFloat(StyleKey.FlexGrow);
+                set { if (value.HasValue) SetFloat(StyleKey.FlexGrow, value.Value); else Clear(StyleKey.FlexGrow); }
+            }
+            public StyleValue<AlignItems>? alignSelf
+            {
+                get { var p = GetProperty(StyleKey.AlignSelf.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<AlignItems> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<AlignItems> { Value = (AlignItems)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.AlignSelf, value.Value); else Clear(StyleKey.AlignSelf); }
+            }
+            public StyleValue<PositionType>? positionType
+            {
+                get { var p = GetProperty(StyleKey.PositionType.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<PositionType> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<PositionType> { Value = (PositionType)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.PositionType, value.Value); else Clear(StyleKey.PositionType); }
+            }
+            public StyleValue<float>? top
+            {
+                get => GetPropertyFloat(StyleKey.Top);
+                set { if (value.HasValue) SetFloat(StyleKey.Top, value.Value); else Clear(StyleKey.Top); }
+            }
+            public StyleValue<float>? bottom
+            {
+                get => GetPropertyFloat(StyleKey.Bottom);
+                set { if (value.HasValue) SetFloat(StyleKey.Bottom, value.Value); else Clear(StyleKey.Bottom); }
+            }
+            public StyleValue<float>? left
+            {
+                get => GetPropertyFloat(StyleKey.Left);
+                set { if (value.HasValue) SetFloat(StyleKey.Left, value.Value); else Clear(StyleKey.Left); }
+            }
+            public StyleValue<float>? right
+            {
+                get => GetPropertyFloat(StyleKey.Right);
+                set { if (value.HasValue) SetFloat(StyleKey.Right, value.Value); else Clear(StyleKey.Right); }
+            }
+            public StyleValue<DisplayStyle>? display
+            {
+                get { var p = GetProperty(StyleKey.Display.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<DisplayStyle> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<DisplayStyle> { Value = (DisplayStyle)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.Display, value.Value); else Clear(StyleKey.Display); }
+            }
         }
 
         private static int s_elementCounter = 0;
@@ -274,8 +395,49 @@ namespace ImTK.UI
         {
         }
 
-        public ImGuiStyleHandler resolvedStyle { get; } = new ImGuiStyleHandler();
         public ImGuiStyleHandler requiredStyle { get; } = new ImGuiStyleHandler();
+        public ImGuiStyleHandler resolvedStyle { get; } = new ImGuiStyleHandler();
+        public ResolvedLayoutState resolvedLayoutState { get; internal set; } = ResolvedLayoutState.Default;
+
+        internal void ResolveLayoutState(List<StyleProperty> composedProps)
+        {
+            var state = ResolvedLayoutState.Default;
+            
+            // Layout properties are not inheritable by default, so we don't copy from parent
+            // except for AlignSelf which defers to parent's AlignItems if not set
+            if (parent != null)
+            {
+                state.alignSelf = parent.resolvedLayoutState.alignItems;
+            }
+
+            foreach (var prop in composedProps)
+            {
+                if (prop.category == StyleCategory.Layout)
+                {
+                    if (prop.key == StyleKey.Width.Hash) state.width = prop.floatValue;
+                    else if (prop.key == StyleKey.Height.Hash) state.height = prop.floatValue;
+                    else if (prop.key == StyleKey.MinWidth.Hash) state.minWidth = prop.floatValue;
+                    else if (prop.key == StyleKey.MaxWidth.Hash) state.maxWidth = prop.floatValue;
+                    else if (prop.key == StyleKey.MinHeight.Hash) state.minHeight = prop.floatValue;
+                    else if (prop.key == StyleKey.MaxHeight.Hash) state.maxHeight = prop.floatValue;
+                    else if (prop.key == StyleKey.Margin.Hash) state.margin = prop.vector2Value;
+                    else if (prop.key == StyleKey.FlexDirection.Hash) state.flexDirection = (FlexDirection)prop.enumValue;
+                    else if (prop.key == StyleKey.FlexWrap.Hash) state.flexWrap = (FlexWrap)prop.enumValue;
+                    else if (prop.key == StyleKey.JustifyContent.Hash) state.justifyContent = (JustifyContent)prop.enumValue;
+                    else if (prop.key == StyleKey.AlignItems.Hash) state.alignItems = (AlignItems)prop.enumValue;
+                    else if (prop.key == StyleKey.FlexGrow.Hash) state.flexGrow = prop.floatValue;
+                    else if (prop.key == StyleKey.AlignSelf.Hash) state.alignSelf = (AlignItems)prop.enumValue;
+                    else if (prop.key == StyleKey.PositionType.Hash) state.positionType = (PositionType)prop.enumValue;
+                    else if (prop.key == StyleKey.Top.Hash) state.top = prop.floatValue;
+                    else if (prop.key == StyleKey.Bottom.Hash) state.bottom = prop.floatValue;
+                    else if (prop.key == StyleKey.Left.Hash) state.left = prop.floatValue;
+                    else if (prop.key == StyleKey.Right.Hash) state.right = prop.floatValue;
+                    else if (prop.key == StyleKey.Display.Hash) state.display = (DisplayStyle)prop.enumValue;
+                }
+            }
+
+            resolvedLayoutState = state;
+        }
 
 
         public VisualElement()
@@ -481,6 +643,22 @@ namespace ImTK.UI
         public virtual bool OnBeginRender()
         {
             return true;
+        }
+
+        public virtual void Update()
+        {
+
+        }
+
+        public Window GetWindow()
+        {
+            VisualElement current = this;
+            while (current != null)
+            {
+                if (current is Window w) return w;
+                current = current.parent;
+            }
+            return null;
         }
 
         public virtual void OnRender()

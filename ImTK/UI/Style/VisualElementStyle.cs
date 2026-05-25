@@ -138,6 +138,27 @@ namespace ImTK.UI
                 prop.key = ImGuiStyleHandler.s_fontSizeImGuiKey.Hash;
                 prop.isInheritable = true;
             }
+            else if (prop.key == VisualElement.StyleKey.Width.Hash ||
+                     prop.key == VisualElement.StyleKey.Height.Hash ||
+                     prop.key == VisualElement.StyleKey.MinWidth.Hash ||
+                     prop.key == VisualElement.StyleKey.MaxWidth.Hash ||
+                     prop.key == VisualElement.StyleKey.MinHeight.Hash ||
+                     prop.key == VisualElement.StyleKey.MaxHeight.Hash ||
+                     prop.key == VisualElement.StyleKey.Margin.Hash ||
+                     prop.key == VisualElement.StyleKey.FlexDirection.Hash ||
+                     prop.key == VisualElement.StyleKey.FlexWrap.Hash ||
+                     prop.key == VisualElement.StyleKey.JustifyContent.Hash ||
+                     prop.key == VisualElement.StyleKey.AlignItems.Hash ||
+                     prop.key == VisualElement.StyleKey.FlexGrow.Hash ||
+                     prop.key == VisualElement.StyleKey.AlignSelf.Hash ||
+                     prop.key == VisualElement.StyleKey.PositionType.Hash ||
+                     prop.key == VisualElement.StyleKey.Top.Hash ||
+                     prop.key == VisualElement.StyleKey.Bottom.Hash ||
+                     prop.key == VisualElement.StyleKey.Left.Hash ||
+                     prop.key == VisualElement.StyleKey.Right.Hash)
+            {
+                prop.category = StyleCategory.Layout;
+            }
             else
             {
                 mapped = false;

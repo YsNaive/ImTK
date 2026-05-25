@@ -174,9 +174,10 @@ namespace ImTK.UI
             {
                 foreach (var window in s_windows.Values)
                 {
-                    RenderEngine.ComputeStyleRecursive(window);
+                    window.BuildRenderList();
+                    RenderEngine.ComputeStyleFlat(window.m_renderList);
                     RenderEngine.ExecuteLayoutPhase(window);
-                    RenderEngine.RenderNode(window);
+                    RenderEngine.RenderFlat(window.m_renderList);
                 }
             }
             catch (Exception ex)

@@ -8,7 +8,8 @@ namespace ImTK.UI
     {
         ImGuiStyle = 0,
         ThemeToken = 1,
-        HighLevelToken = 2
+        HighLevelToken = 2,
+        Layout = 3
     }
 
     public enum StyleDataType : byte

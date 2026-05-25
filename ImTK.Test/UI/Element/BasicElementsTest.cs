@@ -42,7 +42,8 @@ namespace ImTK.Test.UI.Element
 
         private void TestStringDrawer()
         {
-            var stringDrawer = new StringDrawer { label = "Input", value = "Init" };
+            var stringDrawer = new StringDrawer { label = "Input" };
+            stringDrawer.SetValueWithoutNotify("Init");
             ImTKAssert.AreEqual("Init", stringDrawer.value, "StringDrawer initial value failed.");
 
             bool eventFired = false;

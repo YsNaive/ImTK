@@ -6,11 +6,18 @@ namespace ImTK.UI
     {
         private static readonly List<StyleProperty> s_composedUnresolvedProperties = new List<StyleProperty>();
 
-        public static void ComputeStyleRecursive(VisualElement element)
+        public static void ComputeStyleFlat(System.Collections.Generic.List<RenderOp> renderList)
         {
-            if (element.m_isStyleDirty)
+            for (int i = 0; i < renderList.Count; i++)
             {
-                s_composedUnresolvedProperties.Clear();
+                var op = renderList[i];
+                if (op.Type != RenderOpType.Begin) continue;
+                
+                var element = op.Element;
+
+                if (element.m_isStyleDirty)
+                {
+                    s_composedUnresolvedProperties.Clear();
 
                 // 1. Global Sheet
                 foreach (var block in StyleSheet.Global.Blocks)
@@ -54,12 +61,15 @@ namespace ImTK.UI
                 }
 
                 uint oldLayoutHash = element.resolvedStyle.GetLayoutHash();
+                ResolvedLayoutState oldLayoutState = element.resolvedLayoutState;
 
                 element.resolvedStyle.Clear();
                 if (element.parent != null)
                 {
                     element.resolvedStyle.CopyFrom(element.parent.resolvedStyle);
                 }
+
+                element.ResolveLayoutState(s_composedUnresolvedProperties);
 
                 var theme = element.theme ?? ImTKTheme.GlobalTheme;
                 var translatedProps = new List<StyleProperty>();
@@ -119,22 +129,17 @@ namespace ImTK.UI
                 ImGuiStyleHandler.Diff(element.parent?.resolvedStyle, element.resolvedStyle, element.requiredStyle);
                 
                 uint newLayoutHash = element.resolvedStyle.GetLayoutHash();
-                if (oldLayoutHash != newLayoutHash)
+                if (oldLayoutHash != newLayoutHash || oldLayoutState != element.resolvedLayoutState)
                 {
                     element.MarkMeasureDirty();
                 }
 
                 element.m_isStyleDirty = false;
             }
-
-            int childCount = element.hierarchy.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
-                ComputeStyleRecursive(element.hierarchy.ChildAt(i));
-            }
         }
+    }
 
-        private static void SetComposedProperty(StyleProperty prop)
+    private static void SetComposedProperty(StyleProperty prop)
         {
             for (int i = 0; i < s_composedUnresolvedProperties.Count; i++)
             {

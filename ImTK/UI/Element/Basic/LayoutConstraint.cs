@@ -2,6 +2,13 @@ using System;
 
 namespace ImTK.UI
 {
+    public enum FlexDirection { Column, Row }
+    public enum FlexWrap { NoWrap, Wrap }
+    public enum JustifyContent { FlexStart, Center, FlexEnd, SpaceBetween }
+    public enum AlignItems { FlexStart, Center, FlexEnd, Stretch }
+    public enum PositionType { Static, Relative, Absolute }
+    public enum DisplayStyle { Flex, None }
+
     public enum MeasureMode : byte
     {
         Undefined,
