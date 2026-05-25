@@ -8,8 +8,6 @@ namespace ImTK.UI
     {
         public new class StyleKey : VisualElement.StyleKey
         {
-            public static readonly HashedString Width = new HashedString("Width");
-            public static readonly HashedString Height = new HashedString("Height");
             public static readonly HashedString HoverColor = new HashedString("HoverColor");
             public static readonly HashedString ActiveColor = new HashedString("ActiveColor");
         }
@@ -37,28 +35,6 @@ namespace ImTK.UI
                     else Clear(StyleKey.ActiveColor);
                 }
             }
-
-            public StyleValue<float>? width
-            {
-                get => GetPropertyFloat(StyleKey.Width);
-                set
-                {
-                    if (value.HasValue) SetFloat(StyleKey.Width, value.Value);
-                    else Clear(StyleKey.Width);
-                }
-            }
-
-            public StyleValue<float>? height
-            {
-                get => GetPropertyFloat(StyleKey.Height);
-                set
-                {
-                    if (value.HasValue) SetFloat(StyleKey.Height, value.Value);
-                    else Clear(StyleKey.Height);
-                }
-            }
-
-
 
 
 
@@ -92,7 +68,20 @@ namespace ImTK.UI
             }
 }
 
-        public string text { get; set; }
+        private string m_text = string.Empty;
+        public string text 
+        { 
+            get => m_text; 
+            set 
+            {
+                if (m_text != value)
+                {
+                    m_text = value ?? string.Empty;
+                    MarkMeasureDirty();
+                    MarkArrangeDirty();
+                }
+            } 
+        }
 
         public event Action<ClickEvent> onClicked
         {
@@ -115,12 +104,20 @@ namespace ImTK.UI
             return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
         }
 
+        protected override System.Numerics.Vector2 MeasureContent(LayoutConstraint constraint)
+        {
+            var textSize = ImGui.CalcTextSize(text);
+            var padding = ImGui.GetStyle().FramePadding;
+            if (resolvedStyle.TryGetVector2((int)ImGuiStyleVar.FramePadding, out var overridePadding))
+                padding = overridePadding;
+            
+            float frameHeight = ImGui.GetTextLineHeight() + padding.Y * 2;
+            return new System.Numerics.Vector2(textSize.X + padding.X * 2, frameHeight);
+        }
+
         public override void OnRender()
         {
-            float width = style.width?.Value ?? 0f;
-            float height = style.height?.Value ?? 0f;
-
-            if (ImGui.Button(text, new System.Numerics.Vector2(width, height)))
+            if (ImGui.Button(text, new System.Numerics.Vector2(layoutRect.width, layoutRect.height)))
             {
                 var evt = EventPool<ClickEvent>.Get();
                 SendEvent(evt);

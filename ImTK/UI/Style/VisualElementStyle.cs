@@ -96,11 +96,19 @@ namespace ImTK.UI
             {
                 prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
                 prop.key = (int)ImGuiStyleVar.WindowPadding;
+                output.Add(prop);
+                
+                var prop2 = prop;
+                prop2.key = (int)ImGuiStyleVar.FramePadding;
+                output.Add(prop2);
+                
+                return;
             }
             else if (prop.key == VisualElement.StyleKey.ItemSpacing.Hash)
             {
                 prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
                 prop.key = (int)ImGuiStyleVar.ItemSpacing;
+                prop.isInheritable = true;
             }
             else if (prop.key == VisualElement.StyleKey.ItemInnerSpacing.Hash)
             {

@@ -5,6 +5,7 @@ namespace ImTK.UI
     public static partial class RenderEngine
     {
         private static readonly List<StyleProperty> s_composedUnresolvedProperties = new List<StyleProperty>();
+        private static readonly List<StyleProperty> s_translatedProperties = new List<StyleProperty>();
 
         public static void ComputeStyleFlat(System.Collections.Generic.List<RenderOp> renderList)
         {
@@ -69,60 +70,58 @@ namespace ImTK.UI
                     element.resolvedStyle.CopyFrom(element.parent.resolvedStyle);
                 }
 
-                element.ResolveLayoutState(s_composedUnresolvedProperties);
-
-                var theme = element.theme ?? ImTKTheme.GlobalTheme;
-                var translatedProps = new List<StyleProperty>();
-
+                s_translatedProperties.Clear();
                 foreach (var composedProp in s_composedUnresolvedProperties)
                 {
-                    translatedProps.Clear();
-
                     if (element.internalStyle is VisualElementStyle styleComp)
                     {
-                        styleComp.ComputeHighlevelToken(composedProp, translatedProps);
+                        styleComp.ComputeHighlevelToken(composedProp, s_translatedProperties);
                     }
                     else
                     {
-                        translatedProps.Add(composedProp);
+                        s_translatedProperties.Add(composedProp);
+                    }
+                }
+
+                element.ResolveLayoutState(s_translatedProperties);
+
+                var theme = element.theme ?? ImTKTheme.GlobalTheme;
+
+                foreach (var prop in s_translatedProperties)
+                {
+                    var finalProp = prop;
+
+                    if (finalProp.category == StyleCategory.ThemeToken)
+                    {
+                        if (theme.TryGetColorToken(finalProp.tokenHash, out var color))
+                        {
+                            finalProp.category = StyleCategory.ImGuiStyle;
+                            finalProp.dataType = StyleDataType.Color;
+                            finalProp.colorValue = color.u32;
+                        }
+                        else if (theme.TryGetFloatToken(finalProp.tokenHash, out var floatVal))
+                        {
+                            finalProp.category = StyleCategory.ImGuiStyle;
+                            finalProp.dataType = StyleDataType.Float;
+                            finalProp.floatValue = floatVal;
+                        }
+                        else if (theme.TryGetVector2Token(finalProp.tokenHash, out var vec2Val))
+                        {
+                            finalProp.category = StyleCategory.ImGuiStyle;
+                            finalProp.dataType = StyleDataType.Vector2;
+                            finalProp.vector2Value = vec2Val;
+                        }
+                        else if (theme.TryGetHashToken(finalProp.tokenHash, out var hashVal))
+                        {
+                            finalProp.category = StyleCategory.ImGuiStyle;
+                            finalProp.dataType = StyleDataType.HashedString;
+                            finalProp.tokenHash = hashVal;
+                        }
                     }
 
-                    foreach (var prop in translatedProps)
+                    if (finalProp.category == StyleCategory.ImGuiStyle)
                     {
-                        var finalProp = prop;
-
-                        if (finalProp.category == StyleCategory.ThemeToken)
-                        {
-                            if (theme.TryGetColorToken(finalProp.tokenHash, out var color))
-                            {
-                                finalProp.category = StyleCategory.ImGuiStyle;
-                                finalProp.dataType = StyleDataType.Color;
-                                finalProp.colorValue = color.u32;
-                            }
-                            else if (theme.TryGetFloatToken(finalProp.tokenHash, out var floatVal))
-                            {
-                                finalProp.category = StyleCategory.ImGuiStyle;
-                                finalProp.dataType = StyleDataType.Float;
-                                finalProp.floatValue = floatVal;
-                            }
-                            else if (theme.TryGetVector2Token(finalProp.tokenHash, out var vec2Val))
-                            {
-                                finalProp.category = StyleCategory.ImGuiStyle;
-                                finalProp.dataType = StyleDataType.Vector2;
-                                finalProp.vector2Value = vec2Val;
-                            }
-                            else if (theme.TryGetHashToken(finalProp.tokenHash, out var hashVal))
-                            {
-                                finalProp.category = StyleCategory.ImGuiStyle;
-                                finalProp.dataType = StyleDataType.HashedString;
-                                finalProp.tokenHash = hashVal;
-                            }
-                        }
-
-                        if (finalProp.category == StyleCategory.ImGuiStyle)
-                        {
-                            element.resolvedStyle.TrySetProperty(finalProp);
-                        }
+                        element.resolvedStyle.TrySetProperty(finalProp);
                     }
                 }
 

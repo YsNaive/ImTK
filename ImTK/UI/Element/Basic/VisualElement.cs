@@ -370,7 +370,18 @@ namespace ImTK.UI
 
             m_lastConstraint = constraint;
             resolvedStyle.PushFontOnly();
-            m_desiredSize = MeasureContent(constraint);
+            Vector2 desired = MeasureContent(constraint);
+            
+            var state = resolvedLayoutState;
+            if (state.width.HasValue) desired.X = state.width.Value;
+            if (state.height.HasValue) desired.Y = state.height.Value;
+            
+            if (state.minWidth.HasValue) desired.X = Math.Max(desired.X, state.minWidth.Value);
+            if (state.maxWidth.HasValue) desired.X = Math.Min(desired.X, state.maxWidth.Value);
+            if (state.minHeight.HasValue) desired.Y = Math.Max(desired.Y, state.minHeight.Value);
+            if (state.maxHeight.HasValue) desired.Y = Math.Min(desired.Y, state.maxHeight.Value);
+
+            m_desiredSize = desired;
             resolvedStyle.PopFontOnly();
 
             m_isMeasureDirty = false;
@@ -378,7 +389,52 @@ namespace ImTK.UI
 
         protected virtual Vector2 MeasureContent(LayoutConstraint constraint)
         {
-            return Vector2.Zero;
+            var state = resolvedLayoutState;
+            bool isRow = state.flexDirection == FlexDirection.Row;
+
+            float totalMain = 0;
+            float maxCross = 0;
+            
+            System.Numerics.Vector2 itemSpacing = this.theme.itemSpacing;
+            if (resolvedStyle.TryGetVector2((int)ImGuiStyleVar.ItemSpacing, out var overrideSpacing))
+                itemSpacing = overrideSpacing;
+            float gap = isRow ? itemSpacing.X : itemSpacing.Y;
+            int renderableChildCount = 0;
+
+            int childCount = hierarchy.childCount;
+            for (int i = 0; i < childCount; i++)
+            {
+                var child = hierarchy.ChildAt(i);
+                var childState = child.resolvedLayoutState;
+
+                if (childState.display == DisplayStyle.None || childState.positionType == PositionType.Absolute)
+                    continue;
+
+                LayoutConstraint childConstraint = new LayoutConstraint(0, 0, MeasureMode.Undefined, MeasureMode.Undefined);
+                child.Measure(childConstraint);
+                
+                Vector2 childOuterSize = child.m_desiredSize + new Vector2(
+                    Math.Max(0, childState.margin.X), Math.Max(0, childState.margin.Y)
+                );
+                
+                if (isRow)
+                {
+                    totalMain += childOuterSize.X;
+                    maxCross = Math.Max(maxCross, childOuterSize.Y);
+                }
+                else
+                {
+                    totalMain += childOuterSize.Y;
+                    maxCross = Math.Max(maxCross, childOuterSize.X);
+                }
+                renderableChildCount++;
+            }
+
+            if (renderableChildCount > 1)
+                totalMain += gap * (renderableChildCount - 1);
+
+            Vector2 desired = isRow ? new Vector2(totalMain, maxCross) : new Vector2(maxCross, totalMain);
+            return desired;
         }
 
         public void Arrange(Rect finalAbsoluteRect)
@@ -391,8 +447,181 @@ namespace ImTK.UI
             m_isArrangeDirty = false;
         }
 
+        public System.Numerics.Vector2 LocalToWorld(System.Numerics.Vector2 localPoint)
+        {
+            return layoutRect.position + localPoint;
+        }
+
+        public System.Numerics.Vector2 WorldToLocal(System.Numerics.Vector2 worldPoint)
+        {
+            return worldPoint - layoutRect.position;
+        }
+
+        public Rect LocalToWorld(Rect localRect)
+        {
+            return new Rect(layoutRect.position + localRect.position, localRect.size);
+        }
+
+        public Rect WorldToLocal(Rect worldRect)
+        {
+            return new Rect(worldRect.position - layoutRect.position, worldRect.size);
+        }
+
         protected virtual void ArrangeContent(Rect finalAbsoluteRect)
         {
+            var state = resolvedLayoutState;
+            bool isRow = state.flexDirection == FlexDirection.Row;
+            
+            var relativeChildren = new System.Collections.Generic.List<VisualElement>();
+            var absoluteChildren = new System.Collections.Generic.List<VisualElement>();
+            
+            int childCount = hierarchy.childCount;
+            for (int i = 0; i < childCount; i++)
+            {
+                var child = hierarchy.ChildAt(i);
+                if (child.resolvedLayoutState.display == DisplayStyle.None) continue;
+                
+                if (child.resolvedLayoutState.positionType == PositionType.Absolute)
+                    absoluteChildren.Add(child);
+                else
+                    relativeChildren.Add(child);
+            }
+            
+            // Layout Relative Children (Simplified 1-Pass Flexbox)
+            if (relativeChildren.Count > 0)
+            {
+                float availableMain = isRow ? finalAbsoluteRect.width : finalAbsoluteRect.height;
+                float availableCross = isRow ? finalAbsoluteRect.height : finalAbsoluteRect.width;
+                
+                float totalMainDesired = 0;
+                float totalFlexGrow = 0;
+                
+                foreach (var child in relativeChildren)
+                {
+                    var childState = child.resolvedLayoutState;
+                    Vector2 margin = childState.margin;
+                    float childMain = isRow ? (child.m_desiredSize.X + margin.X) : (child.m_desiredSize.Y + margin.Y);
+                    totalMainDesired += childMain;
+                    totalFlexGrow += childState.flexGrow;
+                }
+                
+                System.Numerics.Vector2 itemSpacing = this.theme.itemSpacing;
+                if (resolvedStyle.TryGetVector2((int)ImGuiStyleVar.ItemSpacing, out var overrideSpacing))
+                    itemSpacing = overrideSpacing;
+                float gap = isRow ? itemSpacing.X : itemSpacing.Y;
+                float spacing = gap;
+                
+                float totalGapSpace = relativeChildren.Count > 1 ? gap * (relativeChildren.Count - 1) : 0;
+                float freeMainSpace = availableMain - totalMainDesired - totalGapSpace;
+                float currentMainPos = 0;
+                
+                if (freeMainSpace > 0 && totalFlexGrow == 0)
+                {
+                    switch (state.justifyContent)
+                    {
+                        case JustifyContent.Center:
+                            currentMainPos = freeMainSpace / 2f;
+                            break;
+                        case JustifyContent.FlexEnd:
+                            currentMainPos = freeMainSpace;
+                            break;
+                        case JustifyContent.SpaceBetween:
+                            if (relativeChildren.Count > 1)
+                                spacing = (availableMain - totalMainDesired) / (relativeChildren.Count - 1);
+                            break;
+                    }
+                }
+                
+                foreach (var child in relativeChildren)
+                {
+                    var childState = child.resolvedLayoutState;
+                    Vector2 margin = childState.margin;
+                    
+                    float childDesiredMain = isRow ? child.m_desiredSize.X : child.m_desiredSize.Y;
+                    float childDesiredCross = isRow ? child.m_desiredSize.Y : child.m_desiredSize.X;
+                    
+                    float childMarginMain = isRow ? margin.X : margin.Y;
+                    float childMarginCross = isRow ? margin.Y : margin.X;
+                    
+                    float childActualMain = childDesiredMain;
+                    if (freeMainSpace > 0 && totalFlexGrow > 0 && childState.flexGrow > 0)
+                    {
+                        float growAmt = (childState.flexGrow / totalFlexGrow) * freeMainSpace;
+                        childActualMain += growAmt;
+                    }
+                    
+                    float childActualCross = childDesiredCross;
+                    float currentCrossPos = 0;
+                    AlignItems align = childState.alignSelf;
+                    
+                    float freeCrossSpace = availableCross - (childActualCross + childMarginCross);
+                    
+                    if (align == AlignItems.Stretch && ((isRow && !childState.height.HasValue) || (!isRow && !childState.width.HasValue)))
+                    {
+                        childActualCross = availableCross - childMarginCross;
+                    }
+                    else if (align == AlignItems.Center)
+                    {
+                        currentCrossPos = freeCrossSpace / 2f;
+                    }
+                    else if (align == AlignItems.FlexEnd)
+                    {
+                        currentCrossPos = freeCrossSpace;
+                    }
+                    
+                    if (isRow)
+                    {
+                        if (childState.minWidth.HasValue) childActualMain = Math.Max(childActualMain, childState.minWidth.Value);
+                        if (childState.maxWidth.HasValue) childActualMain = Math.Min(childActualMain, childState.maxWidth.Value);
+                        if (childState.minHeight.HasValue) childActualCross = Math.Max(childActualCross, childState.minHeight.Value);
+                        if (childState.maxHeight.HasValue) childActualCross = Math.Min(childActualCross, childState.maxHeight.Value);
+                    }
+                    else
+                    {
+                        if (childState.minHeight.HasValue) childActualMain = Math.Max(childActualMain, childState.minHeight.Value);
+                        if (childState.maxHeight.HasValue) childActualMain = Math.Min(childActualMain, childState.maxHeight.Value);
+                        if (childState.minWidth.HasValue) childActualCross = Math.Max(childActualCross, childState.minWidth.Value);
+                        if (childState.maxWidth.HasValue) childActualCross = Math.Min(childActualCross, childState.maxWidth.Value);
+                    }
+                    
+                    float x, y, w, h;
+                    if (isRow)
+                    {
+                        x = finalAbsoluteRect.x + currentMainPos + margin.X / 2f;
+                        y = finalAbsoluteRect.y + currentCrossPos + margin.Y / 2f;
+                        w = childActualMain;
+                        h = childActualCross;
+                    }
+                    else
+                    {
+                        x = finalAbsoluteRect.x + currentCrossPos + margin.X / 2f;
+                        y = finalAbsoluteRect.y + currentMainPos + margin.Y / 2f;
+                        w = childActualCross;
+                        h = childActualMain;
+                    }
+                    
+                    currentMainPos += childActualMain + childMarginMain + spacing;
+                    child.Arrange(new Rect(x, y, w, h));
+                }
+            }
+            
+            // Layout Absolute Children
+            foreach (var absChild in absoluteChildren)
+            {
+                var absState = absChild.resolvedLayoutState;
+                float x = finalAbsoluteRect.x + (absState.left ?? 0);
+                float y = finalAbsoluteRect.y + (absState.top ?? 0);
+                float w = absState.width ?? absChild.m_desiredSize.X;
+                float h = absState.height ?? absChild.m_desiredSize.Y;
+                
+                if (absState.right.HasValue && !absState.left.HasValue)
+                    x = finalAbsoluteRect.x + finalAbsoluteRect.width - absState.right.Value - w;
+                    
+                if (absState.bottom.HasValue && !absState.top.HasValue)
+                    y = finalAbsoluteRect.y + finalAbsoluteRect.height - absState.bottom.Value - h;
+                    
+                absChild.Arrange(new Rect(x, y, w, h));
+            }
         }
 
         public ImGuiStyleHandler requiredStyle { get; } = new ImGuiStyleHandler();
@@ -642,6 +871,10 @@ namespace ImTK.UI
 
         public virtual bool OnBeginRender()
         {
+            if (this.parent != null)
+            {
+                ImGui.SetCursorScreenPos(this.layoutRect.position);
+            }
             return true;
         }
 

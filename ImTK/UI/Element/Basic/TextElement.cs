@@ -9,7 +9,24 @@ namespace ImTK.UI
         public string text
         {
             get => m_text;
-            set => m_text = value ?? string.Empty;
+            set 
+            {
+                if (m_text != value)
+                {
+                    m_text = value ?? string.Empty;
+                    MarkMeasureDirty();
+                    MarkArrangeDirty();
+                }
+            }
+        }
+
+        protected override System.Numerics.Vector2 MeasureContent(LayoutConstraint constraint)
+        {
+            if (string.IsNullOrEmpty(m_text)) return System.Numerics.Vector2.Zero;
+            // TODO: If constraint.WidthMode is Exactly or AtMost, we might need text wrapping support here.
+            // For now, return the basic text size (1-line).
+            var size = ImGui.CalcTextSize(m_text);
+            return new System.Numerics.Vector2(size.X, ImGui.GetTextLineHeight());
         }
 
         public TextElement(string text = "")

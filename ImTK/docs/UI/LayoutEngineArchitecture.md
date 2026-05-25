@@ -89,18 +89,18 @@
 
 ---
 
-## 7. 對現有 API 的影響與遷移指南 (Migration Guide)
+## 7. 對現有 API 的影響與架構現狀
 
-導入此架構後，現有程式碼需要進行以下重構與調整：
+導入此架構後，現有程式碼已完成以下重構與調整：
 
 ### 7.1 `RenderEngine.cs`
-* 將被大幅重構，拆分出 `ExecuteLayoutPhase`。
-* 現有的 `RenderNode` 將精簡，剝離所有計算空間相關的邏輯。
+* 已大幅重構，拆分出獨立的排版與渲染雙階段生命週期。
+* 徹底移除了 `RenderNode` 的隱性雙層架構。無論是 Menu、Drawer 還是普通控制項，現已統一併入主 `VisualTree` 之中，由 Layout Engine 統一計算 `layoutRect` 並進行絕對定位渲染。
 
 ### 7.2 `VisualElement.cs`
 * **新增屬性**：`desiredSize`, `layoutRect`, `isMeasureDirty`, `isArrangeDirty`。
-* **新增方法**：`CalculateLayout(LayoutConstraint)` (供框架遞迴呼叫), `MeasureContent(LayoutConstraint)` (供葉節點覆寫，計算本體尺寸)。
-* **API 職責轉移**：既有的 `OnBeginRender`, `OnRender`, `OnEndRender` 介面保留不變，但**實作內絕對禁止呼叫影響佈局的 ImGui API (如 `SameLine`)**。
+* **新增方法**：`Measure(LayoutConstraint)`, `Arrange(Rect)` (供框架遞迴呼叫), `MeasureContent(LayoutConstraint)` (供葉節點覆寫，計算本體自然尺寸)。
+* **API 職責轉移**：既有的 `OnBeginRender`, `OnRender`, `OnEndRender` 介面保留不變，但實作內嚴格禁止呼叫影響佈局的 ImGui API (如 `SameLine`)。
 
 ### 7.3 既有 UI 控制項 (`ImTK.UI.Element.Basic/`)
-* 所有的基礎元件（如 `Button`, `TextField`, `CheckBox` 等）必須全數翻修，將原先寫在 `OnRender` 內的佈局邏輯拆除，並實作 `MeasureContent`，確保能乾淨且精確地對接新的四階段生命週期。
+* 所有的基礎元件（如 `Button`, `TextElement` 等）已全數翻修完成，將原先寫在 `OnRender` 內的佈局邏輯徹底拆除，並實作 `MeasureContent`，確保能乾淨且精確地對接新的四階段生命週期，且嚴格套用 `width`, `height`, `min/max` 約束。

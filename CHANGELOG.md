@@ -8,6 +8,12 @@
 ## [Unreleased]
 
 ### Added (新增)
+- 實作了全新一代的 **1-Pass 輕量級 Flexbox 排版引擎** (Layout Engine)。
+- 將視覺樹的生命週期徹底拆分為 `Measure` (測量)、`Arrange` (佈局座標) 與 `Render` (渲染) 等獨立階段，解決了流式排版在對齊與約束上的耦合痛點。
+- 支援完整的 CSS 彈性盒模型 (Flexbox) 特性：包含 `FlexDirection` (Row/Column)、`FlexGrow` 比例分配、`AlignItems` / `AlignSelf` 對齊。
+- 實作了完美的 `gap` (ItemSpacing) 映射與自動間距扣除計算。
+- 實作了嚴格的邊界約束系統 (`Width`, `Height`, `MinMax`)，確保在拉伸與 FlexGrow 狀態下能精確套用 `Math.Clamp` 夾擠。
+- 實作了 `Padding` 的 CSS 語意化映射，將 `style.padding` 同時套用至 `ImGuiStyleVar.WindowPadding` 與 `FramePadding`，確保 Window 容器與 Button 框架皆能完美吃到內距設定。
 - 實作了 Drawer 的絕對定位排版機制 (`overrideRenderRect`)，支援在 `Vector2Drawer`, `RectDrawer` 等複合 Drawer 中複用多個 `FloatDrawer` 並且完美維持單行顯示，同時改善了標籤字型的垂直對位置中。
 - 實作了 `FoldoutDrawer<T>` 作為可折疊的內容抽屜基底類別，利用 ImDrawList 自定義繪製三角形圖示，並支援整行可點擊的 hover 視覺反饋。
 - 將 `ObjectDrawer` 的繼承基底改為 `FoldoutDrawer<object>`，使得物件屬性面板能天然支援展開與折疊。

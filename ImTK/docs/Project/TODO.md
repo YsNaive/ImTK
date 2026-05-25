@@ -9,8 +9,7 @@
 * （無）
 
 ## 🔵 待處理 (To Do)
-* **[UI 系統]** 排版引擎 (Layout Phase) 開發，承接 `RenderEngine` 的初步重構，將排版與渲染雙階段徹底分離。
-* 擴充 MenuItem 的 Shortcut 功能（包含全域捷徵監聽與 ImGui 字串顯示）。
+* **[UI 系統]** 擴充 MenuItem 的 Shortcut 功能（包含全域捷徵監聽與 ImGui 字串顯示）。
 
 ## 🟡 技術債 (Tech Debt)
 * **[RenderEngine]** 移除 `RenderNode` 的隱性雙層架構。目前 `RenderNode` 是 flat 架構之外的一個局部渲染入口，存在兩個使用場景需要在 Layout Engine 完成後統一：

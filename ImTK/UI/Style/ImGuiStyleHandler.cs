@@ -67,6 +67,17 @@ namespace ImTK.UI
             return false;
         }
 
+        public bool TryGetVector2(int varIdx, out Vector2 value)
+        {
+            if (m_activeVars.Contains(varIdx))
+            {
+                value = m_vars[varIdx].vector2Value;
+                return true;
+            }
+            value = default;
+            return false;
+        }
+
         public IEnumerable<StyleProperty> GetActiveProperties()
         {
             foreach (var colIdx in m_activeColors) yield return m_colors[colIdx];

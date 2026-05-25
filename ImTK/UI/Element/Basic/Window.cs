@@ -222,6 +222,17 @@ namespace ImTK.UI
         {
             m_isOpenForImGuiCache = m_isOpen;
             bool isExpanded = Begin(ref m_isOpenForImGuiCache, flags.Value);
+
+            if (isExpanded)
+            {
+                var avail = ImGui.GetContentRegionAvail();
+                var startPos = ImGui.GetCursorScreenPos();
+                
+                var constraint = new LayoutConstraint(avail.X, avail.Y, MeasureMode.Exactly, MeasureMode.Exactly);
+                this.Measure(constraint);
+                this.Arrange(new Rect(startPos.X, startPos.Y, avail.X, avail.Y));
+            }
+
             return isExpanded;
         }
 
