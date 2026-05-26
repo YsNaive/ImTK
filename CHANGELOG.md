@@ -16,14 +16,22 @@
 - 實作了 `Padding` 的 CSS 語意化映射，將 `style.padding` 同時套用至 `ImGuiStyleVar.WindowPadding` 與 `FramePadding`，確保 Window 容器與 Button 框架皆能完美吃到內距設定。
 - **Theme 局部完整樣式隔離**：`VisualElement.theme` 現在實現真正的局部完整樣式隔離 (Full Local Style Isolation)。設定 `element.theme` 後，該元素及其子樹的所有 ImGui 顏色、StyleVar 與字型皆會切換至指定 Theme，透過既有的 `requiredStyle.Push()/Pop()` 機制在渲染時自動 Push/Pop，無需任何額外 API 呼叫。實作方式為新增 `ImTKTheme.InjectToStyleHandler()` 方法，在 `ComputeStyleFlat` 的 `CopyFrom()` 之後、composed properties 之前注入 Theme 完整樣式。
 - **Module/Object 動態事件開關**：`ImTKModule` 與 `ImTKObject` 的事件訂閱現在與 `enabled` 狀態完全同步。新增 `InternalOnEnable()` / `InternalOnDisable()` 內部包裝方法，分別在 enable 時重建訂閱、disable 時取消訂閱，且此邏輯不可被子類 `override` 繞過。
+- **DX 語法糖系統**：實作了全新一代的開發體驗優化，包含 `StyleColor`, `StyleThickness`, `StyleSpacing` 等中繼結構體，支援隱式轉換，允許開發者直接寫出如 `style.padding = 20;` 或是 `style.textColor = "#FFFF00";` 般簡潔的語法。
+- **主題色系智能映射**：在 `VisualElement.Style` 新增了 `colorFamily` 屬性。在基礎元件會自動設定背景與文字顏色；在 `Button` 等互動元件中，更能一鍵綁定 `Hovered` 與 `Active` 等互動狀態的標準主題色。
+- **`ImTK.Sample` 教學單元**：新增 `StylingDXScenario` 教學單元，展示最新語法糖與 `colorFamily` 的操作體驗。
 
 ### Changed (變更)
 - **`SubscribeEvent<T>()` 延遲訂閱**：`ImTKModule` 與 `ImTKObject` 的 `SubscribeEvent<T>()` 不再立即呼叫 `ImTKEventBus.GlobalSubscribe()`，改為將訂閱函式儲存於 `m_subscribeActions`，在 `InternalOnEnable()` 時才真正生效。物件在 disabled 或尚未 active 期間不會接收任何事件。
 - **`RenderEngineStylePipeline` 效能與安全**：樣式計算管線全面升級為扁平化陣列走訪 `ComputeStyleFlat`，大幅提昇效能；同時新增靜態緩衝區 `s_translatedProps` 與 `s_composedProps`，消除原本每個 dirty element 的 `new List<StyleProperty>()` 分配。
 - **`ImTKApplication`**：所有對 Module/Object 的 `OnEnable()`/`OnDisable()` 直接呼叫改為對應的 `InternalOnEnable()`/`InternalOnDisable()`。
 - **`VisualElement.m_theme`**：存取修飾由 `private` 改為 `internal`，供 `RenderEngine` 在計算管線中判斷是否需要注入 Theme 樣式。
+- **`StyleFontSize` 升級**：將其重構為支援隱式轉換的中繼型別，允許同時綁定 `FontSize` 列舉或是絕對像素大小 (Int)，並與底層的 `StyleProperty` 記憶體佈局完美映射。
 
 ### Fixed (修復)
+- **RenderEngine 渲染重入 (Re-entrancy) 漏洞**：修復 `RenderEngine.RenderFlat` 共用單一 `t_tempRenderList` 靜態列表，導致嵌套呼叫 (Nested RenderFlat) 時外層迴圈被強制覆寫並截斷的問題。已將其替換為基於 `Stack<List<RenderOp>>` 的執行緒安全物件池，解決 `Missing PopID` 與 `Debug##Default` 幽靈視窗崩潰。
+- 修復了 `ImGuiStyleHandler.PushFontOnly` 與 `GetLayoutHash` 未正確對齊 `StyleFontSize` 新記憶體結構 (Enum / Int) 的問題，確保字型絕對縮放大小測量精準且雜湊比對安全。
+- 修復了 `SampleOverviewModule` 在點擊選單時，因同步觸發視窗開啟 (`Add()`) 而違反 `ApplicationState.GuiRender` 期間禁止修改節點樹限制的崩潰問題 (透過 `m_pendingScenarioToOpen` 延遲至安全階段處理)。
+- 修復了 `SampleOverviewModule` 中預留 `Panel` 區域時，錯誤地將絕對座標 `rect.max` 傳遞給 `Rect(position, size)` 第二個參數，導致視窗範圍超出螢幕邊界且被嚴重裁切的排版問題。
 - **B-02 `Panel` 靜態集合未清除**：`Panel.OnClose()` 新增對 `s_windows`、`s_windowsToAdd`、`s_windowsToRemove` 三個靜態集合的 `Clear()`，防止應用程式重啟時殘留舊 Window 實例導致 `InvalidOperationException`。
 - 實作了 Drawer 的絕對定位排版機制 (`overrideRenderRect`)，支援在 `Vector2Drawer`, `RectDrawer` 等複合 Drawer 中複用多個 `FloatDrawer` 並且完美維持單行顯示，同時改善了標籤字型的垂直對位置中。
 - 實作了 `FoldoutDrawer<T>` 作為可折疊的內容抽屜基底類別，利用 ImDrawList 自定義繪製三角形圖示，並支援整行可點擊的 hover 視覺反饋。

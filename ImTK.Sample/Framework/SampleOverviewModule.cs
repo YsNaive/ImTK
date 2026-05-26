@@ -96,6 +96,8 @@ namespace ImTK.Sample.Framework
 
         private Dictionary<ISampleScenario, Window> m_scenarioWindows = new Dictionary<ISampleScenario, Window>();
 
+        private ISampleScenario m_pendingScenarioToOpen;
+
         private void SetCurrentScenario(ISampleScenario scenario)
         {
             if (m_currentScenario == scenario) return;
@@ -106,18 +108,21 @@ namespace ImTK.Sample.Framework
 
             if (scenario != null)
             {
-                var window = scenario.Open();
-                if (window != null)
-                {
-                    m_scenarioWindows[scenario] = window;
-                    // Focus logic is handled internally by Window.Open<T>() which calls ImGui.SetWindowFocus
-                }
+                m_pendingScenarioToOpen = scenario;
             }
         }
 
         protected override void OnLogicUpdate()
         {
-            // Focus tracking logic can be placed here if utilizing ImTK framework events in the future.
+            if (m_pendingScenarioToOpen != null)
+            {
+                var window = m_pendingScenarioToOpen.Open();
+                if (window != null)
+                {
+                    m_scenarioWindows[m_pendingScenarioToOpen] = window;
+                }
+                m_pendingScenarioToOpen = null;
+            }
         }
 
         protected override void OnInitializeDependencies()
@@ -125,15 +130,15 @@ namespace ImTK.Sample.Framework
             // Reserve left panel (Panel A)
             ImTKApplication.GetModule<Panel>().RequireArea(rect =>
             {
-                m_panelARect = new Rect(rect.min, new System.Numerics.Vector2(rect.min.X + LEFT_PANEL_WIDTH, rect.max.Y));
-                return new Rect(new System.Numerics.Vector2(rect.min.X + LEFT_PANEL_WIDTH, rect.min.Y), rect.max);
+                m_panelARect = new Rect(rect.x, rect.y, LEFT_PANEL_WIDTH, rect.height);
+                return new Rect(rect.x + LEFT_PANEL_WIDTH, rect.y, rect.width - LEFT_PANEL_WIDTH, rect.height);
             }, priority: 50);
 
             // Reserve bottom right panel (Panel B)
             ImTKApplication.GetModule<Panel>().RequireArea(rect =>
             {
-                m_panelBRect = new Rect(new System.Numerics.Vector2(rect.min.X, rect.max.Y - BOTTOM_PANEL_HEIGHT), rect.max);
-                return new Rect(rect.min, new System.Numerics.Vector2(rect.max.X, rect.max.Y - BOTTOM_PANEL_HEIGHT));
+                m_panelBRect = new Rect(rect.x, rect.y + rect.height - BOTTOM_PANEL_HEIGHT, rect.width, BOTTOM_PANEL_HEIGHT);
+                return new Rect(rect.x, rect.y, rect.width, rect.height - BOTTOM_PANEL_HEIGHT);
             }, priority: 40);
         }
 

@@ -20,14 +20,27 @@ namespace ImTK.UI
     public static partial class RenderEngine
     {
         [ThreadStatic]
-        private static System.Collections.Generic.List<RenderOp> t_tempRenderList;
+        private static System.Collections.Generic.Stack<System.Collections.Generic.List<RenderOp>> t_listPool;
+
+        private static System.Collections.Generic.List<RenderOp> GetList()
+        {
+            if (t_listPool == null) t_listPool = new System.Collections.Generic.Stack<System.Collections.Generic.List<RenderOp>>();
+            if (t_listPool.Count > 0) return t_listPool.Pop();
+            return new System.Collections.Generic.List<RenderOp>(32);
+        }
+
+        private static void ReleaseList(System.Collections.Generic.List<RenderOp> list)
+        {
+            list.Clear();
+            t_listPool.Push(list);
+        }
 
         public static void ComputeStyleRecursive(VisualElement node)
         {
-            if (t_tempRenderList == null) t_tempRenderList = new System.Collections.Generic.List<RenderOp>(32);
-            t_tempRenderList.Clear();
-            BuildRenderListRecursive(node, t_tempRenderList);
-            ComputeStyleFlat(t_tempRenderList);
+            var list = GetList();
+            BuildRenderListRecursive(node, list);
+            ComputeStyleFlat(list);
+            ReleaseList(list);
         }
 
 
@@ -52,10 +65,10 @@ namespace ImTK.UI
 
         public static void RenderFlat(VisualElement node)
         {
-            if (t_tempRenderList == null) t_tempRenderList = new System.Collections.Generic.List<RenderOp>(32);
-            t_tempRenderList.Clear();
-            BuildRenderListRecursive(node, t_tempRenderList);
-            RenderFlat(t_tempRenderList);
+            var list = GetList();
+            BuildRenderListRecursive(node, list);
+            RenderFlat(list);
+            ReleaseList(list);
         }
 
         public static void RenderFlat(System.Collections.Generic.List<RenderOp> renderList)

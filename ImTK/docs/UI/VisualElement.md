@@ -94,7 +94,7 @@ ImTK 的 UI 系統目標是**「在 Immediate Mode (ImGui) 的底層上，搭建
 ### 6.1 HashedString 與 VisualElement.StyleKey (核心解耦)
 為了將 UI 元件的樣式語義 (如 BackgroundColor) 與 ImGui 底層具體的 ImGuiCol (如 WindowBg, Button 等) 徹底解耦，我們引進了 `VisualElement.StyleKey` 統一列舉。並且透過 `HashedString` 實作 Token (如 "--primary") 和 class 名字的 O(1) 查表。
 
-* **`StyleProperty`**: 利用 C# 的 `[StructLayout(LayoutKind.Explicit)]`，讓 Color、Float、Vector2 和 TokenHash 共用記憶體，實現零裝箱。
+* **`StyleProperty`**: 利用 C# 的 `[StructLayout(LayoutKind.Explicit)]`，讓 Color、Float、Vector2、Int 和 TokenHash 共用記憶體，實現零裝箱與極致效能。（註：為了維持嚴格的 16 bytes 長度，`Thickness` 等複合型別已被拆解為四個獨立的 Float Key）。
 * **零成本預設**: 預設情況下，`VisualElement` 不會分配任何 Style List 的記憶體，直到被顯式賦值或套用 Theme。
 
 ### 6.2 層疊樣式表 (Cascading Style Sheets) 與 ComputedStyle

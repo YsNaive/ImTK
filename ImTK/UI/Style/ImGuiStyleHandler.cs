@@ -232,14 +232,26 @@ namespace ImTK.UI
             if (m_hasFontFamily || m_hasFontSize)
             {
                 int familyHash = m_hasFontFamily ? m_fontFamily.tokenHash : RenderingContext.CurrentFontFamilyHash;
-                var fontSize = m_hasFontSize ? (ImTK.UI.FontSize)m_fontSize.floatValue : ImTK.UI.FontSize.Normal;
-
+                
                 if (m_hasFontFamily)
                 {
                     RenderingContext.PushFontState(familyHash);
                 }
 
-                var fontPtr = ImTKFontManager.GetFont(familyHash, fontSize);
+                ImFontPtr fontPtr;
+                if (m_hasFontSize && m_fontSize.dataType == StyleDataType.Int)
+                {
+                    var (f, scale) = ImTKFontManager.GetFontWithScale(familyHash, m_fontSize.intValue);
+                    fontPtr = f;
+                    ImTKFontManager.PushFontScale(scale);
+                    m_fontScaleWasPushed = true;
+                }
+                else
+                {
+                    var fontSizeEnum = m_hasFontSize ? (ImTK.UI.FontSize)m_fontSize.enumValue : ImTK.UI.FontSize.Normal;
+                    fontPtr = ImTKFontManager.GetFont(familyHash, fontSizeEnum);
+                }
+
                 m_fontWasPushed = fontPtr.NativePtr != null;
                 if (m_fontWasPushed)
                 {
@@ -268,7 +280,7 @@ namespace ImTK.UI
                     }
                 }
                 if (m_hasFontFamily) hash = hash * 23 + (uint)m_fontFamily.tokenHash;
-                if (m_hasFontSize) hash = hash * 23 + BitConverter.SingleToUInt32Bits(m_fontSize.floatValue);
+                if (m_hasFontSize) hash = hash * 23 + (uint)m_fontSize.enumValue;
                 return hash;
             }
         }

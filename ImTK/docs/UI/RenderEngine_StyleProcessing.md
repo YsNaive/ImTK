@@ -5,7 +5,7 @@ This document describes the ImTK Style System architecture, focusing on the pipe
 ## 1. Core Data Layer (`StyleProperty`)
 The foundation of the system is the `StyleProperty` struct, an explicit 16-byte structure designed to prevent GC allocations.
 - **StyleCategory**: Defines the current state of the token (`HighLevelToken`, `ThemeToken`, `ImGuiStyle`).
-- **StyleDataType**: Defines the payload (`Null`, `Float`, `Vector2`, `Color`, `HashedString`, `Int`, `Enum`).
+- **StyleDataType**: Defines the payload (`Null`, `Float`, `Vector2`, `Color`, `HashedString`, `Int`, `Enum`). (Note: `Thickness` has been removed in favor of 4 distinct float properties).
 - **StyleFlags**: Handles control flags like `Inheritable`.
 
 ## 2. Component & Composition Layer (`VisualElement.Style`)
@@ -44,3 +44,7 @@ During the render pass, `RenderEngine.RenderNode()` calls `node.requiredStyle.Pu
 ### 4.4 Global Theme Baseline
 
 `ImTKTheme.GlobalTheme.ApplyToImGui()` sets the global ImGui style baseline once per frame when `isGlobalThemeDirty` is true. This baseline applies to all elements that do **not** have a local `m_theme` set. Elements with a local theme push overrides on top of this baseline via the `requiredStyle` mechanism.
+
+### 4.5 Layout-Aware Padding Translation
+
+In the final step of the Style Pipeline, the system automatically intercepts Padding properties. If any Padding (Left/Top/Right/Bottom) is modified via styles or layout constraints, the pipeline uses the precisely calculated `resolvedLayoutState.padding` to synthesize `Vector2` values. These are directly injected back into `ImGuiStyleVar.WindowPadding` and `FramePadding` on the `resolvedStyle`, ensuring that the bottom-level ImGui rendering borders perfectly align with the Layout Engine's bounding boxes, all while seamlessly falling back to the theme's default padding if unmodified.

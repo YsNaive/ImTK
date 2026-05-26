@@ -98,7 +98,19 @@ ImTK 的樣式系統分為兩大層級，它們各自負責不同的渲染範圍
 *   `DisabledTextColor` -> 覆寫 `ImGuiCol.TextDisabled`
 *   `SelectionColor` -> 覆寫 `ImGuiCol.TextSelectedBg`
 
-### 4.2 特殊元件 (Specialized Components)
+### 4.2 語法糖與中繼代理 (DX Proxies)
+為了提升開發者體驗 (DX)，`VisualElement.Style` 提供了多種具備隱式轉換 (Implicit Cast) 能力的包裹結構，避免繁瑣的 `new` 宣告或型別轉換：
+*   **`StyleColor`**: 支援隱式轉換自 `Color`、`uint` (如 `0xFF00FF00`) 與字串 Token。應用於所有色彩設定。
+*   **`StyleSpacing`**: 支援隱式轉換自單一 `float` (自動展開為 `Vector2(f, f)`)、`Vector2` 與 Token。應用於 `itemSpacing`、`itemInnerSpacing` 等。
+*   **`StyleThickness`**: 支援隱式轉換自 `float` (四邊等寬)、`Vector2` (上下與左右等寬) 與 Token。應用於 `padding` 與 `margin`。
+*   **`StyleFontSize`**: 完美合併了 `int` (絕對像素) 與 `FontSize` (Enum) 的賦值，自動調用底層的 `GetFontWithScale`。
+
+### 4.3 `colorFamily` 自動映射機制
+開發者可透過 `style.colorFamily = ThemeColorFamily.Danger;` 直接套用整個色彩家族，無需單獨設定每個子狀態。這項機制透過覆寫 `ComputeHighlevelToken` 實現：
+*   **基礎 `VisualElement`**: 自動將 `colorFamily` 映射至 `WindowBg` (`-surface`)、`Text` (`-text`)、`TextDisabled` 與 `Border`。這確保了子物件能完美繼承字體顏色。
+*   **互動元件 (`Button`, `InputField`, `MenuItem` 等)**: 自動攔截 `colorFamily` 並將其映射至元件的 `Component`, `Hovered`, `Active` 以及對應的文字顏色。這允許一行程式碼完成按鈕的各狀態換色。
+
+### 4.4 特殊元件 (Specialized Components)
 當 ImTK 的封裝元件在 ImGui 層面對應了多種複合狀態（如 Button、Window），應建立專屬的 `[Element].Style` 子類別，並定義特有的 `StyleKey`，最後覆寫 `PushToImGui` 邏輯。
 
 #### Button
