@@ -52,10 +52,31 @@ namespace ImTK.Sample.Scenarios.StylingDX
             customField.style.backgroundColor = 0xFF333333; // uint color assignment
             customField.style.textColor = Color.Magenta; // ImTK.Core.Color assignment
 
+            // Test Inheritable HighLevelToken
+            var dangerArea = new VisualElement();
+            dangerArea.style.padding = 10;
+            // Set ColorFamily=Danger and mark it as inheritable!
+            dangerArea.style.SetProperty(new StyleProperty { 
+                category = StyleCategory.HighLevelToken, 
+                key = StyleKey.ColorFamily.Hash, 
+                dataType = StyleDataType.Enum, 
+                enumValue = (int)ThemeColorFamily.Danger, 
+                isInheritable = true 
+            });
+
+            var inheritedBtn1 = new Button("Inherited Danger 1");
+            var inheritedBtn2 = new Button("Inherited Danger 2");
+            var inheritedText = new TextElement("This text is also Danger colored.");
+            
+            dangerArea.Add(inheritedBtn1);
+            dangerArea.Add(inheritedBtn2);
+            dangerArea.Add(inheritedText);
+
             Add(description);
             Add(btnDanger);
             Add(btnSuccess);
             Add(customField);
+            Add(dangerArea);
         }
 
         public override void OnRender()

@@ -45,6 +45,11 @@ namespace ImTK.UI
                 return;
             }
 
+            if (prop.isInheritable)
+            {
+                output.Add(prop);
+            }
+
             bool mapped = true;
             if (prop.key == VisualElement.StyleKey.ColorFamily.Hash)
             {

@@ -5,6 +5,21 @@ namespace ImTK.UI
 {
     public class TextElement : VisualElement
     {
+        private bool m_enableWordWrap = true;
+        public bool enableWordWrap
+        {
+            get => m_enableWordWrap;
+            set
+            {
+                if (m_enableWordWrap != value)
+                {
+                    m_enableWordWrap = value;
+                    MarkMeasureDirty();
+                    MarkArrangeDirty();
+                }
+            }
+        }
+
         private string m_text = string.Empty;
         public string text
         {
@@ -23,10 +38,17 @@ namespace ImTK.UI
         protected override System.Numerics.Vector2 MeasureContent(LayoutConstraint constraint)
         {
             if (string.IsNullOrEmpty(m_text)) return System.Numerics.Vector2.Zero;
-            // TODO: If constraint.WidthMode is Exactly or AtMost, we might need text wrapping support here.
-            // For now, return the basic text size (1-line).
-            var size = ImGui.CalcTextSize(m_text);
-            return new System.Numerics.Vector2(size.X, ImGui.GetTextLineHeight());
+            
+            if (enableWordWrap && constraint.WidthMode != MeasureMode.Undefined && constraint.AvailableWidth > 0)
+            {
+                var size = ImGui.CalcTextSize(m_text, 0, m_text.Length, false, constraint.AvailableWidth);
+                return size;
+            }
+            else
+            {
+                var size = ImGui.CalcTextSize(m_text);
+                return new System.Numerics.Vector2(size.X, ImGui.GetTextLineHeight());
+            }
         }
 
         public TextElement(string text = "")
@@ -44,7 +66,16 @@ namespace ImTK.UI
         {
             if (!string.IsNullOrEmpty(m_text))
             {
-                ImGui.TextUnformatted(m_text);
+                if (enableWordWrap)
+                {
+                    ImGui.PushTextWrapPos(Math.Max(1.0f, layoutRect.width));
+                    ImGui.TextUnformatted(m_text);
+                    ImGui.PopTextWrapPos();
+                }
+                else
+                {
+                    ImGui.TextUnformatted(m_text);
+                }
             }
         }
     }

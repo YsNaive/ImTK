@@ -18,7 +18,8 @@
 - **Module/Object 動態事件開關**：`ImTKModule` 與 `ImTKObject` 的事件訂閱現在與 `enabled` 狀態完全同步。新增 `InternalOnEnable()` / `InternalOnDisable()` 內部包裝方法，分別在 enable 時重建訂閱、disable 時取消訂閱，且此邏輯不可被子類 `override` 繞過。
 - **DX 語法糖系統**：實作了全新一代的開發體驗優化，包含 `StyleColor`, `StyleThickness`, `StyleSpacing` 等中繼結構體，支援隱式轉換，允許開發者直接寫出如 `style.padding = 20;` 或是 `style.textColor = "#FFFF00";` 般簡潔的語法。
 - **主題色系智能映射**：在 `VisualElement.Style` 新增了 `colorFamily` 屬性。在基礎元件會自動設定背景與文字顏色；在 `Button` 等互動元件中，更能一鍵綁定 `Hovered` 與 `Active` 等互動狀態的標準主題色。
-- **`ImTK.Sample` 教學單元**：新增 `StylingDXScenario` 教學單元，展示最新語法糖與 `colorFamily` 的操作體驗。
+- **高階意圖繼承 (Inheritable HighLevelToken)**：將 `ImGuiStyleHandler` 的底層資料結構由固定陣列全面重構為動態串列 `List<StyleProperty>`，成功解鎖儲存未知屬性 (如 `colorFamily`) 的能力。同時升級 `RenderEngineStylePipeline` 的擴展順序，允許設定為 `isInheritable = true` 的高階意圖在計算過程中不被消耗，完美繼承給所有子元件。
+- **TextElement 自動折行**：為 `TextElement` 實作了 `enableWordWrap` 屬性 (預設為 `true`)。結合排版引擎傳遞的 `AvailableWidth`，精確計算文字折行後的高度，並利用 `PushTextWrapPos` 確保在渲染時不會撐爆畫面。
 
 ### Changed (變更)
 - **`SubscribeEvent<T>()` 延遲訂閱**：`ImTKModule` 與 `ImTKObject` 的 `SubscribeEvent<T>()` 不再立即呼叫 `ImTKEventBus.GlobalSubscribe()`，改為將訂閱函式儲存於 `m_subscribeActions`，在 `InternalOnEnable()` 時才真正生效。物件在 disabled 或尚未 active 期間不會接收任何事件。
@@ -29,6 +30,7 @@
 
 ### Fixed (修復)
 - **RenderEngine 渲染重入 (Re-entrancy) 漏洞**：修復 `RenderEngine.RenderFlat` 共用單一 `t_tempRenderList` 靜態列表，導致嵌套呼叫 (Nested RenderFlat) 時外層迴圈被強制覆寫並截斷的問題。已將其替換為基於 `Stack<List<RenderOp>>` 的執行緒安全物件池，解決 `Missing PopID` 與 `Debug##Default` 幽靈視窗崩潰。
+- **單行容器交叉軸溢出拉伸 Bug**：修復了單行彈性容器 (Single-line Flex Container) 在 `ArrangeContent` 佈局時，錯誤地因內部子元件溢出而將容器交叉軸 (Cross Axis) 撐開，導致其他設定為 `Stretch` 的子元件跟著異常變大的 Bug。現已嚴格遵守容器自身的尺寸約束。
 - 修復了 `ImGuiStyleHandler.PushFontOnly` 與 `GetLayoutHash` 未正確對齊 `StyleFontSize` 新記憶體結構 (Enum / Int) 的問題，確保字型絕對縮放大小測量精準且雜湊比對安全。
 - 修復了 `SampleOverviewModule` 在點擊選單時，因同步觸發視窗開啟 (`Add()`) 而違反 `ApplicationState.GuiRender` 期間禁止修改節點樹限制的崩潰問題 (透過 `m_pendingScenarioToOpen` 延遲至安全階段處理)。
 - 修復了 `SampleOverviewModule` 中預留 `Panel` 區域時，錯誤地將絕對座標 `rect.max` 傳遞給 `Rect(position, size)` 第二個參數，導致視窗範圍超出螢幕邊界且被嚴重裁切的排版問題。

@@ -21,6 +21,18 @@ namespace ImTK.UI
                 {
                     s_composedProps.Clear();
 
+                    // 0. Inherited Macro Tokens
+                    if (element.parent != null)
+                    {
+                        foreach (var prop in element.parent.resolvedStyle.GetActiveProperties())
+                        {
+                            if (prop.category == StyleCategory.HighLevelToken && prop.isInheritable)
+                            {
+                                SetComposedProperty(prop);
+                            }
+                        }
+                    }
+
                     // 1. Global Sheet
                     foreach (var block in StyleSheet.Global.Blocks)
                     {
@@ -130,10 +142,7 @@ namespace ImTK.UI
                             }
                         }
 
-                        if (finalProp.category == StyleCategory.ImGuiStyle)
-                        {
-                            element.resolvedStyle.TrySetProperty(finalProp);
-                        }
+                        element.resolvedStyle.TrySetProperty(finalProp);
                     }
 
                     bool hasPaddingOverride = false;

@@ -820,7 +820,7 @@ namespace ImTK.UI
 
             if (!isWrap && flexLines.Count == 1)
             {
-                flexLines[0].crossSize = Math.Max(flexLines[0].crossSize, availableCross);
+                flexLines[0].crossSize = availableCross;
             }
 
             // Layout each line

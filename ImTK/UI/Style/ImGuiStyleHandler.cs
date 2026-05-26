@@ -8,73 +8,43 @@ namespace ImTK.UI
 {
     public class ImGuiStyleHandler
     {
-        // 這兩個是 ImGui 層級的 internal key（小寫），與 VisualElement.StyleKey 的 "FontFamily"/"FontSize" 不同。
-        // 使用 HashedString 快取 hash，避免每次使用裸字串 GetHashCode()。
         internal static readonly HashedString s_fontFamilyImGuiKey = new HashedString("fontFamily");
         internal static readonly HashedString s_fontSizeImGuiKey   = new HashedString("fontSize");
 
-        private readonly StyleProperty[] m_colors = new StyleProperty[(int)ImGuiCol.COUNT];
-        private readonly StyleProperty[] m_vars = new StyleProperty[(int)ImGuiStyleVar.COUNT];
-        private StyleProperty m_fontFamily;
-        private StyleProperty m_fontSize;
-
-        private readonly List<int> m_activeColors = new List<int>();
-        private readonly List<int> m_activeVars = new List<int>();
-        private bool m_hasFontFamily = false;
-        private bool m_hasFontSize = false;
+        private readonly List<StyleProperty> m_properties = new List<StyleProperty>();
         private bool m_fontWasPushed = false;
         private bool m_fontScaleWasPushed = false;
 
         public void Clear()
         {
-            m_activeColors.Clear();
-            m_activeVars.Clear();
-            m_hasFontFamily = false;
-            m_hasFontSize = false;
+            m_properties.Clear();
             m_fontWasPushed = false;
             m_fontScaleWasPushed = false;
         }
 
         public bool TrySetProperty(StyleProperty prop)
         {
-            if (prop.category != StyleCategory.ImGuiStyle) return false;
-
-            if (prop.dataType == StyleDataType.Color)
+            for (int i = 0; i < m_properties.Count; i++)
             {
-                if (prop.key < 0 || prop.key >= (int)ImGuiCol.COUNT) return false;
-                m_colors[prop.key] = prop;
-                if (!m_activeColors.Contains(prop.key)) m_activeColors.Add(prop.key);
-                return true;
+                if (m_properties[i].key == prop.key && m_properties[i].category == prop.category)
+                {
+                    m_properties[i] = prop;
+                    return true;
+                }
             }
-            else if (prop.dataType == StyleDataType.HashedString && prop.key == s_fontFamilyImGuiKey.Hash)
-            {
-                m_fontFamily = prop;
-                m_hasFontFamily = true;
-                return true;
-            }
-            else if (prop.dataType == StyleDataType.Float && prop.key == s_fontSizeImGuiKey.Hash)
-            {
-                m_fontSize = prop;
-                m_hasFontSize = true;
-                return true;
-            }
-            else if (prop.dataType == StyleDataType.Float || prop.dataType == StyleDataType.Vector2)
-            {
-                if (prop.key < 0 || prop.key >= (int)ImGuiStyleVar.COUNT) return false;
-                m_vars[prop.key] = prop;
-                if (!m_activeVars.Contains(prop.key)) m_activeVars.Add(prop.key);
-                return true;
-            }
-
-            return false;
+            m_properties.Add(prop);
+            return true;
         }
 
         public bool TryGetVector2(int varIdx, out Vector2 value)
         {
-            if (m_activeVars.Contains(varIdx))
+            for (int i = 0; i < m_properties.Count; i++)
             {
-                value = m_vars[varIdx].vector2Value;
-                return true;
+                if (m_properties[i].category == StyleCategory.ImGuiStyle && m_properties[i].key == varIdx && m_properties[i].dataType == StyleDataType.Vector2)
+                {
+                    value = m_properties[i].vector2Value;
+                    return true;
+                }
             }
             value = default;
             return false;
@@ -82,15 +52,23 @@ namespace ImTK.UI
 
         public bool HasColor(int colIdx)
         {
-            return m_activeColors.Contains(colIdx);
+            for (int i = 0; i < m_properties.Count; i++)
+            {
+                if (m_properties[i].category == StyleCategory.ImGuiStyle && m_properties[i].key == colIdx && m_properties[i].dataType == StyleDataType.Color)
+                    return true;
+            }
+            return false;
         }
 
         public bool TryGetFloat(int varIdx, out float value)
         {
-            if (m_activeVars.Contains(varIdx))
+            for (int i = 0; i < m_properties.Count; i++)
             {
-                value = m_vars[varIdx].floatValue;
-                return true;
+                if (m_properties[i].category == StyleCategory.ImGuiStyle && m_properties[i].key == varIdx && m_properties[i].dataType == StyleDataType.Float)
+                {
+                    value = m_properties[i].floatValue;
+                    return true;
+                }
             }
             value = default;
             return false;
@@ -98,97 +76,131 @@ namespace ImTK.UI
 
         public IEnumerable<StyleProperty> GetActiveProperties()
         {
-            foreach (var colIdx in m_activeColors) yield return m_colors[colIdx];
-            foreach (var varIdx in m_activeVars) yield return m_vars[varIdx];
-            if (m_hasFontFamily) yield return m_fontFamily;
-            if (m_hasFontSize) yield return m_fontSize;
+            return m_properties;
         }
 
         public void CopyFrom(ImGuiStyleHandler parent)
         {
             if (parent == null) return;
-            foreach (var prop in parent.GetActiveProperties())
+            foreach (var prop in parent.m_properties)
             {
                 if (prop.isInheritable) TrySetProperty(prop);
             }
+        }
+
+        private bool TryGetFontFamily(out StyleProperty prop) {
+            for(int i=0; i<m_properties.Count; i++) {
+                if (m_properties[i].category == StyleCategory.ImGuiStyle && m_properties[i].key == s_fontFamilyImGuiKey.Hash) { prop = m_properties[i]; return true; }
+            }
+            prop = default; return false;
+        }
+
+        private bool TryGetFontSize(out StyleProperty prop) {
+            for(int i=0; i<m_properties.Count; i++) {
+                if (m_properties[i].category == StyleCategory.ImGuiStyle && m_properties[i].key == s_fontSizeImGuiKey.Hash) { prop = m_properties[i]; return true; }
+            }
+            prop = default; return false;
         }
 
         public static void Diff(ImGuiStyleHandler parent, ImGuiStyleHandler current, ImGuiStyleHandler output)
         {
             output.Clear();
 
-            foreach (var colIdx in current.m_activeColors)
+            // 1. For properties in current, if not in parent (or different), push.
+            // We ignore HighLevelToken for Diff since they are not pushed to ImGui.
+            foreach (var curProp in current.m_properties)
             {
-                var curProp = current.m_colors[colIdx];
-                if (parent == null || !parent.m_activeColors.Contains(colIdx) || parent.m_colors[colIdx].colorValue != curProp.colorValue)
+                if (curProp.category != StyleCategory.ImGuiStyle) continue;
+                if (curProp.key == s_fontFamilyImGuiKey.Hash || curProp.key == s_fontSizeImGuiKey.Hash) continue; // Handled separately
+
+                bool foundMatch = false;
+                if (parent != null)
+                {
+                    foreach (var pProp in parent.m_properties)
+                    {
+                        if (pProp.category == curProp.category && pProp.key == curProp.key)
+                        {
+                            if (curProp.dataType == StyleDataType.Color && curProp.colorValue == pProp.colorValue) foundMatch = true;
+                            else if (curProp.dataType == StyleDataType.Float && curProp.floatValue == pProp.floatValue) foundMatch = true;
+                            else if (curProp.dataType == StyleDataType.Vector2 && curProp.vector2Value == pProp.vector2Value) foundMatch = true;
+                            else if (curProp.dataType == StyleDataType.HashedString && curProp.tokenHash == pProp.tokenHash) foundMatch = true;
+                            else if (curProp.dataType == StyleDataType.Int && curProp.intValue == pProp.intValue) foundMatch = true;
+                            else if (curProp.dataType == StyleDataType.Enum && curProp.enumValue == pProp.enumValue) foundMatch = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!foundMatch)
                 {
                     output.TrySetProperty(curProp);
                 }
             }
 
-            foreach (var varIdx in current.m_activeVars)
-            {
-                var curProp = current.m_vars[varIdx];
-                if (parent == null || !parent.m_activeVars.Contains(varIdx))
-                {
-                    output.TrySetProperty(curProp);
-                }
-                else
-                {
-                    var pProp = parent.m_vars[varIdx];
-                    if (curProp.dataType == StyleDataType.Float && curProp.floatValue != pProp.floatValue)
-                        output.TrySetProperty(curProp);
-                    else if (curProp.dataType == StyleDataType.Vector2 && curProp.vector2Value != pProp.vector2Value)
-                        output.TrySetProperty(curProp);
-                }
-            }
-
+            // 2. For properties in parent, if NOT INHERITABLE, and NOT IN CURRENT, we MUST revert to default!
             if (parent != null)
             {
-                // For non-inheritable properties pushed by parent, we MUST override them with default values
-                // if 'current' did not explicitly set them, because ImGui's stack leaks downward implicitly.
-                foreach (var varIdx in parent.m_activeVars)
+                foreach (var pProp in parent.m_properties)
                 {
-                    var pProp = parent.m_vars[varIdx];
-                    if (!pProp.isInheritable && !current.m_activeVars.Contains(varIdx))
+                    if (pProp.category != StyleCategory.ImGuiStyle) continue;
+                    if (pProp.key == s_fontFamilyImGuiKey.Hash || pProp.key == s_fontSizeImGuiKey.Hash) continue; // Font cannot be reverted individually this way
+                    
+                    if (!pProp.isInheritable)
                     {
-                        var revertProp = pProp;
-                        revertProp.dataType = pProp.dataType;
-                        GetDefaultStyleVar(varIdx, out revertProp.floatValue, out revertProp.vector2Value);
-                        output.TrySetProperty(revertProp);
-                    }
-                }
+                        bool overridenByCurrent = false;
+                        foreach (var curProp in current.m_properties)
+                        {
+                            if (curProp.category == pProp.category && curProp.key == pProp.key)
+                            {
+                                overridenByCurrent = true;
+                                break;
+                            }
+                        }
 
-                foreach (var colIdx in parent.m_activeColors)
-                {
-                    var pProp = parent.m_colors[colIdx];
-                    if (!pProp.isInheritable && !current.m_activeColors.Contains(colIdx))
-                    {
-                        var revertProp = pProp;
-                        revertProp.colorValue = ImGui.ColorConvertFloat4ToU32(ImGui.GetStyle().Colors[colIdx]);
-                        output.TrySetProperty(revertProp);
+                        if (!overridenByCurrent)
+                        {
+                            if (pProp.dataType == StyleDataType.Color)
+                            {
+                                var revertProp = pProp;
+                                revertProp.colorValue = ImGui.ColorConvertFloat4ToU32(ImGui.GetStyle().Colors[pProp.key]);
+                                output.TrySetProperty(revertProp);
+                            }
+                            else if (pProp.dataType == StyleDataType.Float || pProp.dataType == StyleDataType.Vector2)
+                            {
+                                var revertProp = pProp;
+                                GetDefaultStyleVar(pProp.key, out revertProp.floatValue, out revertProp.vector2Value);
+                                output.TrySetProperty(revertProp);
+                            }
+                        }
                     }
                 }
             }
 
+            // 3. Fonts
             bool fontChanged = false;
-
-            if (current.m_hasFontFamily)
-            {
-                if (parent == null || !parent.m_hasFontFamily || parent.m_fontFamily.tokenHash != current.m_fontFamily.tokenHash)
-                    fontChanged = true;
-            }
+            StyleProperty curFamily = default;
+            bool curHasFamily = current.TryGetFontFamily(out curFamily);
+            StyleProperty parFamily = default;
+            bool parHasFamily = parent != null && parent.TryGetFontFamily(out parFamily);
             
-            if (current.m_hasFontSize)
-            {
-                if (parent == null || !parent.m_hasFontSize || parent.m_fontSize.floatValue != current.m_fontSize.floatValue)
-                    fontChanged = true;
+            StyleProperty curSize = default;
+            bool curHasSize = current.TryGetFontSize(out curSize);
+            StyleProperty parSize = default;
+            bool parHasSize = parent != null && parent.TryGetFontSize(out parSize);
+
+            if (curHasFamily) {
+                if (!parHasFamily || parFamily.tokenHash != curFamily.tokenHash) fontChanged = true;
+            }
+            if (curHasSize) {
+                if (!parHasSize || curSize.dataType != parSize.dataType ||
+                    (curSize.dataType == StyleDataType.Float && curSize.floatValue != parSize.floatValue) ||
+                    (curSize.dataType == StyleDataType.Int && curSize.intValue != parSize.intValue) ||
+                    (curSize.dataType == StyleDataType.Enum && curSize.enumValue != parSize.enumValue)) fontChanged = true;
             }
 
-            if (fontChanged)
-            {
-                if (current.m_hasFontFamily) output.TrySetProperty(current.m_fontFamily);
-                if (current.m_hasFontSize) output.TrySetProperty(current.m_fontSize);
+            if (fontChanged) {
+                if (curHasFamily) output.TrySetProperty(curFamily);
+                if (curHasSize) output.TrySetProperty(curSize);
             }
         }
 
@@ -229,26 +241,29 @@ namespace ImTK.UI
 
         public unsafe void PushFontOnly()
         {
-            if (m_hasFontFamily || m_hasFontSize)
+            bool hasFamily = TryGetFontFamily(out var fontFamily);
+            bool hasSize = TryGetFontSize(out var fontSize);
+
+            if (hasFamily || hasSize)
             {
-                int familyHash = m_hasFontFamily ? m_fontFamily.tokenHash : RenderingContext.CurrentFontFamilyHash;
+                int familyHash = hasFamily ? fontFamily.tokenHash : RenderingContext.CurrentFontFamilyHash;
                 
-                if (m_hasFontFamily)
+                if (hasFamily)
                 {
                     RenderingContext.PushFontState(familyHash);
                 }
 
                 ImFontPtr fontPtr;
-                if (m_hasFontSize && m_fontSize.dataType == StyleDataType.Int)
+                if (hasSize && fontSize.dataType == StyleDataType.Int)
                 {
-                    var (f, scale) = ImTKFontManager.GetFontWithScale(familyHash, m_fontSize.intValue);
+                    var (f, scale) = ImTKFontManager.GetFontWithScale(familyHash, fontSize.intValue);
                     fontPtr = f;
                     ImTKFontManager.PushFontScale(scale);
                     m_fontScaleWasPushed = true;
                 }
                 else
                 {
-                    var fontSizeEnum = m_hasFontSize ? (ImTK.UI.FontSize)m_fontSize.enumValue : ImTK.UI.FontSize.Normal;
+                    var fontSizeEnum = hasSize ? (ImTK.UI.FontSize)fontSize.enumValue : ImTK.UI.FontSize.Normal;
                     fontPtr = ImTKFontManager.GetFont(familyHash, fontSizeEnum);
                 }
 
@@ -265,12 +280,13 @@ namespace ImTK.UI
             unchecked
             {
                 uint hash = 17;
-                foreach (var varIdx in m_activeVars)
+                foreach (var prop in m_properties)
                 {
-                    var prop = m_vars[varIdx];
+                    if (prop.category != StyleCategory.ImGuiStyle) continue;
+
                     if ((prop.flags & StyleFlags.LayoutAffecting) != 0)
                     {
-                        hash = hash * 23 + (uint)varIdx;
+                        hash = hash * 23 + (uint)prop.key;
                         hash = hash * 23 + (uint)prop.dataType;
                         if (prop.dataType == StyleDataType.Float) hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.floatValue);
                         else if (prop.dataType == StyleDataType.Vector2) {
@@ -278,73 +294,73 @@ namespace ImTK.UI
                             hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.vector2Value.Y);
                         }
                     }
+                    if (prop.key == s_fontFamilyImGuiKey.Hash) hash = hash * 23 + (uint)prop.tokenHash;
+                    if (prop.key == s_fontSizeImGuiKey.Hash) {
+                        if (prop.dataType == StyleDataType.Enum) hash = hash * 23 + (uint)prop.enumValue;
+                        else if (prop.dataType == StyleDataType.Int) hash = hash * 23 + (uint)prop.intValue;
+                    }
                 }
-                if (m_hasFontFamily) hash = hash * 23 + (uint)m_fontFamily.tokenHash;
-                if (m_hasFontSize) hash = hash * 23 + (uint)m_fontSize.enumValue;
                 return hash;
             }
         }
 
         public void PopFontOnly()
         {
-            if (m_hasFontFamily || m_hasFontSize)
+            bool hasFamily = TryGetFontFamily(out var fontFamily);
+            bool hasSize = TryGetFontSize(out var fontSize);
+
+            if (hasFamily || hasSize)
             {
                 if (m_fontScaleWasPushed) ImTKFontManager.PopFontScale();
                 if (m_fontWasPushed) ImGui.PopFont();
-                if (m_hasFontFamily) RenderingContext.PopFontState();
+                if (hasFamily) RenderingContext.PopFontState();
             }
         }
 
         public unsafe void Push()
         {
-            foreach (var colIdx in m_activeColors) ImGui.PushStyleColor((ImGuiCol)colIdx, m_colors[colIdx].colorValue);
-            foreach (var varIdx in m_activeVars)
+            int colorCount = 0;
+            int varCount = 0;
+
+            foreach (var prop in m_properties)
             {
-                var prop = m_vars[varIdx];
-                if (prop.dataType == StyleDataType.Float) ImGui.PushStyleVar((ImGuiStyleVar)varIdx, prop.floatValue);
-                else if (prop.dataType == StyleDataType.Vector2) ImGui.PushStyleVar((ImGuiStyleVar)varIdx, prop.vector2Value);
+                if (prop.category != StyleCategory.ImGuiStyle) continue;
+
+                if (prop.dataType == StyleDataType.Color)
+                {
+                    ImGui.PushStyleColor((ImGuiCol)prop.key, prop.colorValue);
+                    colorCount++;
+                }
+                else if (prop.dataType == StyleDataType.Float && prop.key < (int)ImGuiStyleVar.COUNT)
+                {
+                    ImGui.PushStyleVar((ImGuiStyleVar)prop.key, prop.floatValue);
+                    varCount++;
+                }
+                else if (prop.dataType == StyleDataType.Vector2 && prop.key < (int)ImGuiStyleVar.COUNT)
+                {
+                    ImGui.PushStyleVar((ImGuiStyleVar)prop.key, prop.vector2Value);
+                    varCount++;
+                }
             }
 
-            if (m_hasFontFamily || m_hasFontSize)
-            {
-                int familyHash = m_hasFontFamily ? m_fontFamily.tokenHash : RenderingContext.CurrentFontFamilyHash;
-                if (m_hasFontFamily)
-                {
-                    RenderingContext.PushFontState(familyHash);
-                }
-
-                ImFontPtr fontPtr;
-                if (m_hasFontSize && m_fontSize.dataType == StyleDataType.Int)
-                {
-                    var (f, scale) = ImTKFontManager.GetFontWithScale(familyHash, m_fontSize.intValue);
-                    fontPtr = f;
-                    ImTKFontManager.PushFontScale(scale);
-                    m_fontScaleWasPushed = true;
-                }
-                else
-                {
-                    var fontSizeEnum = m_hasFontSize ? (ImTK.UI.FontSize)m_fontSize.enumValue : ImTK.UI.FontSize.Normal;
-                    fontPtr = ImTKFontManager.GetFont(familyHash, fontSizeEnum);
-                }
-                m_fontWasPushed = fontPtr.NativePtr != null;
-                if (m_fontWasPushed)
-                {
-                    ImGui.PushFont(fontPtr);
-                }
-            }
+            PushFontOnly();
         }
 
         public void Pop()
         {
-            if (m_hasFontFamily || m_hasFontSize)
+            PopFontOnly();
+
+            int colorCount = 0;
+            int varCount = 0;
+            foreach (var prop in m_properties)
             {
-                if (m_fontScaleWasPushed) ImTKFontManager.PopFontScale();
-                if (m_fontWasPushed) ImGui.PopFont();
-                if (m_hasFontFamily) RenderingContext.PopFontState();
+                if (prop.category != StyleCategory.ImGuiStyle) continue;
+                if (prop.dataType == StyleDataType.Color) colorCount++;
+                else if ((prop.dataType == StyleDataType.Float || prop.dataType == StyleDataType.Vector2) && prop.key < (int)ImGuiStyleVar.COUNT) varCount++;
             }
 
-            if (m_activeVars.Count > 0) ImGui.PopStyleVar(m_activeVars.Count);
-            if (m_activeColors.Count > 0) ImGui.PopStyleColor(m_activeColors.Count);
+            if (varCount > 0) ImGui.PopStyleVar(varCount);
+            if (colorCount > 0) ImGui.PopStyleColor(colorCount);
         }
     }
 }
