@@ -1,5 +1,6 @@
-using System.Collections.Generic;
 using ImGuiNET;
+using ImTK.Core;
+using System.Collections.Generic;
 
 namespace ImTK.UI
 {
@@ -45,7 +46,21 @@ namespace ImTK.UI
             }
 
             bool mapped = true;
-            if (prop.key == VisualElement.StyleKey.BackgroundColor.Hash)
+            if (prop.key == VisualElement.StyleKey.ColorFamily.Hash)
+            {
+                string prefix = "--normal";
+                if (prop.enumValue == (int)ThemeColorFamily.Success) prefix = "--success";
+                else if (prop.enumValue == (int)ThemeColorFamily.Info) prefix = "--info";
+                else if (prop.enumValue == (int)ThemeColorFamily.Warning) prefix = "--warning";
+                else if (prop.enumValue == (int)ThemeColorFamily.Danger) prefix = "--danger";
+
+                output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.WindowBg, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-surface").Hash });
+                output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.Text, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-text").Hash, isInheritable = true });
+                output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.TextDisabled, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-disabled-text").Hash, isInheritable = true });
+                output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.Border, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-border").Hash });
+                return;
+            }
+            else if (prop.key == VisualElement.StyleKey.BackgroundColor.Hash)
             {
                 prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
                 prop.key = (int)ImGuiCol.WindowBg;
@@ -71,6 +86,21 @@ namespace ImTK.UI
             {
                 prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
                 prop.key = (int)ImGuiStyleVar.WindowBorderSize;
+                output.Add(prop);
+
+                var prop2 = prop;
+                prop2.key = (int)ImGuiStyleVar.FrameBorderSize;
+                output.Add(prop2);
+
+                var prop3 = prop;
+                prop3.key = (int)ImGuiStyleVar.PopupBorderSize;
+                output.Add(prop3);
+
+                var prop4 = prop;
+                prop4.key = (int)ImGuiStyleVar.ChildBorderSize;
+                output.Add(prop4);
+
+                return;
             }
             else if (prop.key == VisualElement.StyleKey.BorderRadius.Hash)
             {
@@ -92,18 +122,7 @@ namespace ImTK.UI
 
                 return; // return early since we output multiple
             }
-            else if (prop.key == VisualElement.StyleKey.Padding.Hash)
-            {
-                prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
-                prop.key = (int)ImGuiStyleVar.WindowPadding;
-                output.Add(prop);
-                
-                var prop2 = prop;
-                prop2.key = (int)ImGuiStyleVar.FramePadding;
-                output.Add(prop2);
-                
-                return;
-            }
+
             else if (prop.key == VisualElement.StyleKey.ItemSpacing.Hash)
             {
                 prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
@@ -141,8 +160,6 @@ namespace ImTK.UI
             else if (prop.key == VisualElement.StyleKey.FontSize.Hash)
             {
                 prop.category = StyleCategory.ImGuiStyle;
-                prop.dataType = StyleDataType.Float;
-                prop.floatValue = prop.intValue;
                 prop.key = ImGuiStyleHandler.s_fontSizeImGuiKey.Hash;
                 prop.isInheritable = true;
             }
@@ -152,7 +169,14 @@ namespace ImTK.UI
                      prop.key == VisualElement.StyleKey.MaxWidth.Hash ||
                      prop.key == VisualElement.StyleKey.MinHeight.Hash ||
                      prop.key == VisualElement.StyleKey.MaxHeight.Hash ||
-                     prop.key == VisualElement.StyleKey.Margin.Hash ||
+                     prop.key == VisualElement.StyleKey.MarginLeft.Hash ||
+                     prop.key == VisualElement.StyleKey.MarginTop.Hash ||
+                     prop.key == VisualElement.StyleKey.MarginRight.Hash ||
+                     prop.key == VisualElement.StyleKey.MarginBottom.Hash ||
+                     prop.key == VisualElement.StyleKey.PaddingLeft.Hash ||
+                     prop.key == VisualElement.StyleKey.PaddingTop.Hash ||
+                     prop.key == VisualElement.StyleKey.PaddingRight.Hash ||
+                     prop.key == VisualElement.StyleKey.PaddingBottom.Hash ||
                      prop.key == VisualElement.StyleKey.FlexDirection.Hash ||
                      prop.key == VisualElement.StyleKey.FlexWrap.Hash ||
                      prop.key == VisualElement.StyleKey.JustifyContent.Hash ||

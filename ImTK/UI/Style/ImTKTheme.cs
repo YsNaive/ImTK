@@ -6,6 +6,15 @@ using ImTK.Core;
 
 namespace ImTK.UI
 {
+    public enum ThemeColorFamily
+    {
+        Normal,
+        Success,
+        Info,
+        Warning,
+        Danger
+    }
+
     public class ImTKTheme
     {
         public ImTKTheme parent { get; set; }
@@ -227,6 +236,52 @@ namespace ImTK.UI
         private SyntaxTheme m_syntax;
         public SyntaxTheme syntax => m_syntax ??= new SyntaxTheme(this);
 
+        /// <summary>
+        /// 將 normalColor 的所有語義 Token 映射至對應的 ImGui Color，透過 <paramref name="sink"/> 輸出。
+        /// BorderShadow 為硬編碼透明黑的特例，不納入此方法，由呼叫端自行處理。
+        /// </summary>
+        private void BuildColorMap(System.Action<ImGuiCol, Color> sink)
+        {
+            sink(ImGuiCol.Text,                  normalColor.text);
+            sink(ImGuiCol.TextDisabled,          normalColor.disabledText);
+            sink(ImGuiCol.WindowBg,              normalColor.surface);
+            sink(ImGuiCol.ChildBg,               normalColor.surface);
+            sink(ImGuiCol.PopupBg,               normalColor.container);
+            sink(ImGuiCol.Border,                normalColor.border);
+            sink(ImGuiCol.FrameBg,               normalColor.component);
+            sink(ImGuiCol.FrameBgHovered,        normalColor.componentHover);
+            sink(ImGuiCol.FrameBgActive,         normalColor.componentActive);
+            sink(ImGuiCol.TitleBg,               normalColor.container);
+            sink(ImGuiCol.TitleBgActive,         normalColor.container);
+            sink(ImGuiCol.TitleBgCollapsed,      normalColor.container);
+            sink(ImGuiCol.MenuBarBg,             normalColor.container);
+            sink(ImGuiCol.ScrollbarBg,           normalColor.container);
+            sink(ImGuiCol.ScrollbarGrab,         normalColor.accent);
+            sink(ImGuiCol.ScrollbarGrabHovered,  normalColor.accentHover);
+            sink(ImGuiCol.ScrollbarGrabActive,   normalColor.accentActive);
+            sink(ImGuiCol.CheckMark,             normalColor.accent);
+            sink(ImGuiCol.SliderGrab,            normalColor.accent);
+            sink(ImGuiCol.SliderGrabActive,      normalColor.accentActive);
+            sink(ImGuiCol.Button,                normalColor.component);
+            sink(ImGuiCol.ButtonHovered,         normalColor.componentHover);
+            sink(ImGuiCol.ButtonActive,          normalColor.componentActive);
+            sink(ImGuiCol.Header,                normalColor.component);
+            sink(ImGuiCol.HeaderHovered,         normalColor.componentHover);
+            sink(ImGuiCol.HeaderActive,          normalColor.componentActive);
+            sink(ImGuiCol.Separator,             normalColor.divider);
+            sink(ImGuiCol.SeparatorHovered,      normalColor.divider);
+            sink(ImGuiCol.SeparatorActive,       normalColor.divider);
+            sink(ImGuiCol.ResizeGrip,            normalColor.component);
+            sink(ImGuiCol.ResizeGripHovered,     normalColor.componentHover);
+            sink(ImGuiCol.ResizeGripActive,      normalColor.componentActive);
+            sink(ImGuiCol.Tab,                   normalColor.component);
+            sink(ImGuiCol.TabHovered,            normalColor.componentHover);
+            sink(ImGuiCol.TabSelected,           normalColor.selection);
+            sink(ImGuiCol.TabDimmed,             normalColor.component);
+            sink(ImGuiCol.TabDimmedSelected,     normalColor.selection);
+            sink(ImGuiCol.TextSelectedBg,        normalColor.selection);
+        }
+
         public void ApplyToImGui()
         {
             unsafe
@@ -234,61 +289,8 @@ namespace ImTK.UI
                 ImGuiStylePtr style = ImGui.GetStyle();
 
                 // Colors
-                style.Colors[(int)ImGuiCol.Text] = normalColor.text.rgba;
-                style.Colors[(int)ImGuiCol.TextDisabled] = normalColor.disabledText.rgba;
-
-                style.Colors[(int)ImGuiCol.WindowBg] = normalColor.surface.rgba;
-                style.Colors[(int)ImGuiCol.ChildBg] = normalColor.surface.rgba;
-                style.Colors[(int)ImGuiCol.PopupBg] = normalColor.container.rgba;
-
-                style.Colors[(int)ImGuiCol.Border] = normalColor.border.rgba;
-                style.Colors[(int)ImGuiCol.BorderShadow] = new Vector4(0, 0, 0, 0);
-
-                style.Colors[(int)ImGuiCol.FrameBg] = normalColor.component.rgba;
-                style.Colors[(int)ImGuiCol.FrameBgHovered] = normalColor.componentHover.rgba;
-                style.Colors[(int)ImGuiCol.FrameBgActive] = normalColor.componentActive.rgba;
-
-                style.Colors[(int)ImGuiCol.TitleBg] = normalColor.container.rgba;
-                style.Colors[(int)ImGuiCol.TitleBgActive] = normalColor.container.rgba;
-                style.Colors[(int)ImGuiCol.TitleBgCollapsed] = normalColor.container.rgba;
-
-                style.Colors[(int)ImGuiCol.MenuBarBg] = normalColor.container.rgba;
-
-                style.Colors[(int)ImGuiCol.ScrollbarBg] = normalColor.container.rgba;
-                style.Colors[(int)ImGuiCol.ScrollbarGrab] = normalColor.accent.rgba;
-                style.Colors[(int)ImGuiCol.ScrollbarGrabHovered] = normalColor.accentHover.rgba;
-                style.Colors[(int)ImGuiCol.ScrollbarGrabActive] = normalColor.accentActive.rgba;
-
-                style.Colors[(int)ImGuiCol.CheckMark] = normalColor.accent.rgba;
-
-                style.Colors[(int)ImGuiCol.SliderGrab] = normalColor.accent.rgba;
-                style.Colors[(int)ImGuiCol.SliderGrabActive] = normalColor.accentActive.rgba;
-
-                style.Colors[(int)ImGuiCol.Button] = normalColor.component.rgba;
-                style.Colors[(int)ImGuiCol.ButtonHovered] = normalColor.componentHover.rgba;
-                style.Colors[(int)ImGuiCol.ButtonActive] = normalColor.componentActive.rgba;
-
-                style.Colors[(int)ImGuiCol.Header] = normalColor.component.rgba;
-                style.Colors[(int)ImGuiCol.HeaderHovered] = normalColor.componentHover.rgba;
-                style.Colors[(int)ImGuiCol.HeaderActive] = normalColor.componentActive.rgba;
-
-                style.Colors[(int)ImGuiCol.Separator] = normalColor.divider.rgba;
-                style.Colors[(int)ImGuiCol.SeparatorHovered] = normalColor.divider.rgba;
-                style.Colors[(int)ImGuiCol.SeparatorActive] = normalColor.divider.rgba;
-
-                style.Colors[(int)ImGuiCol.ResizeGrip] = normalColor.component.rgba;
-                style.Colors[(int)ImGuiCol.ResizeGripHovered] = normalColor.componentHover.rgba;
-                style.Colors[(int)ImGuiCol.ResizeGripActive] = normalColor.componentActive.rgba;
-
-                style.Colors[(int)ImGuiCol.Tab] = normalColor.component.rgba;
-                style.Colors[(int)ImGuiCol.TabHovered] = normalColor.componentHover.rgba;
-                style.Colors[(int)ImGuiCol.TabSelected] = normalColor.selection.rgba;
-                style.Colors[(int)ImGuiCol.TabDimmed] = normalColor.component.rgba;
-                style.Colors[(int)ImGuiCol.TabDimmedSelected] = normalColor.selection.rgba;
-
-                style.Colors[(int)ImGuiCol.TextSelectedBg] = normalColor.selection.rgba;
-                // Note: NavHighlight doesn't exist in ImGui versions or is named differently in the wrapper
-                // style.Colors[(int)ImGuiCol.NavHighlight] = normalColor.accent.rgba;
+                BuildColorMap((col, color) => style.Colors[(int)col] = color.rgba);
+                style.Colors[(int)ImGuiCol.BorderShadow] = new Vector4(0, 0, 0, 0); // Special: hardcoded transparent black, not a ColorFamily token
 
                 // Dimensions / Layout
                 style.WindowPadding = padding;
@@ -331,56 +333,18 @@ namespace ImTK.UI
         internal void InjectToStyleHandler(ImGuiStyleHandler handler)
         {
             // --- Colors ---
-            InjectColor(handler, ImGuiCol.Text,               normalColor.text);
-            InjectColor(handler, ImGuiCol.TextDisabled,       normalColor.disabledText);
-            InjectColor(handler, ImGuiCol.WindowBg,           normalColor.surface);
-            InjectColor(handler, ImGuiCol.ChildBg,            normalColor.surface);
-            InjectColor(handler, ImGuiCol.PopupBg,            normalColor.container);
-            InjectColor(handler, ImGuiCol.Border,             normalColor.border);
+            BuildColorMap((col, color) => InjectColor(handler, col, color));
 
-            // BorderShadow = transparent black
+            // BorderShadow = transparent black (special case: hardcoded, not a ColorFamily token)
             var shadowProp = new StyleProperty
             {
-                category = StyleCategory.ImGuiStyle,
-                key      = (int)ImGuiCol.BorderShadow,
-                dataType = StyleDataType.Color,
+                category   = StyleCategory.ImGuiStyle,
+                key        = (int)ImGuiCol.BorderShadow,
+                dataType   = StyleDataType.Color,
                 colorValue = 0u
             };
             shadowProp.isInheritable = true;
             handler.TrySetProperty(shadowProp);
-
-            InjectColor(handler, ImGuiCol.FrameBg,            normalColor.component);
-            InjectColor(handler, ImGuiCol.FrameBgHovered,     normalColor.componentHover);
-            InjectColor(handler, ImGuiCol.FrameBgActive,      normalColor.componentActive);
-            InjectColor(handler, ImGuiCol.TitleBg,            normalColor.container);
-            InjectColor(handler, ImGuiCol.TitleBgActive,      normalColor.container);
-            InjectColor(handler, ImGuiCol.TitleBgCollapsed,   normalColor.container);
-            InjectColor(handler, ImGuiCol.MenuBarBg,          normalColor.container);
-            InjectColor(handler, ImGuiCol.ScrollbarBg,        normalColor.container);
-            InjectColor(handler, ImGuiCol.ScrollbarGrab,      normalColor.accent);
-            InjectColor(handler, ImGuiCol.ScrollbarGrabHovered, normalColor.accentHover);
-            InjectColor(handler, ImGuiCol.ScrollbarGrabActive,  normalColor.accentActive);
-            InjectColor(handler, ImGuiCol.CheckMark,          normalColor.accent);
-            InjectColor(handler, ImGuiCol.SliderGrab,         normalColor.accent);
-            InjectColor(handler, ImGuiCol.SliderGrabActive,   normalColor.accentActive);
-            InjectColor(handler, ImGuiCol.Button,             normalColor.component);
-            InjectColor(handler, ImGuiCol.ButtonHovered,      normalColor.componentHover);
-            InjectColor(handler, ImGuiCol.ButtonActive,       normalColor.componentActive);
-            InjectColor(handler, ImGuiCol.Header,             normalColor.component);
-            InjectColor(handler, ImGuiCol.HeaderHovered,      normalColor.componentHover);
-            InjectColor(handler, ImGuiCol.HeaderActive,       normalColor.componentActive);
-            InjectColor(handler, ImGuiCol.Separator,          normalColor.divider);
-            InjectColor(handler, ImGuiCol.SeparatorHovered,   normalColor.divider);
-            InjectColor(handler, ImGuiCol.SeparatorActive,    normalColor.divider);
-            InjectColor(handler, ImGuiCol.ResizeGrip,         normalColor.component);
-            InjectColor(handler, ImGuiCol.ResizeGripHovered,  normalColor.componentHover);
-            InjectColor(handler, ImGuiCol.ResizeGripActive,   normalColor.componentActive);
-            InjectColor(handler, ImGuiCol.Tab,                normalColor.component);
-            InjectColor(handler, ImGuiCol.TabHovered,         normalColor.componentHover);
-            InjectColor(handler, ImGuiCol.TabSelected,        normalColor.selection);
-            InjectColor(handler, ImGuiCol.TabDimmed,          normalColor.component);
-            InjectColor(handler, ImGuiCol.TabDimmedSelected,  normalColor.selection);
-            InjectColor(handler, ImGuiCol.TextSelectedBg,     normalColor.selection);
 
             // --- Style Vars ---
             InjectVar2(handler, ImGuiStyleVar.WindowPadding,    padding);

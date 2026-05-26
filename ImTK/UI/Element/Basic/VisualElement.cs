@@ -19,13 +19,18 @@ namespace ImTK.UI
             public static readonly HashedString SelectionColor = new HashedString("SelectionColor");
             public static readonly HashedString BorderColor = new HashedString("BorderColor");
 
-            public static readonly HashedString Padding = new HashedString("Padding");
-            public static readonly HashedString ItemSpacing = new HashedString("ItemSpacing");
-            public static readonly HashedString ItemInnerSpacing = new HashedString("ItemInnerSpacing");
             public static readonly HashedString BorderWidth = new HashedString("BorderWidth");
             public static readonly HashedString BorderRadius = new HashedString("BorderRadius");
             public static readonly HashedString Alpha = new HashedString("Alpha");
             public static readonly HashedString DisabledAlpha = new HashedString("DisabledAlpha");
+
+            public static readonly HashedString PaddingLeft = new HashedString("PaddingLeft");
+            public static readonly HashedString PaddingTop = new HashedString("PaddingTop");
+            public static readonly HashedString PaddingRight = new HashedString("PaddingRight");
+            public static readonly HashedString PaddingBottom = new HashedString("PaddingBottom");
+
+            public static readonly HashedString ItemSpacing = new HashedString("ItemSpacing");
+            public static readonly HashedString ItemInnerSpacing = new HashedString("ItemInnerSpacing");
 
             public static readonly HashedString FontFamily = new HashedString("FontFamily");
             public static readonly HashedString FontSize = new HashedString("FontSize");
@@ -38,7 +43,10 @@ namespace ImTK.UI
             public static readonly HashedString MinHeight = new HashedString("MinHeight");
             public static readonly HashedString MaxHeight = new HashedString("MaxHeight");
 
-            public static readonly HashedString Margin = new HashedString("Margin");
+            public static readonly HashedString MarginLeft = new HashedString("MarginLeft");
+            public static readonly HashedString MarginTop = new HashedString("MarginTop");
+            public static readonly HashedString MarginRight = new HashedString("MarginRight");
+            public static readonly HashedString MarginBottom = new HashedString("MarginBottom");
             public static readonly HashedString FlexDirection = new HashedString("FlexDirection");
             public static readonly HashedString FlexWrap = new HashedString("FlexWrap");
             public static readonly HashedString JustifyContent = new HashedString("JustifyContent");
@@ -52,6 +60,7 @@ namespace ImTK.UI
             public static readonly HashedString Left = new HashedString("Left");
             public static readonly HashedString Right = new HashedString("Right");
             public static readonly HashedString Display = new HashedString("Display");
+            public static readonly HashedString ColorFamily = new HashedString("ColorFamily");
         }
 
         public class Style : VisualElementStyle, IVisualElementStyle
@@ -59,16 +68,68 @@ namespace ImTK.UI
             protected VisualElement m_owner;
 
             public StyleValue<HashedString> fontFamily { set => SetStringToken(StyleKey.FontFamily, value); }
-            public StyleValue<int> fontSize { set => SetInt(StyleKey.FontSize, value); }
-            public StyleValue<FontSize> fontSizeEnum { set => SetEnum(StyleKey.FontSize, value); }
+            public StyleFontSize? fontSize
+            {
+                get
+                {
+                    var p = GetProperty(StyleKey.FontSize.Hash);
+                    if (p.dataType == StyleDataType.Null) return null;
+                    if (p.dataType == StyleDataType.HashedString) return new StyleFontSize { Token = new HashedString("TOKEN_" + p.tokenHash) };
+                    if (p.dataType == StyleDataType.Enum) return new StyleFontSize { EnumValue = (FontSize)p.enumValue, IsEnum = true };
+                    return new StyleFontSize { IntValue = p.intValue, IsEnum = false };
+                }
+                set
+                {
+                    if (value.HasValue)
+                    {
+                        if (value.Value.IsToken) SetStringToken(StyleKey.FontSize, new StyleValue<HashedString> { Token = value.Value.Token });
+                        else if (value.Value.IsEnum) SetEnum(StyleKey.FontSize, new StyleValue<FontSize> { Value = value.Value.EnumValue });
+                        else SetInt(StyleKey.FontSize, new StyleValue<int> { Value = value.Value.IntValue });
+                    }
+                    else
+                    {
+                        Clear(StyleKey.FontSize);
+                    }
+                }
+            }
 
             public Style() { }
             public void Init(VisualElement owner) { m_owner = owner; }
 
-            protected StyleValue<Color>? GetPropertyColor(HashedString key)
+            protected StyleColor? GetPropertyColor(HashedString key)
             {
                 var p = GetProperty(key.Hash);
-                return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Color> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Color> { Value = (Color)p.colorValue });
+                if (p.dataType == StyleDataType.Null) return null;
+                if (p.dataType == StyleDataType.HashedString) return new StyleColor { Token = new HashedString("TOKEN_" + p.tokenHash) };
+                return new StyleColor { Value = (Color)p.colorValue };
+            }
+
+            protected void SetPropertyColor(HashedString key, StyleColor? value)
+            {
+                if (value.HasValue)
+                {
+                    if (value.Value.IsToken) SetStringToken(key, new StyleValue<HashedString> { Token = value.Value.Token });
+                    else SetColor(key, new StyleValue<Color> { Value = value.Value.Value });
+                }
+                else Clear(key);
+            }
+
+            protected StyleSpacing? GetPropertySpacing(HashedString key)
+            {
+                var p = GetProperty(key.Hash);
+                if (p.dataType == StyleDataType.Null) return null;
+                if (p.dataType == StyleDataType.HashedString) return new StyleSpacing { Token = new HashedString("TOKEN_" + p.tokenHash) };
+                return new StyleSpacing { Value = p.vector2Value };
+            }
+
+            protected void SetPropertySpacing(HashedString key, StyleSpacing? value)
+            {
+                if (value.HasValue)
+                {
+                    if (value.Value.IsToken) SetStringToken(key, new StyleValue<HashedString> { Token = value.Value.Token });
+                    else SetVector2(key, new StyleValue<Vector2> { Value = value.Value.Value });
+                }
+                else Clear(key);
             }
 
             protected StyleValue<float>? GetPropertyFloat(HashedString key)
@@ -150,17 +211,7 @@ namespace ImTK.UI
                 m_owner?.MarkArrangeDirty();
             }
 
-            public void SetThickness(HashedString key, StyleValue<Thickness> value)
-            {
-                if (value.IsNull) { Clear(key); return; }
-                var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Thickness };
-                if (value.IsToken) prop.tokenHash = value.Token.Hash;
-                else prop.thicknessValue = value.Value;
-                SetProperty(prop);
-                m_owner?.MarkStyleDirty();
-                m_owner?.MarkMeasureDirty();
-                m_owner?.MarkArrangeDirty();
-            }
+
 
             public void Clear(HashedString key)
             {
@@ -172,28 +223,42 @@ namespace ImTK.UI
 
             // --- High-level Property Syntax Sugar ---
 
-            public StyleValue<Color>? backgroundColor
+            public StyleValue<ThemeColorFamily>? colorFamily
+            {
+                get
+                {
+                    var p = GetProperty(StyleKey.ColorFamily.Hash);
+                    return p.dataType == StyleDataType.Null ? null : new StyleValue<ThemeColorFamily> { Value = (ThemeColorFamily)p.enumValue };
+                }
+                set
+                {
+                    if (value.HasValue) SetEnum(StyleKey.ColorFamily, value.Value);
+                    else Clear(StyleKey.ColorFamily);
+                }
+            }
+
+            public StyleColor? backgroundColor
             {
                 get => GetPropertyColor(StyleKey.BackgroundColor);
-                set { if (value.HasValue) SetColor(StyleKey.BackgroundColor, value.Value); else Clear(StyleKey.BackgroundColor); }
+                set => SetPropertyColor(StyleKey.BackgroundColor, value);
             }
 
-            public StyleValue<Color>? textColor
+            public StyleColor? textColor
             {
                 get => GetPropertyColor(StyleKey.TextColor);
-                set { if (value.HasValue) SetColor(StyleKey.TextColor, value.Value); else Clear(StyleKey.TextColor); }
+                set => SetPropertyColor(StyleKey.TextColor, value);
             }
 
-            public StyleValue<Color>? disabledTextColor
+            public StyleColor? disabledTextColor
             {
                 get => GetPropertyColor(StyleKey.DisabledTextColor);
-                set { if (value.HasValue) SetColor(StyleKey.DisabledTextColor, value.Value); else Clear(StyleKey.DisabledTextColor); }
+                set => SetPropertyColor(StyleKey.DisabledTextColor, value);
             }
 
-            public StyleValue<Color>? borderColor
+            public StyleColor? borderColor
             {
                 get => GetPropertyColor(StyleKey.BorderColor);
-                set { if (value.HasValue) SetColor(StyleKey.BorderColor, value.Value); else Clear(StyleKey.BorderColor); }
+                set => SetPropertyColor(StyleKey.BorderColor, value);
             }
 
             public StyleValue<float>? borderWidth
@@ -220,28 +285,65 @@ namespace ImTK.UI
                 set { if (value.HasValue) SetFloat(StyleKey.DisabledAlpha, value.Value); else Clear(StyleKey.DisabledAlpha); }
             }
 
-            public StyleValue<Thickness>? padding
+            public StyleThickness? padding
             {
-                get { var p = GetProperty(StyleKey.Padding.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Thickness> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Thickness> { Value = p.thicknessValue }); }
-                set { if (value.HasValue) SetThickness(StyleKey.Padding, value.Value); else Clear(StyleKey.Padding); }
+                get
+                {
+                    var l = GetProperty(StyleKey.PaddingLeft.Hash);
+                    var t = GetProperty(StyleKey.PaddingTop.Hash);
+                    var r = GetProperty(StyleKey.PaddingRight.Hash);
+                    var b = GetProperty(StyleKey.PaddingBottom.Hash);
+                    if (l.isNull && t.isNull && r.isNull && b.isNull) return null;
+                    if (l.isToken) return new StyleThickness { Token = new HashedString("TOKEN_" + l.tokenHash) };
+                    return new StyleThickness { Value = new Thickness(l.floatValue, t.floatValue, r.floatValue, b.floatValue) };
+                }
+                set
+                {
+                    if (value.HasValue)
+                    {
+                        if (value.Value.IsToken)
+                        {
+                            var tokenVal = new StyleValue<float> { Token = value.Value.Token };
+                            SetFloat(StyleKey.PaddingLeft, tokenVal);
+                            SetFloat(StyleKey.PaddingTop, tokenVal);
+                            SetFloat(StyleKey.PaddingRight, tokenVal);
+                            SetFloat(StyleKey.PaddingBottom, tokenVal);
+                        }
+                        else
+                        {
+                            var v = value.Value.Value;
+                            SetFloat(StyleKey.PaddingLeft, v.left);
+                            SetFloat(StyleKey.PaddingTop, v.top);
+                            SetFloat(StyleKey.PaddingRight, v.right);
+                            SetFloat(StyleKey.PaddingBottom, v.bottom);
+                        }
+                    }
+                    else
+                    {
+                        Clear(StyleKey.PaddingLeft);
+                        Clear(StyleKey.PaddingTop);
+                        Clear(StyleKey.PaddingRight);
+                        Clear(StyleKey.PaddingBottom);
+                    }
+                }
             }
 
-            public StyleValue<Vector2>? itemSpacing
+            public StyleSpacing? itemSpacing
             {
-                get { var p = GetProperty(StyleKey.ItemSpacing.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Vector2> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Vector2> { Value = p.vector2Value }); }
-                set { if (value.HasValue) SetVector2(StyleKey.ItemSpacing, value.Value); else Clear(StyleKey.ItemSpacing); }
+                get => GetPropertySpacing(StyleKey.ItemSpacing);
+                set => SetPropertySpacing(StyleKey.ItemSpacing, value);
             }
 
-            public StyleValue<Vector2>? itemInnerSpacing
+            public StyleSpacing? itemInnerSpacing
             {
-                get { var p = GetProperty(StyleKey.ItemInnerSpacing.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Vector2> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Vector2> { Value = p.vector2Value }); }
-                set { if (value.HasValue) SetVector2(StyleKey.ItemInnerSpacing, value.Value); else Clear(StyleKey.ItemInnerSpacing); }
+                get => GetPropertySpacing(StyleKey.ItemInnerSpacing);
+                set => SetPropertySpacing(StyleKey.ItemInnerSpacing, value);
             }
 
-            public StyleValue<Color>? selectionColor
+            public StyleColor? selectionColor
             {
                 get => GetPropertyColor(StyleKey.SelectionColor);
-                set { if (value.HasValue) SetColor(StyleKey.SelectionColor, value.Value); else Clear(StyleKey.SelectionColor); }
+                set => SetPropertyColor(StyleKey.SelectionColor, value);
             }
 
             // --- High-level Layout Properties ---
@@ -275,10 +377,47 @@ namespace ImTK.UI
                 get => GetPropertyFloat(StyleKey.MaxHeight);
                 set { if (value.HasValue) SetFloat(StyleKey.MaxHeight, value.Value); else Clear(StyleKey.MaxHeight); }
             }
-            public StyleValue<Thickness>? margin
+            public StyleThickness? margin
             {
-                get { var p = GetProperty(StyleKey.Margin.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Thickness> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Thickness> { Value = p.thicknessValue }); }
-                set { if (value.HasValue) SetThickness(StyleKey.Margin, value.Value); else Clear(StyleKey.Margin); }
+                get
+                {
+                    var l = GetProperty(StyleKey.MarginLeft.Hash);
+                    var t = GetProperty(StyleKey.MarginTop.Hash);
+                    var r = GetProperty(StyleKey.MarginRight.Hash);
+                    var b = GetProperty(StyleKey.MarginBottom.Hash);
+                    if (l.isNull && t.isNull && r.isNull && b.isNull) return null;
+                    if (l.isToken) return new StyleThickness { Token = new HashedString("TOKEN_" + l.tokenHash) };
+                    return new StyleThickness { Value = new Thickness(l.floatValue, t.floatValue, r.floatValue, b.floatValue) };
+                }
+                set
+                {
+                    if (value.HasValue)
+                    {
+                        if (value.Value.IsToken)
+                        {
+                            var tokenVal = new StyleValue<float> { Token = value.Value.Token };
+                            SetFloat(StyleKey.MarginLeft, tokenVal);
+                            SetFloat(StyleKey.MarginTop, tokenVal);
+                            SetFloat(StyleKey.MarginRight, tokenVal);
+                            SetFloat(StyleKey.MarginBottom, tokenVal);
+                        }
+                        else
+                        {
+                            var v = value.Value.Value;
+                            SetFloat(StyleKey.MarginLeft, v.left);
+                            SetFloat(StyleKey.MarginTop, v.top);
+                            SetFloat(StyleKey.MarginRight, v.right);
+                            SetFloat(StyleKey.MarginBottom, v.bottom);
+                        }
+                    }
+                    else
+                    {
+                        Clear(StyleKey.MarginLeft);
+                        Clear(StyleKey.MarginTop);
+                        Clear(StyleKey.MarginRight);
+                        Clear(StyleKey.MarginBottom);
+                    }
+                }
             }
             public StyleValue<FlexDirection>? flexDirection
             {
@@ -872,8 +1011,14 @@ namespace ImTK.UI
                     else if (prop.key == StyleKey.MaxWidth.Hash) state.maxWidth = isNull ? null : prop.floatValue;
                     else if (prop.key == StyleKey.MinHeight.Hash) state.minHeight = isNull ? null : prop.floatValue;
                     else if (prop.key == StyleKey.MaxHeight.Hash) state.maxHeight = isNull ? null : prop.floatValue;
-                    else if (prop.key == StyleKey.Margin.Hash) state.margin = isNull ? Thickness.Zero : (prop.dataType == StyleDataType.Vector2 ? new Thickness(prop.vector2Value.X, prop.vector2Value.Y) : prop.thicknessValue);
-                    else if (prop.key == StyleKey.Padding.Hash) state.padding = isNull ? Thickness.Zero : (prop.dataType == StyleDataType.Vector2 ? new Thickness(prop.vector2Value.X, prop.vector2Value.Y) : prop.thicknessValue);
+                    else if (prop.key == StyleKey.MarginLeft.Hash) state.margin.left = isNull ? 0 : prop.floatValue;
+                    else if (prop.key == StyleKey.MarginTop.Hash) state.margin.top = isNull ? 0 : prop.floatValue;
+                    else if (prop.key == StyleKey.MarginRight.Hash) state.margin.right = isNull ? 0 : prop.floatValue;
+                    else if (prop.key == StyleKey.MarginBottom.Hash) state.margin.bottom = isNull ? 0 : prop.floatValue;
+                    else if (prop.key == StyleKey.PaddingLeft.Hash) state.padding.left = isNull ? 0 : prop.floatValue;
+                    else if (prop.key == StyleKey.PaddingTop.Hash) state.padding.top = isNull ? 0 : prop.floatValue;
+                    else if (prop.key == StyleKey.PaddingRight.Hash) state.padding.right = isNull ? 0 : prop.floatValue;
+                    else if (prop.key == StyleKey.PaddingBottom.Hash) state.padding.bottom = isNull ? 0 : prop.floatValue;
                     else if (prop.key == StyleKey.FlexDirection.Hash) state.flexDirection = isNull ? FlexDirection.Column : (FlexDirection)prop.enumValue;
                     else if (prop.key == StyleKey.FlexWrap.Hash) state.flexWrap = isNull ? FlexWrap.NoWrap : (FlexWrap)prop.enumValue;
                     else if (prop.key == StyleKey.JustifyContent.Hash) state.justifyContent = isNull ? JustifyContent.FlexStart : (JustifyContent)prop.enumValue;

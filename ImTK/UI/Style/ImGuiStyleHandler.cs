@@ -23,6 +23,7 @@ namespace ImTK.UI
         private bool m_hasFontFamily = false;
         private bool m_hasFontSize = false;
         private bool m_fontWasPushed = false;
+        private bool m_fontScaleWasPushed = false;
 
         public void Clear()
         {
@@ -31,6 +32,7 @@ namespace ImTK.UI
             m_hasFontFamily = false;
             m_hasFontSize = false;
             m_fontWasPushed = false;
+            m_fontScaleWasPushed = false;
         }
 
         public bool TrySetProperty(StyleProperty prop)
@@ -56,7 +58,7 @@ namespace ImTK.UI
                 m_hasFontSize = true;
                 return true;
             }
-            else if (prop.dataType == StyleDataType.Float || prop.dataType == StyleDataType.Vector2 || prop.dataType == StyleDataType.Thickness)
+            else if (prop.dataType == StyleDataType.Float || prop.dataType == StyleDataType.Vector2)
             {
                 if (prop.key < 0 || prop.key >= (int)ImGuiStyleVar.COUNT) return false;
                 m_vars[prop.key] = prop;
@@ -137,8 +139,6 @@ namespace ImTK.UI
                     if (curProp.dataType == StyleDataType.Float && curProp.floatValue != pProp.floatValue)
                         output.TrySetProperty(curProp);
                     else if (curProp.dataType == StyleDataType.Vector2 && curProp.vector2Value != pProp.vector2Value)
-                        output.TrySetProperty(curProp);
-                    else if (curProp.dataType == StyleDataType.Thickness && curProp.thicknessValue != pProp.thicknessValue)
                         output.TrySetProperty(curProp);
                 }
             }
@@ -265,12 +265,6 @@ namespace ImTK.UI
                             hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.vector2Value.X);
                             hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.vector2Value.Y);
                         }
-                        else if (prop.dataType == StyleDataType.Thickness) {
-                            hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.thicknessValue.left);
-                            hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.thicknessValue.top);
-                            hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.thicknessValue.right);
-                            hash = hash * 23 + BitConverter.SingleToUInt32Bits(prop.thicknessValue.bottom);
-                        }
                     }
                 }
                 if (m_hasFontFamily) hash = hash * 23 + (uint)m_fontFamily.tokenHash;
@@ -283,6 +277,7 @@ namespace ImTK.UI
         {
             if (m_hasFontFamily || m_hasFontSize)
             {
+                if (m_fontScaleWasPushed) ImTKFontManager.PopFontScale();
                 if (m_fontWasPushed) ImGui.PopFont();
                 if (m_hasFontFamily) RenderingContext.PopFontState();
             }
@@ -296,20 +291,29 @@ namespace ImTK.UI
                 var prop = m_vars[varIdx];
                 if (prop.dataType == StyleDataType.Float) ImGui.PushStyleVar((ImGuiStyleVar)varIdx, prop.floatValue);
                 else if (prop.dataType == StyleDataType.Vector2) ImGui.PushStyleVar((ImGuiStyleVar)varIdx, prop.vector2Value);
-                else if (prop.dataType == StyleDataType.Thickness) ImGui.PushStyleVar((ImGuiStyleVar)varIdx, new Vector2(prop.thicknessValue.left, prop.thicknessValue.top));
             }
 
             if (m_hasFontFamily || m_hasFontSize)
             {
                 int familyHash = m_hasFontFamily ? m_fontFamily.tokenHash : RenderingContext.CurrentFontFamilyHash;
-                var fontSize = m_hasFontSize ? (ImTK.UI.FontSize)m_fontSize.floatValue : ImTK.UI.FontSize.Normal;
-
                 if (m_hasFontFamily)
                 {
                     RenderingContext.PushFontState(familyHash);
                 }
 
-                var fontPtr = ImTKFontManager.GetFont(familyHash, fontSize);
+                ImFontPtr fontPtr;
+                if (m_hasFontSize && m_fontSize.dataType == StyleDataType.Int)
+                {
+                    var (f, scale) = ImTKFontManager.GetFontWithScale(familyHash, m_fontSize.intValue);
+                    fontPtr = f;
+                    ImTKFontManager.PushFontScale(scale);
+                    m_fontScaleWasPushed = true;
+                }
+                else
+                {
+                    var fontSizeEnum = m_hasFontSize ? (ImTK.UI.FontSize)m_fontSize.enumValue : ImTK.UI.FontSize.Normal;
+                    fontPtr = ImTKFontManager.GetFont(familyHash, fontSizeEnum);
+                }
                 m_fontWasPushed = fontPtr.NativePtr != null;
                 if (m_fontWasPushed)
                 {
@@ -322,6 +326,7 @@ namespace ImTK.UI
         {
             if (m_hasFontFamily || m_hasFontSize)
             {
+                if (m_fontScaleWasPushed) ImTKFontManager.PopFontScale();
                 if (m_fontWasPushed) ImGui.PopFont();
                 if (m_hasFontFamily) RenderingContext.PopFontState();
             }

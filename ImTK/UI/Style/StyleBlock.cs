@@ -24,7 +24,7 @@ namespace ImTK.UI
             {
                 category = StyleCategory.HighLevelToken,
                 key = key.Hash,
-                type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.ColorValue)
+                dataType = value.Keyword == StyleKeyword.Null ? StyleDataType.Null : (value.IsToken ? StyleDataType.HashedString : StyleDataType.Color)
             };
 
             if (value.IsToken)
@@ -48,7 +48,7 @@ namespace ImTK.UI
             {
                 category = StyleCategory.HighLevelToken,
                 key = key.Hash,
-                type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.FloatValue)
+                dataType = value.Keyword == StyleKeyword.Null ? StyleDataType.Null : (value.IsToken ? StyleDataType.HashedString : StyleDataType.Float)
             };
 
             if (value.IsToken)
@@ -72,7 +72,7 @@ namespace ImTK.UI
             {
                 category = StyleCategory.HighLevelToken,
                 key = key.Hash,
-                type = value.Keyword == StyleKeyword.Null ? StylePropertyType.Null : (value.IsToken ? StylePropertyType.Token : StylePropertyType.Vector2Value)
+                dataType = value.Keyword == StyleKeyword.Null ? StyleDataType.Null : (value.IsToken ? StyleDataType.HashedString : StyleDataType.Vector2)
             };
 
             if (value.IsToken)

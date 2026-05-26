@@ -1,5 +1,6 @@
 using System.Collections.Generic;
-
+using System.Numerics;
+using ImGuiNET;
 namespace ImTK.UI
 {
     public static partial class RenderEngine
@@ -133,6 +134,37 @@ namespace ImTK.UI
                         {
                             element.resolvedStyle.TrySetProperty(finalProp);
                         }
+                    }
+
+                    bool hasPaddingOverride = false;
+                    foreach (var prop in s_translatedProps)
+                    {
+                        if (prop.key == VisualElement.StyleKey.PaddingLeft.Hash || prop.key == VisualElement.StyleKey.PaddingRight.Hash || 
+                            prop.key == VisualElement.StyleKey.PaddingTop.Hash || prop.key == VisualElement.StyleKey.PaddingBottom.Hash) 
+                        {
+                            hasPaddingOverride = true;
+                            break;
+                        }
+                    }
+
+                    if (hasPaddingOverride)
+                    {
+                        var pad = element.resolvedLayoutState.padding;
+                        var paddingVec = new Vector2((pad.left + pad.right) / 2f, (pad.top + pad.bottom) / 2f);
+
+                        element.resolvedStyle.TrySetProperty(new StyleProperty {
+                            category = StyleCategory.ImGuiStyle,
+                            dataType = StyleDataType.Vector2,
+                            key = (int)ImGuiStyleVar.WindowPadding,
+                            vector2Value = paddingVec
+                        });
+                        
+                        element.resolvedStyle.TrySetProperty(new StyleProperty {
+                            category = StyleCategory.ImGuiStyle,
+                            dataType = StyleDataType.Vector2,
+                            key = (int)ImGuiStyleVar.FramePadding,
+                            vector2Value = paddingVec
+                        });
                     }
 
                     ImGuiStyleHandler.Diff(element.parent?.resolvedStyle, element.resolvedStyle, element.requiredStyle);

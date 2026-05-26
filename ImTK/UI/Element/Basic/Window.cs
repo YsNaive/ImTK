@@ -46,34 +46,22 @@ namespace ImTK.UI
 
 
 
-            public StyleValue<Color>? titleBarColor
+            public StyleColor? titleBarColor
             {
                 get => GetPropertyColor(StyleKey.TitleBarColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.TitleBarColor, value.Value);
-                    else Clear(StyleKey.TitleBarColor);
-                }
+                set => SetPropertyColor(StyleKey.TitleBarColor, value);
             }
 
-            public StyleValue<Color>? titleBarActiveColor
+            public StyleColor? titleBarActiveColor
             {
                 get => GetPropertyColor(StyleKey.TitleBarActiveColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.TitleBarActiveColor, value.Value);
-                    else Clear(StyleKey.TitleBarActiveColor);
-                }
+                set => SetPropertyColor(StyleKey.TitleBarActiveColor, value);
             }
 
-            public StyleValue<Color>? titleBarCollapsedColor
+            public StyleColor? titleBarCollapsedColor
             {
                 get => GetPropertyColor(StyleKey.TitleBarCollapsedColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.TitleBarCollapsedColor, value.Value);
-                    else Clear(StyleKey.TitleBarCollapsedColor);
-                }
+                set => SetPropertyColor(StyleKey.TitleBarCollapsedColor, value);
             }
 
             public override void ComputeHighlevelToken(StyleProperty prop, System.Collections.Generic.IList<StyleProperty> output)

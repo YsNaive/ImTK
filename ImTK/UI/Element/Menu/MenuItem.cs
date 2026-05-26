@@ -22,24 +22,16 @@ namespace ImTK.UI
         {
 
 
-            public StyleValue<Color>? hoverColor
+            public StyleColor? hoverColor
             {
                 get => GetPropertyColor(StyleKey.HoverColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.HoverColor, value.Value);
-                    else Clear(StyleKey.HoverColor);
-                }
+                set => SetPropertyColor(StyleKey.HoverColor, value);
             }
 
-            public StyleValue<Color>? activeColor
+            public StyleColor? activeColor
             {
                 get => GetPropertyColor(StyleKey.ActiveColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.ActiveColor, value.Value);
-                    else Clear(StyleKey.ActiveColor);
-                }
+                set => SetPropertyColor(StyleKey.ActiveColor, value);
             }
 
 
@@ -50,6 +42,21 @@ namespace ImTK.UI
             {
                 if (prop.category == StyleCategory.HighLevelToken)
                 {
+                    if (prop.key == VisualElement.StyleKey.ColorFamily.Hash)
+                    {
+                        string prefix = "--normal";
+                        if (prop.enumValue == (int)ThemeColorFamily.Success) prefix = "--success";
+                        else if (prop.enumValue == (int)ThemeColorFamily.Info) prefix = "--info";
+                        else if (prop.enumValue == (int)ThemeColorFamily.Warning) prefix = "--warning";
+                        else if (prop.enumValue == (int)ThemeColorFamily.Danger) prefix = "--danger";
+
+                        output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.Header, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component").Hash });
+                        output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.HeaderHovered, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component-hover").Hash });
+                        output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.HeaderActive, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component-active").Hash });
+                        output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.Text, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-text").Hash });
+                        return;
+                    }
+
                     if (prop.key == VisualElement.StyleKey.BackgroundColor.Hash)
                     {
                         prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;

@@ -17,29 +17,38 @@ namespace ImTK.UI
         {
 
 
-            public StyleValue<Color>? hoverColor
+            public StyleColor? hoverColor
             {
                 get => GetPropertyColor(StyleKey.HoverColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.HoverColor, value.Value);
-                    else Clear(StyleKey.HoverColor);
-                }
+                set => SetPropertyColor(StyleKey.HoverColor, value);
             }
 
-            public StyleValue<Color>? activeColor
+            public StyleColor? activeColor
             {
                 get => GetPropertyColor(StyleKey.ActiveColor);
-                set
-                {
-                    if (value.HasValue) SetColor(StyleKey.ActiveColor, value.Value);
-                    else Clear(StyleKey.ActiveColor);
-                }
+                set => SetPropertyColor(StyleKey.ActiveColor, value);
             }
+            public override void ComputeHighlevelToken(StyleProperty prop, System.Collections.Generic.IList<StyleProperty> output)
+            {
+                if (prop.category == StyleCategory.HighLevelToken)
+                {
+                    if (prop.key == VisualElement.StyleKey.ColorFamily.Hash)
+                    {
+                        string prefix = "--normal";
+                        if (prop.enumValue == (int)ThemeColorFamily.Success) prefix = "--success";
+                        else if (prop.enumValue == (int)ThemeColorFamily.Info) prefix = "--info";
+                        else if (prop.enumValue == (int)ThemeColorFamily.Warning) prefix = "--warning";
+                        else if (prop.enumValue == (int)ThemeColorFamily.Danger) prefix = "--danger";
 
-
-
-
+                        output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.FrameBg, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component").Hash });
+                        output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.FrameBgHovered, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component-hover").Hash });
+                        output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.FrameBgActive, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component-active").Hash });
+                        output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.Text, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-text").Hash });
+                        return;
+                    }
+                }
+                base.ComputeHighlevelToken(prop, output);
+            }
         }
 
         public string label { get; set; }

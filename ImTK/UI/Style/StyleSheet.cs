@@ -11,10 +11,7 @@ namespace ImTK.UI
             get
             {
                 if (s_global == null)
-                {
                     s_global = new StyleSheet();
-                    DefaultStyles.Register(s_global);
-                }
                 return s_global;
             }
         }
