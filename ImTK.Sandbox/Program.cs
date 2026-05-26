@@ -11,6 +11,7 @@ namespace ImTK.Sandbox
             var log = new ImTK.Log.LogContext("Sandbox");
             log.Info("Starting ImTK Sandbox Application...");
 
+            ImTKEnvironment.CompanyName     = "ImTK";
             ImTKEnvironment.ApplicationName = "ImTK.Sandbox";
             var config = new ImTKSilkConstant
             {

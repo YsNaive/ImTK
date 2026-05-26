@@ -26,7 +26,8 @@ namespace ImTK.Test
             {
                 log.Info("All headless tests passed. Launching UI...");
             }
-
+            
+            ImTKEnvironment.CompanyName     = "ImTK";
             ImTKEnvironment.ApplicationName = "ImTK.Test";
             var config = new ImTKSilkConstant
             {

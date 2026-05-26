@@ -10,7 +10,8 @@ namespace ImTK.Sample
         {
             var log = new ImTK.Log.LogContext("SampleProgram");
             log.Info("Starting ImTK Sample Application...");
-
+            
+            ImTKEnvironment.CompanyName     = "ImTK";
             ImTKEnvironment.ApplicationName = "ImTK.Sample";
             var config = new ImTKSilkConstant
             {
