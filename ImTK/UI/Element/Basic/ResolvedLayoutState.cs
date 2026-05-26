@@ -2,6 +2,10 @@ using System.Numerics;
 
 namespace ImTK.UI
 {
+    /// <summary>
+    /// 儲存了視覺元件經過樣式計算與層疊後的最終排版狀態。
+    /// 包含來自 Inline Style、Local StyleSheet 與 Global Theme 決議後的 Layout 屬性，供 Layout Engine 讀取。
+    /// </summary>
     public struct ResolvedLayoutState : System.IEquatable<ResolvedLayoutState>
     {
         public float? width;

@@ -176,7 +176,6 @@ namespace ImTK.UI
                 {
                     window.BuildRenderList();
                     RenderEngine.ComputeStyleFlat(window.m_renderList);
-                    RenderEngine.ExecuteLayoutPhase(window);
                     RenderEngine.RenderFlat(window.m_renderList);
                 }
             }

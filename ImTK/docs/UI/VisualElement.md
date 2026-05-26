@@ -36,11 +36,11 @@ ImTK 的 UI 系統目標是**「在 Immediate Mode (ImGui) 的底層上，搭建
 
 在 ImGui 的基礎上，`VisualElement` 的渲染流程採用了 **Template Method Pattern (樣板方法模式)**，由框架統一控制渲染流程，元件開發者只需覆寫特定的三個生命週期方法。
 
-**特別注意 (Layout Engine 預備)**：在未來的排版引擎導入後，這些方法將**嚴格限定只能處理純粹的視覺繪製**。絕對禁止在實作內呼叫任何會改變游標或影響相鄰節點排版的 ImGui API（如 `ImGui.SameLine`、`ImGui.Indent` 等）。所有的排版與空間計算都將被抽離到獨立的 Layout Phase。
+**特別注意 (Layout Engine 已上線)**：由於全新排版引擎已經全面導入，這些渲染方法**嚴格限定只能處理純粹的視覺繪製**。絕對禁止在實作內呼叫任何會改變游標或影響相鄰節點排版的 ImGui API（如 `ImGui.SameLine`、`ImGui.Indent` 等）。所有的排版與空間計算都已由獨立的 Layout Phase 接管處理。
 
 ### 3.1 三層渲染生命週期
 
-`RenderEngine.RenderNode` 在走訪視覺樹時，會嚴格依序呼叫以下三個對外開放的虛擬方法：
+`RenderEngine.RenderFlat` 在走訪視覺樹時，會嚴格依序呼叫以下三個對外開放的虛擬方法：
 
 1. **`public virtual bool OnBeginRender()`** (渲染前置與範圍定義)
    * **職責**：用於宣告需要包裹子節點的 ImGui 範圍（例如 `ImGui.BeginChild`、`ImGui.BeginGroup`）。

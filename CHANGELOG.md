@@ -127,6 +127,8 @@
 - 將 `HoverColor`、`ActiveColor` 與 `CheckMarkColor` 從基底 `VisualElement.StyleKey` 中移除，改由各特化元件 (`Button`, `TextField`, `CheckBox`, `MenuItem`) 的 `<T>.StyleKey` 獨立實作，避免語意混淆。
 - 擴充基底 `VisualElement.StyleKey`，新增 `SelectionColor` 與 `DisabledTextColor` 的 ImGui 映射支援。
 - 更新 `TextField`、`CheckBox`、`MenuView` 及 `MenuItem` 的樣式映射實作，將背景色精準導向至 `FrameBg`、`PopupBg/MenuBarBg` 與 `Header`，完成全域與局部組件語義化覆寫的最終拼圖。
+- 移除了 `RenderEngine.ExecuteLayoutPhase` 空的預留方法，確立 Layout Engine 與渲染生命週期 (`Window.OnBeginRender`) 即時綁定與執行的架構，避免誤導開發者。
+- 全面補齊了 Layout Engine 新增基礎設施（包含 `VisualElement` 測量佈局方法、`LayoutConstraint`、`ResolvedLayoutState` 及 `DrawerLayoutMode`）的 API XML 註解。
 
 ### Fixed (修復)
 - 修復 ImGui `SetCursorScreenPos()` 無法擴展父視窗邊界的問題 (Assertion failed)。透過預先放置 `ImGui.Dummy` 分配複合 Drawers (`Vector2`, `Rect` 等) 所需的版面空間，確保安全計算並完美支援自訂 Absolute 排版。

@@ -19,11 +19,6 @@ namespace ImTK.UI
 
     public static partial class RenderEngine
     {
-        public static void ExecuteLayoutPhase(VisualElement node)
-        {
-            // Empty shell to be implemented later when Layout Engine is developed.
-        }
-
         [ThreadStatic]
         private static System.Collections.Generic.List<RenderOp> t_tempRenderList;
 

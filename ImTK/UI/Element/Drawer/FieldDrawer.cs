@@ -56,6 +56,10 @@ namespace ImTK.UI
         }
 
         private DrawerLayoutMode m_layoutMode = DrawerLayoutMode.Inline;
+        /// <summary>
+        /// 控制此 Drawer 繪製時的排版佈局模式 (例如同行並排 Inline 或是換行展開 Expand)。
+        /// 設定此屬性會自動更新元件底層的 FlexDirection 與 AlignItems。
+        /// </summary>
         public virtual DrawerLayoutMode layoutMode
         {
             get => m_layoutMode;

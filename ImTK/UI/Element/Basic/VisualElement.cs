@@ -389,9 +389,16 @@ namespace ImTK.UI
         internal bool m_isMeasureDirty = true;
         internal bool m_isArrangeDirty = true;
         internal Vector2 m_desiredSize;
+        /// <summary>
+        /// 排版引擎 (Layout Engine) 計算後賦予此元件的最終絕對座標與尺寸。
+        /// 在渲染階段 (Render) 會依據此矩形進行剪裁與繪製。
+        /// </summary>
         public Rect layoutRect { get; internal set; }
         internal LayoutConstraint m_lastConstraint;
 
+        /// <summary>
+        /// 標記此元件的尺寸測量 (Measure) 已失效，並向上通知父節點需要重新排版。
+        /// </summary>
         internal void MarkMeasureDirty()
         {
             if (m_isMeasureDirty) return;
@@ -400,6 +407,9 @@ namespace ImTK.UI
             hierarchy.parent?.MarkMeasureDirty();
         }
 
+        /// <summary>
+        /// 標記此元件的絕對位置佈局 (Arrange) 已失效，並向上通知父節點需要重新排版。
+        /// </summary>
         internal void MarkArrangeDirty()
         {
             if (m_isArrangeDirty) return;
@@ -408,6 +418,10 @@ namespace ImTK.UI
             hierarchy.parent?.MarkArrangeDirty();
         }
 
+        /// <summary>
+        /// 執行排版引擎的第一階段：測量 (Measure Pass)。
+        /// 根據父節點傳入的約束 (constraint) 計算出此元件所需的理想尺寸 (desiredSize)。
+        /// </summary>
         public void Measure(LayoutConstraint constraint)
         {
             if (!m_isMeasureDirty && m_lastConstraint == constraint)
@@ -432,6 +446,10 @@ namespace ImTK.UI
             m_isMeasureDirty = false;
         }
 
+        /// <summary>
+        /// 供子類別覆寫的實際測量邏輯。
+        /// 預設實作為遍歷子節點並依照 Flexbox 規則計算內容尺寸。
+        /// </summary>
         protected virtual Vector2 MeasureContent(LayoutConstraint constraint)
         {
             if (m_useNativeLayout)
@@ -545,6 +563,10 @@ namespace ImTK.UI
             return isRow ? new Vector2(desiredMain, desiredCross) : new Vector2(desiredCross, desiredMain);
         }
 
+        /// <summary>
+        /// 執行排版引擎的第二階段：佈局 (Arrange Pass)。
+        /// 根據父節點計算出的絕對矩形 (finalAbsoluteRect) 正式設定此元件的佈局範圍 (layoutRect)，並向下佈局子節點。
+        /// </summary>
         public void Arrange(Rect finalAbsoluteRect)
         {
             if (!m_isArrangeDirty && this.layoutRect == finalAbsoluteRect && !m_isMeasureDirty)
@@ -583,6 +605,10 @@ namespace ImTK.UI
             public float totalFlexGrow = 0;
         }
 
+        /// <summary>
+        /// 供子類別覆寫的實際佈局邏輯。
+        /// 預設實作為根據 Flexbox 規則排列並設定所有子節點的最終絕對位置。
+        /// </summary>
         protected virtual void ArrangeContent(Rect finalAbsoluteRect)
         {
             if (m_useNativeLayout) return;
