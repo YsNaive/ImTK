@@ -96,11 +96,19 @@ namespace ImTK.UI
             {
                 prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
                 prop.key = (int)ImGuiStyleVar.WindowPadding;
+                output.Add(prop);
+                
+                var prop2 = prop;
+                prop2.key = (int)ImGuiStyleVar.FramePadding;
+                output.Add(prop2);
+                
+                return;
             }
             else if (prop.key == VisualElement.StyleKey.ItemSpacing.Hash)
             {
                 prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
                 prop.key = (int)ImGuiStyleVar.ItemSpacing;
+                prop.isInheritable = true;
             }
             else if (prop.key == VisualElement.StyleKey.ItemInnerSpacing.Hash)
             {
@@ -137,6 +145,28 @@ namespace ImTK.UI
                 prop.floatValue = prop.intValue;
                 prop.key = ImGuiStyleHandler.s_fontSizeImGuiKey.Hash;
                 prop.isInheritable = true;
+            }
+            else if (prop.key == VisualElement.StyleKey.Width.Hash ||
+                     prop.key == VisualElement.StyleKey.Height.Hash ||
+                     prop.key == VisualElement.StyleKey.MinWidth.Hash ||
+                     prop.key == VisualElement.StyleKey.MaxWidth.Hash ||
+                     prop.key == VisualElement.StyleKey.MinHeight.Hash ||
+                     prop.key == VisualElement.StyleKey.MaxHeight.Hash ||
+                     prop.key == VisualElement.StyleKey.Margin.Hash ||
+                     prop.key == VisualElement.StyleKey.FlexDirection.Hash ||
+                     prop.key == VisualElement.StyleKey.FlexWrap.Hash ||
+                     prop.key == VisualElement.StyleKey.JustifyContent.Hash ||
+                     prop.key == VisualElement.StyleKey.AlignItems.Hash ||
+                     prop.key == VisualElement.StyleKey.FlexGrow.Hash ||
+                     prop.key == VisualElement.StyleKey.AlignSelf.Hash ||
+                     prop.key == VisualElement.StyleKey.PositionType.Hash ||
+                     prop.key == VisualElement.StyleKey.Top.Hash ||
+                     prop.key == VisualElement.StyleKey.Bottom.Hash ||
+                     prop.key == VisualElement.StyleKey.Left.Hash ||
+                     prop.key == VisualElement.StyleKey.Right.Hash ||
+                     prop.key == VisualElement.StyleKey.Display.Hash)
+            {
+                prop.category = StyleCategory.Layout;
             }
             else
             {

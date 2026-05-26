@@ -17,11 +17,12 @@
 2.  **依序切割**：`Panel` 會依照註冊的 `priority`（優先權），依序呼叫各個模組註冊的空間切割函式 (`Func<Rect, Rect> reservedFunc`)。
     *   例如：MenuBar 模組要求並切割了上方 24px 的高度。它將剩餘的矩形回傳給 `Panel`。
     *   接下來 SideBar 模組收到剩下的矩形，並要求切割左方的 200px 寬度，再將剩餘矩形回傳。
-3.  **剩餘空間分配**：所有函式執行完畢後，**最後剩下的 `Rect`，將完全作為全域的 DockSpace (視窗停靠區)**。
+3.  **全域 DockSpace 自動掛載 (Centralized)**：所有切割函式執行完畢後，針對**最後剩下的 `Rect`**，`Panel` 會自動呼叫 `ImGui.SetNextWindowPos/Size` 鎖定該空間，並開啟一個帶有嚴格 Flags (`NoDecoration | NoMove | NoBringToFrontOnFocus | NoBackground | NoSavedSettings`) 的底層隱形宿主視窗，在裡面呼叫 `ImGui.DockSpace()` 建立全域視窗停靠區。
 
 ### 2.2 放棄原生的 `BeginMainMenuBar`
 因為 ImGui 提供的 `ImGui.BeginMainMenuBar()` 內部會自動搶佔空間並干擾我們客製化的 `Rect` 系統，我們必須**放棄使用這個特化的 API**。
-取而代之的是，所有的邊緣模組 (MenuBar, SideBar 等) 必須使用普通的 `ImGui.Begin()`，搭配無邊框 (`ImGuiWindowFlags.NoDecoration`) 與 `ImGui.SetNextWindowPos/Size`，在自己被分配到的那塊 `Rect` 上進行純手工繪製。
+取而代之的是，所有的邊緣模組 (MenuBar, SideBar 等) 必須使用普通的 `ImGui.Begin()`，搭配 `ImGui.SetNextWindowPos/Size`，在自己被分配到的那塊 `Rect` 上進行繪製。
+**注意**：邊緣模組必須套用極為嚴格的 Window Flags（如 `NoDecoration | NoSavedSettings | NoNavFocus | NoBringToFrontOnFocus | NoBackground`），以確保不會干擾一般視窗的焦點與層級。
 
 ---
 
@@ -29,8 +30,8 @@
 
 為了避免空間切割函式在渲染過程中被隨意增加或移除，進而導致版面瞬間錯亂或運算崩潰，`Panel` 對註冊 API 設定了極其嚴格的生命週期限制：
 
-*   **註冊階段限制**：各模組必須在系統初始化階段（即 `ApplicationState.Initialize` 期間，如模組的 `OnInitialize` 方法中）呼叫 `Panel.RequireArea(...)` 來註冊自己的切割函式。
-*   **拒絕與報錯**：若在初始化階段以外（例如 `GuiRender` 或 `LogicUpdate`）呼叫註冊 API，`Panel` 將會**無視該操作並觸發 `ImTKLog.Error`**，從根本上防範不可預期的佈局變更。
+*   **註冊階段限制**：各模組必須在系統初始化階段（即 `ApplicationState.Initialize` 期間，如模組的 `OnInitialize` 方法中）呼叫 `Panel.RequireArea(...)` 來註冊自己的切割函式。實作上會引入全域的 `isLayoutLocked` 布林值。
+*   **鎖定與防呆**：在 `ApplicationState.Initialize` 結束後，系統會設定 `Panel.isLayoutLocked = true`。此後若有任何模組試圖呼叫註冊 API，`Panel` 會直接調用 `ImTKLog.Error` 並 `return`，從根本上防範執行期不可預期的佈局變更。
 
 ---
 

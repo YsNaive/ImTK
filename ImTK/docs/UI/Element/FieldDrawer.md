@@ -24,7 +24,7 @@
 
 `FieldDrawer` 原生支援了標準的 `[ Icon ] [ Label ] [ Field ]` 排版結構，並將其分為兩種模式：
 
-*   **`Inline` (同行展開)**：適合簡單的 Value Type (`int`, `string`)。Label 與實際的輸入控制項會在同一行繪製（透過 `ImGui.SameLine()` 等技巧）。
+*   **`Inline` (同行展開)**：適合簡單的 Value Type (`int`, `string`)。Label 與實際的輸入控制項會在同一行繪製（透過新版 Layout Engine 設定 `FlexDirection = Row` 與 `AlignItems = Center` 來達成並排顯示）。
 *   **`Expand` (換行展開)**：適合複雜的 Reference Type 或佔據較大空間的控制項。Label 會繪製在上方，輸入控制項或子節點會從下一行開始繪製。
 
 子類不需要覆寫排版邏輯，只需在覆寫的 `OnRenderSelf()` 中處理具體的 ImGui 輸入控制項即可。若是複合型 Drawer（會產生子 VisualElement），甚至不需覆寫，依賴 Visual Tree 的原生遞迴渲染即可。

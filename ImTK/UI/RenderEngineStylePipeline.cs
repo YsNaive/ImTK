@@ -4,112 +4,98 @@ namespace ImTK.UI
 {
     public static partial class RenderEngine
     {
-        // 兩個靜態緩衝區，在整個 ComputeStyleRecursive 呼叫樹中重複使用，避免每個 dirty element 的 List 分配。
-        // 合約：這兩個欄位只能在 ComputeStyleRecursiveInternal 內、且已消費完畢後才由子節點的遞迴清除。
-        // 在 Debug build 中，s_isComputing guard 會在任何意外重入時立即拋出例外。
-        private static readonly List<StyleProperty> s_composedProps   = new List<StyleProperty>();
+        private static readonly List<StyleProperty> s_composedProps = new List<StyleProperty>();
         private static readonly List<StyleProperty> s_translatedProps = new List<StyleProperty>();
 
-#if DEBUG
-        private static bool s_isComputing = false;
-#endif
-
-        /// <summary>
-        /// 遞迴計算 element 及其所有子節點的樣式。
-        /// 此方法不可重入：在 ComputeHighlevelToken 或 Theme 解析路徑中不得呼叫 MarkStyleDirty 以觸發重新進入。
-        /// </summary>
-        public static void ComputeStyleRecursive(VisualElement element)
+        public static void ComputeStyleFlat(System.Collections.Generic.List<RenderOp> renderList)
         {
-#if DEBUG
-            if (s_isComputing)
-                throw new System.InvalidOperationException(
-                    "ComputeStyleRecursive is not re-entrant. " +
-                    "Do NOT call MarkStyleDirty or trigger style recomputation from within ComputeHighlevelToken or theme token resolution.");
-            s_isComputing = true;
-            try   { ComputeStyleRecursiveInternal(element); }
-            finally { s_isComputing = false; }
-#else
-            ComputeStyleRecursiveInternal(element);
-#endif
-        }
-
-        private static void ComputeStyleRecursiveInternal(VisualElement element)
-        {
-            if (element.m_isStyleDirty)
+            for (int i = 0; i < renderList.Count; i++)
             {
-                s_composedProps.Clear();
+                var op = renderList[i];
+                if (op.Type != RenderOpType.Begin) continue;
+                
+                var element = op.Element;
 
-                // 1. Global Sheet
-                foreach (var block in StyleSheet.Global.Blocks)
+                if (element.m_isStyleDirty)
                 {
-                    if (element.classList.Has(block.ClassName))
-                    {
-                        foreach (var prop in block.Properties) SetComposedProperty(prop);
-                    }
-                }
+                    s_composedProps.Clear();
 
-                // 2. Ancestor Local Sheet
-                var curr = element;
-                StyleSheet activeLocalSheet = null;
-                while (curr != null)
-                {
-                    if (curr.localStyleSheet != null)
-                    {
-                        activeLocalSheet = curr.localStyleSheet;
-                        break;
-                    }
-                    curr = curr.parent;
-                }
-
-                if (activeLocalSheet != null)
-                {
-                    foreach (var block in activeLocalSheet.Blocks)
+                    // 1. Global Sheet
+                    foreach (var block in StyleSheet.Global.Blocks)
                     {
                         if (element.classList.Has(block.ClassName))
                         {
                             foreach (var prop in block.Properties) SetComposedProperty(prop);
                         }
                     }
-                }
 
-                // 3. Inline Style
-                if (element.internalStyle is VisualElementStyle inlineStyle)
-                {
-                    foreach (var prop in inlineStyle.UnresolvedProperties)
+                    // 2. Ancestor Local Sheet
+                    var curr = element;
+                    StyleSheet activeLocalSheet = null;
+                    while (curr != null)
                     {
-                        SetComposedProperty(prop);
+                        if (curr.localStyleSheet != null)
+                        {
+                            activeLocalSheet = curr.localStyleSheet;
+                            break;
+                        }
+                        curr = curr.parent;
                     }
-                }
 
-                element.resolvedStyle.Clear();
-                if (element.parent != null)
-                {
-                    element.resolvedStyle.CopyFrom(element.parent.resolvedStyle);
-                }
+                    if (activeLocalSheet != null)
+                    {
+                        foreach (var block in activeLocalSheet.Blocks)
+                        {
+                            if (element.classList.Has(block.ClassName))
+                            {
+                                foreach (var prop in block.Properties) SetComposedProperty(prop);
+                            }
+                        }
+                    }
 
-                // 若此元素有局部 theme，將 theme 的完整 ImGui 樣式注入 resolvedStyle。
-                // 時機：CopyFrom 繼承父層基底之後、composed properties 之前，
-                // 使 StyleSheet / inline style 仍可覆蓋 theme 值（優先序：inline > stylesheet > theme）。
-                // 實際的 Push/Pop 隔離由既有的 Diff → requiredStyle → RenderNode 機制自動處理。
-                if (element.m_theme != null)
-                {
-                    element.m_theme.InjectToStyleHandler(element.resolvedStyle);
-                }
+                    // 3. Inline Style
+                    if (element.internalStyle is VisualElementStyle inlineStyle)
+                    {
+                        foreach (var prop in inlineStyle.UnresolvedProperties)
+                        {
+                            SetComposedProperty(prop);
+                        }
+                    }
 
-                var theme = element.theme ?? ImTKTheme.GlobalTheme;
+                    uint oldLayoutHash = element.resolvedStyle.GetLayoutHash();
+                    ResolvedLayoutState oldLayoutState = element.resolvedLayoutState;
 
-                foreach (var composedProp in s_composedProps)
-                {
+                    element.resolvedStyle.Clear();
+                    if (element.parent != null)
+                    {
+                        element.resolvedStyle.CopyFrom(element.parent.resolvedStyle);
+                    }
+
+                    // 若此元素有局部 theme，將 theme 的完整 ImGui 樣式注入 resolvedStyle。
+                    // 時機：CopyFrom 繼承父層基底之後、composed properties 之前，
+                    // 使 StyleSheet / inline style 仍可覆蓋 theme 值（優先序：inline > stylesheet > theme）。
+                    // 實際的 Push/Pop 隔離由既有的 Diff → requiredStyle → RenderNode 機制自動處理。
+                    if (element.m_theme != null)
+                    {
+                        element.m_theme.InjectToStyleHandler(element.resolvedStyle);
+                    }
+
                     s_translatedProps.Clear();
+                    foreach (var composedProp in s_composedProps)
+                    {
+                        if (element.internalStyle is VisualElementStyle styleComp)
+                        {
+                            styleComp.ComputeHighlevelToken(composedProp, s_translatedProps);
+                        }
+                        else
+                        {
+                            s_translatedProps.Add(composedProp);
+                        }
+                    }
 
-                    if (element.internalStyle is VisualElementStyle styleComp)
-                    {
-                        styleComp.ComputeHighlevelToken(composedProp, s_translatedProps);
-                    }
-                    else
-                    {
-                        s_translatedProps.Add(composedProp);
-                    }
+                    element.ResolveLayoutState(s_translatedProps);
+
+                    var theme = element.theme ?? ImTKTheme.GlobalTheme;
 
                     foreach (var prop in s_translatedProps)
                     {
@@ -148,16 +134,17 @@ namespace ImTK.UI
                             element.resolvedStyle.TrySetProperty(finalProp);
                         }
                     }
+
+                    ImGuiStyleHandler.Diff(element.parent?.resolvedStyle, element.resolvedStyle, element.requiredStyle);
+                    
+                    uint newLayoutHash = element.resolvedStyle.GetLayoutHash();
+                    if (oldLayoutHash != newLayoutHash || oldLayoutState != element.resolvedLayoutState)
+                    {
+                        element.MarkMeasureDirty();
+                    }
+
+                    element.m_isStyleDirty = false;
                 }
-
-                ImGuiStyleHandler.Diff(element.parent?.resolvedStyle, element.resolvedStyle, element.requiredStyle);
-                element.m_isStyleDirty = false;
-            }
-
-            int childCount = element.hierarchy.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
-                ComputeStyleRecursiveInternal(element.hierarchy.ChildAt(i));
             }
         }
 

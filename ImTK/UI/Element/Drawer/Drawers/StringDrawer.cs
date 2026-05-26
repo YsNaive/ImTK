@@ -1,12 +1,12 @@
 using System;
+using System.Numerics;
+using ImGuiNET;
 
 namespace ImTK.UI
 {
     [CustomFieldDrawer(typeof(string), allowInheritType: false)]
     public class StringDrawer : FieldDrawer<string>
     {
-        private TextField m_textField;
-
         private bool m_multiline;
         public bool multiline
         {
@@ -17,32 +17,19 @@ namespace ImTK.UI
                 UpdateTextFieldMode(this.value);
             }
         }
+        
+        private FieldElement m_fieldElement;
 
         public StringDrawer()
         {
-            m_textField = new TextField("##" + label);
-            m_textField.onValueChanged += OnTextFieldValueChanged;
-            hierarchy.Add(m_textField);
-        }
-
-        public override string label
-        {
-            get => base.label;
-            set
-            {
-                base.label = value;
-                if (m_textField != null)
-                {
-                    m_textField.label = "##" + value;
-                }
-            }
+            m_fieldElement = new FieldElement(this);
+            m_contentContainer.Add(m_fieldElement);
         }
 
         public override void SetValueWithoutNotify(string newValue)
         {
             base.SetValueWithoutNotify(newValue);
             UpdateTextFieldMode(newValue);
-            m_textField.SetValueWithoutNotify(newValue);
         }
 
         public override string value
@@ -52,14 +39,7 @@ namespace ImTK.UI
             {
                 base.value = value;
                 UpdateTextFieldMode(value);
-                m_textField.SetValueWithoutNotify(value);
             }
-        }
-
-        private void OnTextFieldValueChanged(ValueChangedEvent<string> evt)
-        {
-            UpdateTextFieldMode(evt.newValue);
-            SetValueWithChanged(evt.newValue);
         }
 
         private void UpdateTextFieldMode(string val)
@@ -68,25 +48,62 @@ namespace ImTK.UI
             if (m_multiline || hasNewline)
             {
                 layoutMode = DrawerLayoutMode.Expand;
-                m_textField.multiline = true;
             }
             else
             {
                 layoutMode = DrawerLayoutMode.Inline;
-                m_textField.multiline = false;
             }
+            m_fieldElement.MarkMeasureDirty();
         }
 
-                protected internal override bool CheckHoverState()
+        private class FieldElement : VisualElement
         {
-            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
-        }
+            private readonly StringDrawer m_drawer;
+            public FieldElement(StringDrawer drawer)
+            {
+                m_drawer = drawer;
+                this.style.flexGrow = 1;
+            }
 
-        public override void OnRender()
-        {
-            // Do not render anything natively here.
-            // The composed m_textField child element will be rendered by the VisualElement hierarchy.
-            base.OnRender();
+            protected override Vector2 MeasureContent(LayoutConstraint constraint)
+            {
+                string v = m_drawer.value ?? string.Empty;
+                bool hasNewline = !string.IsNullOrEmpty(v) && v.Contains("\n");
+                if (m_drawer.m_multiline || hasNewline)
+                {
+                    float height = Math.Max(ImGuiNET.ImGui.GetFrameHeight(), ImGuiNET.ImGui.CalcTextSize(v).Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2);
+                    return new Vector2(0, height);
+                }
+                else
+                {
+                    return new Vector2(0, ImGuiNET.ImGui.GetFrameHeight());
+                }
+            }
+
+            public override void OnRender()
+            {
+                string v = m_drawer.value ?? string.Empty;
+                ImGuiNET.ImGuiInputTextFlags flags = ImGuiNET.ImGuiInputTextFlags.None;
+                bool changed = false;
+
+                bool hasNewline = !string.IsNullOrEmpty(v) && v.Contains("\n");
+                if (m_drawer.m_multiline || hasNewline)
+                {
+                    float height = Math.Max(ImGuiNET.ImGui.GetFrameHeight(), ImGuiNET.ImGui.CalcTextSize(v).Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2);
+                    changed = ImGuiNET.ImGui.InputTextMultiline("##" + m_drawer.label, ref v, 32768, new Vector2(this.layoutRect.width, height), flags);
+                }
+                else
+                {
+                    ImGuiNET.ImGui.SetNextItemWidth(this.layoutRect.width);
+                    changed = ImGuiNET.ImGui.InputText("##" + m_drawer.label, ref v, 32768, flags);
+                }
+
+                if (changed || ImGuiNET.ImGui.IsItemDeactivatedAfterEdit())
+                {
+                    m_drawer.SetValueWithChanged(v);
+                }
+            }
+
         }
     }
 }

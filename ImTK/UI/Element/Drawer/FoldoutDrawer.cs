@@ -6,135 +6,76 @@ namespace ImTK.UI
 {
     public abstract class FoldoutDrawer<T> : FieldDrawer<T>
     {
-        public bool isExpanded
+        public override DrawerLayoutMode layoutMode
+        {
+            get => base.layoutMode;
+            set
+            {
+                base.layoutMode = value;
+                bool expanded = (value == DrawerLayoutMode.Expand);
+                m_contentContainer.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
+                if (m_iconElement != null)
+                {
+                    m_iconElement.type = expanded ? IconElement.IconType.DownArrow : IconElement.IconType.RightArrow;
+                }
+            }
+        }
+
+        public virtual bool isExpanded
         {
             get => layoutMode == DrawerLayoutMode.Expand;
             set => layoutMode = value ? DrawerLayoutMode.Expand : DrawerLayoutMode.Inline;
         }
 
-        protected override void OnRenderIcon(ImDrawListPtr drawList, Rect iconRect)
+        protected FoldoutDrawer() : base()
         {
-            uint color = ImGui.GetColorU32(ImGuiCol.Text);
-            System.Numerics.Vector2 center = iconRect.center;
-
-            float radius = iconRect.width * 0.5f * 0.7f;
-
-            if (isExpanded)
-            {
-                // Down arrow
-                drawList.AddTriangleFilled(
-                    new System.Numerics.Vector2(center.X - radius, center.Y - radius * 0.5f),
-                    new System.Numerics.Vector2(center.X + radius, center.Y - radius * 0.5f),
-                    new System.Numerics.Vector2(center.X, center.Y + radius),
-                    color);
-            }
-            else
-            {
-                // Right arrow
-                drawList.AddTriangleFilled(
-                    new System.Numerics.Vector2(center.X - radius * 0.5f, center.Y - radius),
-                    new System.Numerics.Vector2(center.X + radius, center.Y),
-                    new System.Numerics.Vector2(center.X - radius * 0.5f, center.Y + radius),
-                    color);
-            }
+            this.style.flexDirection = FlexDirection.Column;
+            this.style.alignItems = AlignItems.Stretch;
+            m_contentContainer.style.margin = new Thickness(this.theme.indentWidth, 0, 0, 0);
+            // Initially expanded? Let's say expand. Or inline means collapsed for foldout.
+            isExpanded = false;
         }
 
-        protected override void OnRenderLabel()
+        protected internal bool m_isHeaderHovered;
+
+        private class FoldoutHeaderContainer : VisualElement
         {
-            base.OnRenderLabel();
-        }
-
-        private float m_indentCache;
-
-        public override bool OnBeginRender()
-        {
-            float currentLabelWidth = labelWidth.Value;
-            float frameHeight = ImGui.GetFrameHeight();
-            float iconSize = frameHeight * 0.8f;
-            float yOffset = (frameHeight - iconSize) * 0.5f;
-
-            System.Numerics.Vector2 cursorPos = ImGui.GetCursorScreenPos();
-            Rect iconRect = new Rect(
-                new System.Numerics.Vector2(cursorPos.X, cursorPos.Y + yOffset),
-                new System.Numerics.Vector2(iconSize, iconSize)
-            );
-
-            float headerWidth = ImGui.GetContentRegionAvail().X;
-
-            ImGui.SetNextItemAllowOverlap();
-            if (ImGui.InvisibleButton($"###foldout_btn_{this.GetHashCode()}", new System.Numerics.Vector2(headerWidth, frameHeight)))
+            private FoldoutDrawer<T> m_drawer;
+            public FoldoutHeaderContainer(FoldoutDrawer<T> drawer)
             {
-                isExpanded = !isExpanded;
+                m_drawer = drawer;
             }
 
-            m_isHeaderHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
-            if (m_isHeaderHovered)
+            public override void OnRender()
             {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                ImGui.GetWindowDrawList().AddRectFilled(
-                    cursorPos,
-                    new System.Numerics.Vector2(cursorPos.X + headerWidth, cursorPos.Y + frameHeight),
-                    ImGui.GetColorU32(ImGuiCol.HeaderHovered)
-                );
-            }
-
-            ImGui.SetCursorScreenPos(cursorPos);
-
-            ImGui.Dummy(new System.Numerics.Vector2(iconSize, frameHeight));
-            OnRenderIcon(ImGui.GetWindowDrawList(), iconRect);
-
-            if (layoutMode == DrawerLayoutMode.Inline)
-            {
-                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
-                OnRenderLabel();
-
-                if (!string.IsNullOrEmpty(label))
+                ImGui.SetNextItemAllowOverlap();
+                
+                if (ImGui.InvisibleButton($"###foldout_btn_{m_drawer.GetHashCode()}", this.layoutRect.size))
                 {
-                    float currentX = ImGui.GetCursorPosX();
-                    float targetX = currentLabelWidth;
-                    if (currentX < targetX)
-                    {
-                        ImGui.SameLine(targetX);
-                    }
-                    else
-                    {
-                        ImGui.SameLine();
-                    }
-                }
-                else
-                {
-                    ImGui.SameLine();
+                    m_drawer.isExpanded = !m_drawer.isExpanded;
                 }
 
-                ImGui.SetNextItemWidth(-1);
-
-                return false; // Do not render children inline
-            }
-            else // layoutMode == DrawerLayoutMode.Expand
-            {
-                ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
-                OnRenderLabel();
-
-                m_indentCache = iconSize + ImGui.GetStyle().ItemInnerSpacing.X;
-                ImGui.Indent(m_indentCache);
-                ImGui.SetNextItemWidth(-1);
-
-                return true; // Render children
+                m_drawer.m_isHeaderHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+                if (m_drawer.m_isHeaderHovered)
+                {
+                    ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                    ImGui.GetWindowDrawList().AddRectFilled(
+                        this.layoutRect.position,
+                        this.layoutRect.position + this.layoutRect.size,
+                        ImGui.GetColorU32(ImGuiCol.HeaderHovered)
+                    );
+                }
             }
         }
 
-        public override void OnEndRender()
+        protected override VisualElement CreateHeaderContainer()
         {
-            if (layoutMode == DrawerLayoutMode.Expand)
-            {
-                ImGui.Unindent(m_indentCache);
-            }
+            var container = new FoldoutHeaderContainer(this);
+            container.style.flexDirection = FlexDirection.Row;
+            container.style.alignItems = AlignItems.Center;
+            container.style.flexGrow = 1;
+            return container;
         }
 
-        private bool m_isHeaderHovered;
-        protected internal override bool CheckHoverState()
-        {
-            return m_isHeaderHovered;
-        }
     }
 }

@@ -37,7 +37,7 @@ namespace ImTK.Sample.Framework
                 ImGui.SetNextWindowSize(new System.Numerics.Vector2(PanelARect.max.X - PanelARect.min.X, PanelARect.max.Y - PanelARect.min.Y));
                 if (ImGui.Begin("ImTK Sample Overview", flags))
                 {
-                    if (PanelA != null) RenderEngine.RenderNode(PanelA);
+                    if (PanelA != null) RenderEngine.RenderFlat(PanelA);
                 }
                 ImGui.End();
 
@@ -46,7 +46,7 @@ namespace ImTK.Sample.Framework
                 ImGui.SetNextWindowSize(new System.Numerics.Vector2(PanelBRect.max.X - PanelBRect.min.X, PanelBRect.max.Y - PanelBRect.min.Y));
                 if (ImGui.Begin("Scenario Details", flags))
                 {
-                    if (PanelB != null) RenderEngine.RenderNode(PanelB);
+                    if (PanelB != null) RenderEngine.RenderFlat(PanelB);
                 }
                 ImGui.End();
 
@@ -143,7 +143,7 @@ namespace ImTK.Sample.Framework
             {
                 m_overviewHost.PanelARect = m_panelARect;
                 m_overviewHost.PanelBRect = m_panelBRect;
-                RenderEngine.RenderNode(m_overviewHost);
+                RenderEngine.RenderFlat(m_overviewHost);
             }
 
             // Focus Tracking

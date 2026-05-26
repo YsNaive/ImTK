@@ -7,8 +7,10 @@ using ImTK.Core;
 
 namespace ImTK.UI
 {
+
     public class VisualElement : IVisualElementHierarchy
     {
+
         public class StyleKey
         {
             public static readonly HashedString BackgroundColor = new HashedString("BackgroundColor");
@@ -27,15 +29,41 @@ namespace ImTK.UI
 
             public static readonly HashedString FontFamily = new HashedString("FontFamily");
             public static readonly HashedString FontSize = new HashedString("FontSize");
+
+            // --- Layout Properties ---
+            public static readonly HashedString Width = new HashedString("Width");
+            public static readonly HashedString Height = new HashedString("Height");
+            public static readonly HashedString MinWidth = new HashedString("MinWidth");
+            public static readonly HashedString MaxWidth = new HashedString("MaxWidth");
+            public static readonly HashedString MinHeight = new HashedString("MinHeight");
+            public static readonly HashedString MaxHeight = new HashedString("MaxHeight");
+
+            public static readonly HashedString Margin = new HashedString("Margin");
+            public static readonly HashedString FlexDirection = new HashedString("FlexDirection");
+            public static readonly HashedString FlexWrap = new HashedString("FlexWrap");
+            public static readonly HashedString JustifyContent = new HashedString("JustifyContent");
+            public static readonly HashedString AlignItems = new HashedString("AlignItems");
+            public static readonly HashedString FlexGrow = new HashedString("FlexGrow");
+            public static readonly HashedString AlignSelf = new HashedString("AlignSelf");
+            
+            public static readonly HashedString PositionType = new HashedString("PositionType");
+            public static readonly HashedString Top = new HashedString("Top");
+            public static readonly HashedString Bottom = new HashedString("Bottom");
+            public static readonly HashedString Left = new HashedString("Left");
+            public static readonly HashedString Right = new HashedString("Right");
+            public static readonly HashedString Display = new HashedString("Display");
         }
 
         public class Style : VisualElementStyle, IVisualElementStyle
         {
+            protected VisualElement m_owner;
+
             public StyleValue<HashedString> fontFamily { set => SetStringToken(StyleKey.FontFamily, value); }
             public StyleValue<int> fontSize { set => SetInt(StyleKey.FontSize, value); }
             public StyleValue<FontSize> fontSizeEnum { set => SetEnum(StyleKey.FontSize, value); }
 
             public Style() { }
+            public void Init(VisualElement owner) { m_owner = owner; }
 
             protected StyleValue<Color>? GetPropertyColor(HashedString key)
             {
@@ -58,6 +86,9 @@ namespace ImTK.UI
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.colorValue = value.Value.u32;
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void SetInt(HashedString key, StyleValue<int> value)
@@ -67,6 +98,9 @@ namespace ImTK.UI
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.intValue = value.Value;
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void SetEnum<TEnum>(HashedString key, StyleValue<TEnum> value) where TEnum : struct, System.Enum
@@ -76,6 +110,9 @@ namespace ImTK.UI
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.enumValue = System.Convert.ToInt32(value.Value);
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void SetStringToken(HashedString key, StyleValue<HashedString> value)
@@ -84,6 +121,9 @@ namespace ImTK.UI
                 int hash = value.IsToken ? value.Token.Hash : value.Value.Hash;
                 var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = StyleDataType.HashedString, tokenHash = hash };
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void SetFloat(HashedString key, StyleValue<float> value)
@@ -93,6 +133,9 @@ namespace ImTK.UI
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.floatValue = value.Value;
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void SetVector2(HashedString key, StyleValue<Vector2> value)
@@ -102,11 +145,29 @@ namespace ImTK.UI
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.vector2Value = value.Value;
                 SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
+            }
+
+            public void SetThickness(HashedString key, StyleValue<Thickness> value)
+            {
+                if (value.IsNull) { Clear(key); return; }
+                var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Thickness };
+                if (value.IsToken) prop.tokenHash = value.Token.Hash;
+                else prop.thicknessValue = value.Value;
+                SetProperty(prop);
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             public void Clear(HashedString key)
             {
                 SetProperty(new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = StyleDataType.Null });
+                m_owner?.MarkStyleDirty();
+                m_owner?.MarkMeasureDirty();
+                m_owner?.MarkArrangeDirty();
             }
 
             // --- High-level Property Syntax Sugar ---
@@ -159,10 +220,10 @@ namespace ImTK.UI
                 set { if (value.HasValue) SetFloat(StyleKey.DisabledAlpha, value.Value); else Clear(StyleKey.DisabledAlpha); }
             }
 
-            public StyleValue<Vector2>? padding
+            public StyleValue<Thickness>? padding
             {
-                get { var p = GetProperty(StyleKey.Padding.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Vector2> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Vector2> { Value = p.vector2Value }); }
-                set { if (value.HasValue) SetVector2(StyleKey.Padding, value.Value); else Clear(StyleKey.Padding); }
+                get { var p = GetProperty(StyleKey.Padding.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Thickness> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Thickness> { Value = p.thicknessValue }); }
+                set { if (value.HasValue) SetThickness(StyleKey.Padding, value.Value); else Clear(StyleKey.Padding); }
             }
 
             public StyleValue<Vector2>? itemSpacing
@@ -182,6 +243,103 @@ namespace ImTK.UI
                 get => GetPropertyColor(StyleKey.SelectionColor);
                 set { if (value.HasValue) SetColor(StyleKey.SelectionColor, value.Value); else Clear(StyleKey.SelectionColor); }
             }
+
+            // --- High-level Layout Properties ---
+            public StyleValue<float>? width
+            {
+                get => GetPropertyFloat(StyleKey.Width);
+                set { if (value.HasValue) SetFloat(StyleKey.Width, value.Value); else Clear(StyleKey.Width); }
+            }
+            public StyleValue<float>? height
+            {
+                get => GetPropertyFloat(StyleKey.Height);
+                set { if (value.HasValue) SetFloat(StyleKey.Height, value.Value); else Clear(StyleKey.Height); }
+            }
+            public StyleValue<float>? minWidth
+            {
+                get => GetPropertyFloat(StyleKey.MinWidth);
+                set { if (value.HasValue) SetFloat(StyleKey.MinWidth, value.Value); else Clear(StyleKey.MinWidth); }
+            }
+            public StyleValue<float>? maxWidth
+            {
+                get => GetPropertyFloat(StyleKey.MaxWidth);
+                set { if (value.HasValue) SetFloat(StyleKey.MaxWidth, value.Value); else Clear(StyleKey.MaxWidth); }
+            }
+            public StyleValue<float>? minHeight
+            {
+                get => GetPropertyFloat(StyleKey.MinHeight);
+                set { if (value.HasValue) SetFloat(StyleKey.MinHeight, value.Value); else Clear(StyleKey.MinHeight); }
+            }
+            public StyleValue<float>? maxHeight
+            {
+                get => GetPropertyFloat(StyleKey.MaxHeight);
+                set { if (value.HasValue) SetFloat(StyleKey.MaxHeight, value.Value); else Clear(StyleKey.MaxHeight); }
+            }
+            public StyleValue<Thickness>? margin
+            {
+                get { var p = GetProperty(StyleKey.Margin.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Thickness> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Thickness> { Value = p.thicknessValue }); }
+                set { if (value.HasValue) SetThickness(StyleKey.Margin, value.Value); else Clear(StyleKey.Margin); }
+            }
+            public StyleValue<FlexDirection>? flexDirection
+            {
+                get { var p = GetProperty(StyleKey.FlexDirection.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<FlexDirection> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<FlexDirection> { Value = (FlexDirection)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.FlexDirection, value.Value); else Clear(StyleKey.FlexDirection); }
+            }
+            public StyleValue<FlexWrap>? flexWrap
+            {
+                get { var p = GetProperty(StyleKey.FlexWrap.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<FlexWrap> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<FlexWrap> { Value = (FlexWrap)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.FlexWrap, value.Value); else Clear(StyleKey.FlexWrap); }
+            }
+            public StyleValue<JustifyContent>? justifyContent
+            {
+                get { var p = GetProperty(StyleKey.JustifyContent.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<JustifyContent> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<JustifyContent> { Value = (JustifyContent)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.JustifyContent, value.Value); else Clear(StyleKey.JustifyContent); }
+            }
+            public StyleValue<AlignItems>? alignItems
+            {
+                get { var p = GetProperty(StyleKey.AlignItems.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<AlignItems> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<AlignItems> { Value = (AlignItems)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.AlignItems, value.Value); else Clear(StyleKey.AlignItems); }
+            }
+            public StyleValue<float>? flexGrow
+            {
+                get => GetPropertyFloat(StyleKey.FlexGrow);
+                set { if (value.HasValue) SetFloat(StyleKey.FlexGrow, value.Value); else Clear(StyleKey.FlexGrow); }
+            }
+            public StyleValue<AlignItems>? alignSelf
+            {
+                get { var p = GetProperty(StyleKey.AlignSelf.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<AlignItems> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<AlignItems> { Value = (AlignItems)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.AlignSelf, value.Value); else Clear(StyleKey.AlignSelf); }
+            }
+            public StyleValue<PositionType>? positionType
+            {
+                get { var p = GetProperty(StyleKey.PositionType.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<PositionType> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<PositionType> { Value = (PositionType)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.PositionType, value.Value); else Clear(StyleKey.PositionType); }
+            }
+            public StyleValue<float>? top
+            {
+                get => GetPropertyFloat(StyleKey.Top);
+                set { if (value.HasValue) SetFloat(StyleKey.Top, value.Value); else Clear(StyleKey.Top); }
+            }
+            public StyleValue<float>? bottom
+            {
+                get => GetPropertyFloat(StyleKey.Bottom);
+                set { if (value.HasValue) SetFloat(StyleKey.Bottom, value.Value); else Clear(StyleKey.Bottom); }
+            }
+            public StyleValue<float>? left
+            {
+                get => GetPropertyFloat(StyleKey.Left);
+                set { if (value.HasValue) SetFloat(StyleKey.Left, value.Value); else Clear(StyleKey.Left); }
+            }
+            public StyleValue<float>? right
+            {
+                get => GetPropertyFloat(StyleKey.Right);
+                set { if (value.HasValue) SetFloat(StyleKey.Right, value.Value); else Clear(StyleKey.Right); }
+            }
+            public StyleValue<DisplayStyle>? display
+            {
+                get { var p = GetProperty(StyleKey.Display.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<DisplayStyle> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<DisplayStyle> { Value = (DisplayStyle)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.Display, value.Value); else Clear(StyleKey.Display); }
+            }
         }
 
         private static int s_elementCounter = 0;
@@ -191,6 +349,14 @@ namespace ImTK.UI
         public virtual VisualElement contentContainer => this;
 
         public VisualElement parent { get; internal set; }
+        public VisualElement focusRoot { get; internal set; }
+
+        protected bool m_useNativeLayout = false;
+        public bool useNativeLayout
+        {
+            get => m_useNativeLayout;
+            set => m_useNativeLayout = value;
+        }
 
         public PickingMode pickingMode { get; set; } = PickingMode.Position;
         internal bool m_wasHovered = false;
@@ -220,14 +386,518 @@ namespace ImTK.UI
 
         internal bool m_isStyleDirty = true;
 
-        public ImGuiStyleHandler resolvedStyle { get; } = new ImGuiStyleHandler();
+        internal bool m_isMeasureDirty = true;
+        internal bool m_isArrangeDirty = true;
+        internal Vector2 m_desiredSize;
+        /// <summary>
+        /// 排版引擎 (Layout Engine) 計算後賦予此元件的最終絕對座標與尺寸。
+        /// 在渲染階段 (Render) 會依據此矩形進行剪裁與繪製。
+        /// </summary>
+        public Rect layoutRect { get; internal set; }
+        internal LayoutConstraint m_lastConstraint;
+
+        /// <summary>
+        /// 標記此元件的尺寸測量 (Measure) 已失效，並向上通知父節點需要重新排版。
+        /// </summary>
+        internal void MarkMeasureDirty()
+        {
+            if (m_isMeasureDirty) return;
+            m_isMeasureDirty = true;
+            if (this is IWindow) return;
+            hierarchy.parent?.MarkMeasureDirty();
+        }
+
+        /// <summary>
+        /// 標記此元件的絕對位置佈局 (Arrange) 已失效，並向上通知父節點需要重新排版。
+        /// </summary>
+        internal void MarkArrangeDirty()
+        {
+            if (m_isArrangeDirty) return;
+            m_isArrangeDirty = true;
+            if (this is IWindow) return;
+            hierarchy.parent?.MarkArrangeDirty();
+        }
+
+        /// <summary>
+        /// 執行排版引擎的第一階段：測量 (Measure Pass)。
+        /// 根據父節點傳入的約束 (constraint) 計算出此元件所需的理想尺寸 (desiredSize)。
+        /// </summary>
+        public void Measure(LayoutConstraint constraint)
+        {
+            if (!m_isMeasureDirty && m_lastConstraint == constraint)
+                return;
+
+            m_lastConstraint = constraint;
+            resolvedStyle.PushFontOnly();
+            Vector2 desired = MeasureContent(constraint);
+            
+            var state = resolvedLayoutState;
+            if (state.width.HasValue) desired.X = state.width.Value;
+            if (state.height.HasValue) desired.Y = state.height.Value;
+            
+            if (state.minWidth.HasValue) desired.X = Math.Max(desired.X, state.minWidth.Value);
+            if (state.maxWidth.HasValue) desired.X = Math.Min(desired.X, state.maxWidth.Value);
+            if (state.minHeight.HasValue) desired.Y = Math.Max(desired.Y, state.minHeight.Value);
+            if (state.maxHeight.HasValue) desired.Y = Math.Min(desired.Y, state.maxHeight.Value);
+
+            m_desiredSize = desired;
+            resolvedStyle.PopFontOnly();
+
+            m_isMeasureDirty = false;
+        }
+
+        /// <summary>
+        /// 供子類別覆寫的實際測量邏輯。
+        /// 預設實作為遍歷子節點並依照 Flexbox 規則計算內容尺寸。
+        /// </summary>
+        protected virtual Vector2 MeasureContent(LayoutConstraint constraint)
+        {
+            if (m_useNativeLayout)
+            {
+                var stateNative = resolvedLayoutState;
+                return new Vector2(stateNative.width ?? 0, stateNative.height ?? 0);
+            }
+
+            var state = resolvedLayoutState;
+            bool isRow = state.flexDirection == FlexDirection.Row;
+            bool isWrap = state.flexWrap == FlexWrap.Wrap;
+
+            System.Numerics.Vector2 itemSpacing = this.theme.itemSpacing;
+            if (resolvedStyle.TryGetVector2((int)ImGuiStyleVar.ItemSpacing, out var overrideSpacing))
+                itemSpacing = overrideSpacing;
+            float gapMain = isRow ? itemSpacing.X : itemSpacing.Y;
+            float gapCross = isRow ? itemSpacing.Y : itemSpacing.X;
+
+            float availableMain = isRow ? constraint.AvailableWidth : constraint.AvailableHeight;
+            float availableCross = isRow ? constraint.AvailableHeight : constraint.AvailableWidth;
+            MeasureMode mainMode = isRow ? constraint.WidthMode : constraint.HeightMode;
+            MeasureMode crossMode = isRow ? constraint.HeightMode : constraint.WidthMode;
+
+            float borderX = 0;
+            if (resolvedStyle.TryGetFloat((int)ImGuiStyleVar.WindowBorderSize, out float bw)) borderX = bw;
+            else if (resolvedStyle.HasColor((int)ImGuiCol.Border)) borderX = this.theme.borderWidth;
+            float borderY = borderX;
+            
+            float paddingX = state.padding.horizontal + borderX * 2;
+            float paddingY = state.padding.vertical + borderY * 2;
+            float paddingMain = isRow ? paddingX : paddingY;
+            float paddingCross = isRow ? paddingY : paddingX;
+
+            if (mainMode != MeasureMode.Undefined)
+                availableMain = Math.Max(0, availableMain - paddingMain);
+            if (crossMode != MeasureMode.Undefined)
+                availableCross = Math.Max(0, availableCross - paddingCross);
+
+            float totalMain = 0;
+            float maxCross = 0;
+            
+            float currentLineMain = 0;
+            float currentLineMaxCross = 0;
+            int itemsInCurrentLine = 0;
+            
+            int childCount = hierarchy.childCount;
+            for (int i = 0; i < childCount; i++)
+            {
+                var child = hierarchy.ChildAt(i);
+                var childState = child.resolvedLayoutState;
+
+                if (childState.display == DisplayStyle.None || childState.positionType == PositionType.Absolute)
+                    continue;
+
+                float childAvailWidth = 0;
+                float childAvailHeight = 0;
+                MeasureMode childWidthMode = MeasureMode.Undefined;
+                MeasureMode childHeightMode = MeasureMode.Undefined;
+
+                float childFreeMain = availableMain;
+                if (!isWrap && mainMode != MeasureMode.Undefined)
+                    childFreeMain = availableMain - currentLineMain - (itemsInCurrentLine > 0 ? gapMain : 0);
+
+                if (isRow)
+                {
+                    childAvailWidth = childFreeMain;
+                    childWidthMode = mainMode;
+                    childAvailHeight = availableCross;
+                    childHeightMode = crossMode;
+                }
+                else
+                {
+                    childAvailHeight = childFreeMain;
+                    childHeightMode = mainMode;
+                    childAvailWidth = availableCross;
+                    childWidthMode = crossMode;
+                }
+
+                child.Measure(new LayoutConstraint(childAvailWidth, childAvailHeight, childWidthMode, childHeightMode));
+                
+                float childMarginMain = isRow ? childState.margin.horizontal : childState.margin.vertical;
+                float childMarginCross = isRow ? childState.margin.vertical : childState.margin.horizontal;
+
+                float childOuterMain = (isRow ? child.m_desiredSize.X : child.m_desiredSize.Y) + childMarginMain;
+                float childOuterCross = (isRow ? child.m_desiredSize.Y : child.m_desiredSize.X) + childMarginCross;
+                
+                if (isWrap && itemsInCurrentLine > 0 && mainMode != MeasureMode.Undefined && currentLineMain + gapMain + childOuterMain > availableMain)
+                {
+                    totalMain = Math.Max(totalMain, currentLineMain);
+                    maxCross += currentLineMaxCross + gapCross;
+                    
+                    currentLineMain = childOuterMain;
+                    currentLineMaxCross = childOuterCross;
+                    itemsInCurrentLine = 1;
+                }
+                else
+                {
+                    if (itemsInCurrentLine > 0) currentLineMain += gapMain;
+                    currentLineMain += childOuterMain;
+                    currentLineMaxCross = Math.Max(currentLineMaxCross, childOuterCross);
+                    itemsInCurrentLine++;
+                }
+            }
+
+            totalMain = Math.Max(totalMain, currentLineMain);
+            maxCross += currentLineMaxCross;
+
+            float desiredMain = totalMain + paddingMain;
+            float desiredCross = maxCross + paddingCross;
+
+            return isRow ? new Vector2(desiredMain, desiredCross) : new Vector2(desiredCross, desiredMain);
+        }
+
+        /// <summary>
+        /// 執行排版引擎的第二階段：佈局 (Arrange Pass)。
+        /// 根據父節點計算出的絕對矩形 (finalAbsoluteRect) 正式設定此元件的佈局範圍 (layoutRect)，並向下佈局子節點。
+        /// </summary>
+        public void Arrange(Rect finalAbsoluteRect)
+        {
+            if (!m_isArrangeDirty && this.layoutRect == finalAbsoluteRect && !m_isMeasureDirty)
+                return;
+
+            this.layoutRect = finalAbsoluteRect;
+            ArrangeContent(finalAbsoluteRect);
+            m_isArrangeDirty = false;
+        }
+
+        public System.Numerics.Vector2 LocalToWorld(System.Numerics.Vector2 localPoint)
+        {
+            return layoutRect.position + localPoint;
+        }
+
+        public System.Numerics.Vector2 WorldToLocal(System.Numerics.Vector2 worldPoint)
+        {
+            return worldPoint - layoutRect.position;
+        }
+
+        public Rect LocalToWorld(Rect localRect)
+        {
+            return new Rect(layoutRect.position + localRect.position, localRect.size);
+        }
+
+        public Rect WorldToLocal(Rect worldRect)
+        {
+            return new Rect(worldRect.position - layoutRect.position, worldRect.size);
+        }
+
+        private class FlexLine
+        {
+            public List<VisualElement> items = new List<VisualElement>();
+            public float mainSize = 0;
+            public float crossSize = 0;
+            public float totalFlexGrow = 0;
+        }
+
+        /// <summary>
+        /// 供子類別覆寫的實際佈局邏輯。
+        /// 預設實作為根據 Flexbox 規則排列並設定所有子節點的最終絕對位置。
+        /// </summary>
+        protected virtual void ArrangeContent(Rect finalAbsoluteRect)
+        {
+            if (m_useNativeLayout) return;
+
+            var state = resolvedLayoutState;
+            bool isRow = state.flexDirection == FlexDirection.Row;
+            bool isWrap = state.flexWrap == FlexWrap.Wrap;
+            
+            float borderX = 0;
+            if (resolvedStyle.TryGetFloat((int)ImGuiStyleVar.WindowBorderSize, out float bw)) borderX = bw;
+            else if (resolvedStyle.HasColor((int)ImGuiCol.Border)) borderX = this.theme.borderWidth;
+            float borderY = borderX;
+            
+            float padLeft = state.padding.left + borderX;
+            float padTop = state.padding.top + borderY;
+            float padRight = state.padding.right + borderX;
+            float padBottom = state.padding.bottom + borderY;
+
+            Rect contentRect = new Rect(
+                finalAbsoluteRect.x + padLeft,
+                finalAbsoluteRect.y + padTop,
+                Math.Max(0, finalAbsoluteRect.width - padLeft - padRight),
+                Math.Max(0, finalAbsoluteRect.height - padTop - padBottom)
+            );
+
+            System.Numerics.Vector2 itemSpacing = this.theme.itemSpacing;
+            if (resolvedStyle.TryGetVector2((int)ImGuiStyleVar.ItemSpacing, out var overrideSpacing))
+                itemSpacing = overrideSpacing;
+            float gapMain = isRow ? itemSpacing.X : itemSpacing.Y;
+            float gapCross = isRow ? itemSpacing.Y : itemSpacing.X;
+
+            float availableMain = isRow ? contentRect.width : contentRect.height;
+            float availableCross = isRow ? contentRect.height : contentRect.width;
+
+            var absoluteChildren = new List<VisualElement>();
+            var flexLines = new List<FlexLine>();
+            FlexLine currentLine = new FlexLine();
+            
+            int childCount = hierarchy.childCount;
+            for (int i = 0; i < childCount; i++)
+            {
+                var child = hierarchy.ChildAt(i);
+                if (child.resolvedLayoutState.display == DisplayStyle.None) continue;
+                
+                if (child.resolvedLayoutState.positionType == PositionType.Absolute)
+                {
+                    absoluteChildren.Add(child);
+                    continue;
+                }
+
+                var childState = child.resolvedLayoutState;
+                float childMarginMain = isRow ? childState.margin.horizontal : childState.margin.vertical;
+                float childMarginCross = isRow ? childState.margin.vertical : childState.margin.horizontal;
+                float childOuterMain = (isRow ? child.m_desiredSize.X : child.m_desiredSize.Y) + childMarginMain;
+                float childOuterCross = (isRow ? child.m_desiredSize.Y : child.m_desiredSize.X) + childMarginCross;
+
+                if (isWrap && currentLine.items.Count > 0 && currentLine.mainSize + gapMain + childOuterMain > availableMain)
+                {
+                    flexLines.Add(currentLine);
+                    currentLine = new FlexLine();
+                }
+
+                if (currentLine.items.Count > 0) currentLine.mainSize += gapMain;
+                currentLine.mainSize += childOuterMain;
+                currentLine.crossSize = Math.Max(currentLine.crossSize, childOuterCross);
+                currentLine.totalFlexGrow += childState.flexGrow;
+                currentLine.items.Add(child);
+            }
+            if (currentLine.items.Count > 0) flexLines.Add(currentLine);
+
+            if (!isWrap && flexLines.Count == 1)
+            {
+                flexLines[0].crossSize = Math.Max(flexLines[0].crossSize, availableCross);
+            }
+
+            // Layout each line
+            float currentCrossPos = 0;
+            foreach (var line in flexLines)
+            {
+                float freeMainSpace = availableMain - line.mainSize;
+                float spacing = gapMain;
+                float currentMainPos = 0;
+
+                if (freeMainSpace > 0 && line.totalFlexGrow == 0)
+                {
+                    switch (state.justifyContent)
+                    {
+                        case JustifyContent.Center:
+                            currentMainPos = freeMainSpace / 2f;
+                            break;
+                        case JustifyContent.FlexEnd:
+                            currentMainPos = freeMainSpace;
+                            break;
+                        case JustifyContent.SpaceBetween:
+                            if (line.items.Count > 1)
+                                spacing = (availableMain - (line.mainSize - gapMain * (line.items.Count - 1))) / (line.items.Count - 1);
+                            break;
+                    }
+                }
+
+                // First pass for FlexGrow resolution
+                var flexItems = new List<VisualElement>();
+                if (freeMainSpace > 0 && line.totalFlexGrow > 0)
+                {
+                    float totalGrow = line.totalFlexGrow;
+                    float remainingFreeSpace = freeMainSpace;
+                    bool spaceReassigned;
+                    do
+                    {
+                        spaceReassigned = false;
+                        foreach (var item in line.items)
+                        {
+                            if (flexItems.Contains(item)) continue;
+                            if (item.resolvedLayoutState.flexGrow == 0) continue;
+                            
+                            float flexGrow = item.resolvedLayoutState.flexGrow;
+                            float baseMain = isRow ? item.m_desiredSize.X : item.m_desiredSize.Y;
+                            float targetMain = baseMain + (flexGrow / totalGrow) * remainingFreeSpace;
+                            float maxLimit = isRow ? (item.resolvedLayoutState.maxWidth ?? float.MaxValue) : (item.resolvedLayoutState.maxHeight ?? float.MaxValue);
+                            
+                            if (targetMain > maxLimit)
+                            {
+                                flexItems.Add(item);
+                                remainingFreeSpace -= (maxLimit - baseMain);
+                                totalGrow -= flexGrow;
+                                spaceReassigned = true;
+                            }
+                        }
+                    } while (spaceReassigned && totalGrow > 0 && remainingFreeSpace > 0);
+                    
+                    freeMainSpace = remainingFreeSpace;
+                    line.totalFlexGrow = totalGrow;
+                }
+
+                foreach (var child in line.items)
+                {
+                    var childState = child.resolvedLayoutState;
+                    float childDesiredMain = isRow ? child.m_desiredSize.X : child.m_desiredSize.Y;
+                    float childDesiredCross = isRow ? child.m_desiredSize.Y : child.m_desiredSize.X;
+                    
+                    float childMarginMain = isRow ? childState.margin.horizontal : childState.margin.vertical;
+                    float childMarginCross = isRow ? childState.margin.vertical : childState.margin.horizontal;
+                    
+                    float childMarginLeftTop = isRow ? childState.margin.left : childState.margin.top;
+                    float childMarginRightBottom = isRow ? childState.margin.right : childState.margin.bottom;
+                    float childMarginCrossLeftTop = isRow ? childState.margin.top : childState.margin.left;
+                    float childMarginCrossRightBottom = isRow ? childState.margin.bottom : childState.margin.right;
+
+                    float childActualMain = childDesiredMain;
+                    if (freeMainSpace > 0 && line.totalFlexGrow > 0 && childState.flexGrow > 0)
+                    {
+                        if (flexItems.Contains(child))
+                        {
+                            childActualMain = isRow ? (childState.maxWidth ?? childDesiredMain) : (childState.maxHeight ?? childDesiredMain);
+                        }
+                        else
+                        {
+                            childActualMain += (childState.flexGrow / line.totalFlexGrow) * freeMainSpace;
+                        }
+                    }
+
+                    if (isRow)
+                    {
+                        if (childState.minWidth.HasValue) childActualMain = Math.Max(childActualMain, childState.minWidth.Value);
+                        if (childState.maxWidth.HasValue) childActualMain = Math.Min(childActualMain, childState.maxWidth.Value);
+                    }
+                    else
+                    {
+                        if (childState.minHeight.HasValue) childActualMain = Math.Max(childActualMain, childState.minHeight.Value);
+                        if (childState.maxHeight.HasValue) childActualMain = Math.Min(childActualMain, childState.maxHeight.Value);
+                    }
+
+                    float childActualCross = childDesiredCross;
+                    float itemCrossPos = currentCrossPos;
+                    AlignItems align = childState.alignSelf;
+                    
+                    float freeCrossSpace = line.crossSize - (childActualCross + childMarginCross);
+                    
+                    if (align == AlignItems.Stretch && ((isRow && !childState.height.HasValue) || (!isRow && !childState.width.HasValue)))
+                    {
+                        childActualCross = line.crossSize - childMarginCross;
+                    }
+                    else if (align == AlignItems.Center)
+                    {
+                        itemCrossPos += freeCrossSpace / 2f;
+                    }
+                    else if (align == AlignItems.FlexEnd)
+                    {
+                        itemCrossPos += freeCrossSpace;
+                    }
+
+                    float x, y, w, h;
+                    if (isRow)
+                    {
+                        x = contentRect.x + currentMainPos + childMarginLeftTop;
+                        y = contentRect.y + itemCrossPos + childMarginCrossLeftTop;
+                        w = childActualMain;
+                        h = childActualCross;
+                    }
+                    else
+                    {
+                        x = contentRect.x + itemCrossPos + childMarginCrossLeftTop;
+                        y = contentRect.y + currentMainPos + childMarginLeftTop;
+                        w = childActualCross;
+                        h = childActualMain;
+                    }
+                    
+                    currentMainPos += childActualMain + childMarginMain + spacing;
+                    child.Arrange(new Rect(x, y, w, h));
+                }
+                
+                currentCrossPos += line.crossSize + gapCross;
+            }
+            
+            // Layout Absolute Children
+            foreach (var absChild in absoluteChildren)
+            {
+                var absState = absChild.resolvedLayoutState;
+                float x = contentRect.x + (absState.left ?? 0) + absState.margin.left;
+                float y = contentRect.y + (absState.top ?? 0) + absState.margin.top;
+                float w = absState.width ?? absChild.m_desiredSize.X;
+                float h = absState.height ?? absChild.m_desiredSize.Y;
+                
+                if (absState.right.HasValue && !absState.left.HasValue)
+                    x = contentRect.x + contentRect.width - absState.right.Value - absState.margin.right - w;
+                else if (absState.right.HasValue && absState.left.HasValue && !absState.width.HasValue)
+                    w = Math.Max(0, contentRect.width - absState.left.Value - absState.right.Value - absState.margin.horizontal);
+
+                if (absState.bottom.HasValue && !absState.top.HasValue)
+                    y = contentRect.y + contentRect.height - absState.bottom.Value - absState.margin.bottom - h;
+                else if (absState.bottom.HasValue && absState.top.HasValue && !absState.height.HasValue)
+                    h = Math.Max(0, contentRect.height - absState.top.Value - absState.bottom.Value - absState.margin.vertical);
+                    
+                absChild.Arrange(new Rect(x, y, w, h));
+            }
+        }
+
         public ImGuiStyleHandler requiredStyle { get; } = new ImGuiStyleHandler();
+        public ImGuiStyleHandler resolvedStyle { get; } = new ImGuiStyleHandler();
+        public ResolvedLayoutState resolvedLayoutState { get; internal set; } = ResolvedLayoutState.Default;
+
+        internal void ResolveLayoutState(List<StyleProperty> composedProps)
+        {
+            var state = ResolvedLayoutState.Default;
+            
+            // Layout properties are not inheritable by default, so we don't copy from parent
+            // except for AlignSelf which defers to parent's AlignItems if not set
+            if (parent != null)
+            {
+                state.alignSelf = parent.resolvedLayoutState.alignItems;
+            }
+
+            foreach (var prop in composedProps)
+            {
+                if (prop.category == StyleCategory.Layout)
+                {
+                    bool isNull = prop.dataType == StyleDataType.Null;
+                    if (prop.key == StyleKey.Width.Hash) state.width = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Height.Hash) state.height = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.MinWidth.Hash) state.minWidth = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.MaxWidth.Hash) state.maxWidth = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.MinHeight.Hash) state.minHeight = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.MaxHeight.Hash) state.maxHeight = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Margin.Hash) state.margin = isNull ? Thickness.Zero : (prop.dataType == StyleDataType.Vector2 ? new Thickness(prop.vector2Value.X, prop.vector2Value.Y) : prop.thicknessValue);
+                    else if (prop.key == StyleKey.Padding.Hash) state.padding = isNull ? Thickness.Zero : (prop.dataType == StyleDataType.Vector2 ? new Thickness(prop.vector2Value.X, prop.vector2Value.Y) : prop.thicknessValue);
+                    else if (prop.key == StyleKey.FlexDirection.Hash) state.flexDirection = isNull ? FlexDirection.Column : (FlexDirection)prop.enumValue;
+                    else if (prop.key == StyleKey.FlexWrap.Hash) state.flexWrap = isNull ? FlexWrap.NoWrap : (FlexWrap)prop.enumValue;
+                    else if (prop.key == StyleKey.JustifyContent.Hash) state.justifyContent = isNull ? JustifyContent.FlexStart : (JustifyContent)prop.enumValue;
+                    else if (prop.key == StyleKey.AlignItems.Hash) state.alignItems = isNull ? AlignItems.Stretch : (AlignItems)prop.enumValue;
+                    else if (prop.key == StyleKey.FlexGrow.Hash) state.flexGrow = isNull ? 0f : prop.floatValue;
+                    else if (prop.key == StyleKey.AlignSelf.Hash) state.alignSelf = isNull ? state.alignItems : (AlignItems)prop.enumValue;
+                    else if (prop.key == StyleKey.PositionType.Hash) state.positionType = isNull ? PositionType.Relative : (PositionType)prop.enumValue;
+                    else if (prop.key == StyleKey.Top.Hash) state.top = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Bottom.Hash) state.bottom = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Left.Hash) state.left = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Right.Hash) state.right = isNull ? null : prop.floatValue;
+                    else if (prop.key == StyleKey.Display.Hash) state.display = isNull ? DisplayStyle.Flex : (DisplayStyle)prop.enumValue;
+                }
+            }
+
+            resolvedLayoutState = state;
+        }
 
 
         public VisualElement()
         {
             m_elementId = ++s_elementCounter;
             internalStyle = new Style();
+            internalStyle.Init(this);
             hierarchy = new VisualElementHierarchy(this);
 
             classList = new StyleClass();
@@ -426,7 +1096,31 @@ namespace ImTK.UI
 
         public virtual bool OnBeginRender()
         {
+            if (this.hierarchy.parent != null && !m_useNativeLayout)
+            {
+                ImGui.SetCursorScreenPos(this.layoutRect.position);
+            }
             return true;
+        }
+
+        public virtual void Update()
+        {
+            int childCount = hierarchy.childCount;
+            for (int i = 0; i < childCount; i++)
+            {
+                hierarchy.ChildAt(i).Update();
+            }
+        }
+
+        public Window GetWindow()
+        {
+            VisualElement current = this;
+            while (current != null)
+            {
+                if (current is Window w) return w;
+                current = current.hierarchy.parent;
+            }
+            return null;
         }
 
         public virtual void OnRender()
@@ -460,9 +1154,11 @@ namespace ImTK.UI
     {
         public new TStyle style => (TStyle)internalStyle;
 
-        public VisualElement() : base()
+        public VisualElement()
         {
             internalStyle = new TStyle();
+            internalStyle.Init(this);
+            m_isStyleDirty = true;
         }
     }
 

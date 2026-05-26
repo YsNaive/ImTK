@@ -1,3 +1,5 @@
+using System;
+using System.Numerics;
 using ImGuiNET;
 
 namespace ImTK.UI
@@ -5,59 +7,35 @@ namespace ImTK.UI
     [CustomFieldDrawer(typeof(bool), allowInheritType: false)]
     public class BoolDrawer : FieldDrawer<bool>
     {
-        private CheckBox m_checkBox;
-
         public BoolDrawer()
         {
-            m_checkBox = new CheckBox("##" + label);
-            m_checkBox.onValueChanged += OnCheckBoxValueChanged;
-            hierarchy.Add(m_checkBox);
+            m_contentContainer.Add(new FieldElement(this));
         }
 
-        public override string label
+        private class FieldElement : VisualElement
         {
-            get => base.label;
-            set
+            private readonly BoolDrawer m_drawer;
+            public FieldElement(BoolDrawer drawer)
             {
-                base.label = value;
-                if (m_checkBox != null)
+                m_drawer = drawer;
+                this.style.flexGrow = 1;
+            }
+
+            protected override Vector2 MeasureContent(LayoutConstraint constraint)
+            {
+                return new Vector2(0, ImGuiNET.ImGui.GetFrameHeight());
+            }
+
+            public override void OnRender()
+            {
+                ImGuiNET.ImGui.SetNextItemWidth(this.layoutRect.width);
+                bool v = m_drawer.value;
+                if (ImGuiNET.ImGui.Checkbox("##" + m_drawer.label, ref v))
                 {
-                    m_checkBox.label = "##" + value;
+                    m_drawer.SetValueWithChanged(v);
                 }
             }
-        }
 
-        public override void SetValueWithoutNotify(bool newValue)
-        {
-            base.SetValueWithoutNotify(newValue);
-            m_checkBox.SetValueWithoutNotify(newValue);
-        }
-
-        public override bool value
-        {
-            get => base.value;
-            set
-            {
-                base.value = value;
-                m_checkBox.SetValueWithoutNotify(value);
-            }
-        }
-
-        private void OnCheckBoxValueChanged(ValueChangedEvent<bool> evt)
-        {
-            SetValueWithChanged(evt.newValue);
-        }
-
-                protected internal override bool CheckHoverState()
-        {
-            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
-        }
-
-        public override void OnRender()
-        {
-            // Do not render anything natively here.
-            // The composed m_checkBox child element will be rendered by the VisualElement hierarchy.
-            base.OnRender();
         }
     }
 }

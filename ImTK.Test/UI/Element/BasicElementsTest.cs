@@ -9,8 +9,8 @@ namespace ImTK.Test.UI.Element
         public void Run()
         {
             TestTextElement();
-            TestCheckBox();
-            TestTextField();
+            TestBoolDrawer();
+            TestStringDrawer();
         }
 
         private void TestTextElement()
@@ -22,40 +22,41 @@ namespace ImTK.Test.UI.Element
             ImTKAssert.AreEqual("World", textElem.text, "TextElement setter failed.");
         }
 
-        private void TestCheckBox()
+        private void TestBoolDrawer()
         {
-            var checkBox = new CheckBox("Toggle", false);
-            ImTKAssert.AreEqual(false, checkBox.value, "CheckBox initial value failed.");
+            var boolDrawer = new BoolDrawer { label = "Toggle", value = false };
+            ImTKAssert.AreEqual(false, boolDrawer.value, "BoolDrawer initial value failed.");
 
             bool eventFired = false;
-            checkBox.onValueChanged += evt => {
+            boolDrawer.RegisterValueChangedCallback(evt => {
                 eventFired = true;
-                ImTKAssert.AreEqual(false, evt.previousValue, "CheckBox prev value mismatch.");
-                ImTKAssert.AreEqual(true, evt.newValue, "CheckBox new value mismatch.");
-            };
+                ImTKAssert.AreEqual(false, evt.previousValue, "BoolDrawer prev value mismatch.");
+                ImTKAssert.AreEqual(true, evt.newValue, "BoolDrawer new value mismatch.");
+            });
 
-            checkBox.value = true;
+            boolDrawer.value = true;
             EventDispatcher.ProcessQueue();
-            ImTKAssert.IsTrue(eventFired, "CheckBox onValueChanged event not fired.");
-            ImTKAssert.AreEqual(true, checkBox.value, "CheckBox value update failed.");
+            ImTKAssert.IsTrue(eventFired, "BoolDrawer ValueChangedEvent not fired.");
+            ImTKAssert.AreEqual(true, boolDrawer.value, "BoolDrawer value update failed.");
         }
 
-        private void TestTextField()
+        private void TestStringDrawer()
         {
-            var textField = new TextField("Input", "Init");
-            ImTKAssert.AreEqual("Init", textField.value, "TextField initial value failed.");
+            var stringDrawer = new StringDrawer { label = "Input" };
+            stringDrawer.SetValueWithoutNotify("Init");
+            ImTKAssert.AreEqual("Init", stringDrawer.value, "StringDrawer initial value failed.");
 
             bool eventFired = false;
-            textField.onValueChanged += evt => {
+            stringDrawer.RegisterValueChangedCallback(evt => {
                 eventFired = true;
-                ImTKAssert.AreEqual("Init", evt.previousValue, "TextField prev value mismatch.");
-                ImTKAssert.AreEqual("NewText", evt.newValue, "TextField new value mismatch.");
-            };
+                ImTKAssert.AreEqual("Init", evt.previousValue, "StringDrawer prev value mismatch.");
+                ImTKAssert.AreEqual("NewText", evt.newValue, "StringDrawer new value mismatch.");
+            });
 
-            textField.value = "NewText";
+            stringDrawer.value = "NewText";
             EventDispatcher.ProcessQueue();
-            ImTKAssert.IsTrue(eventFired, "TextField onValueChanged event not fired.");
-            ImTKAssert.AreEqual("NewText", textField.value, "TextField value update failed.");
+            ImTKAssert.IsTrue(eventFired, "StringDrawer ValueChangedEvent not fired.");
+            ImTKAssert.AreEqual("NewText", stringDrawer.value, "StringDrawer value update failed.");
         }
     }
 }

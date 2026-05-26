@@ -90,6 +90,7 @@ namespace ImTK.UI
         {
             this.name = name;
             this.priority = priority;
+            m_useNativeLayout = true;
             if (onClicked != null)
             {
                 this.onClicked += onClicked;

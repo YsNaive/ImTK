@@ -9,18 +9,116 @@ namespace ImTK.UI
     public abstract class FieldDrawer<T> : VisualElement, IFieldDrawer<T>
     {
         protected T m_value;
-        public virtual string label { get; set; } = "";
+
+        private string m_label = "";
+        public virtual string label
+        {
+            get => m_label;
+            set
+            {
+                m_label = value;
+                if (m_labelElement != null)
+                {
+                    m_labelElement.text = value;
+                    m_labelElement.style.display = string.IsNullOrEmpty(m_label) ? DisplayStyle.None : DisplayStyle.Flex;
+                }
+            }
+        }
 
         private float? m_labelWidth = null;
         public float? labelWidth
         {
             get => m_labelWidth ?? theme.labelWidth;
-            set => m_labelWidth = value;
+            set
+            {
+                m_labelWidth = value;
+                if (m_labelElement != null && m_labelWidth.HasValue)
+                {
+                    m_labelElement.style.width = m_labelWidth.Value;
+                }
+                else if (m_labelElement != null)
+                {
+                    m_labelElement.style.width = null;
+                }
+            }
         }
 
-        public DrawerLayoutMode layoutMode { get; set; } = DrawerLayoutMode.Inline;
+        public IconElement.IconType iconType
+        {
+            get => m_iconElement?.type ?? IconElement.IconType.None;
+            set
+            {
+                if (m_iconElement != null)
+                {
+                    m_iconElement.type = value;
+                }
+            }
+        }
 
-        public Rect? overrideRenderRect { get; set; }
+        private DrawerLayoutMode m_layoutMode = DrawerLayoutMode.Inline;
+        /// <summary>
+        /// 控制此 Drawer 繪製時的排版佈局模式 (例如同行並排 Inline 或是換行展開 Expand)。
+        /// 設定此屬性會自動更新元件底層的 FlexDirection 與 AlignItems。
+        /// </summary>
+        public virtual DrawerLayoutMode layoutMode
+        {
+            get => m_layoutMode;
+            set
+            {
+                m_layoutMode = value;
+                if (m_layoutMode == DrawerLayoutMode.Inline)
+                {
+                    this.style.flexDirection = FlexDirection.Row;
+                    this.style.alignItems = AlignItems.Center;
+                }
+                else
+                {
+                    this.style.flexDirection = FlexDirection.Column;
+                    this.style.alignItems = AlignItems.Stretch;
+                }
+            }
+        }
+
+        protected VisualElement m_headerContainer;
+        protected IconElement m_iconElement;
+        protected TextElement m_labelElement;
+        protected VisualElement m_contentContainer;
+
+        public override VisualElement contentContainer => m_contentContainer;
+
+        protected virtual VisualElement CreateHeaderContainer()
+        {
+            var container = new VisualElement();
+            container.style.flexDirection = FlexDirection.Row;
+            container.style.alignItems = AlignItems.Center;
+            return container;
+        }
+
+        protected FieldDrawer()
+        {
+            m_headerContainer = CreateHeaderContainer();
+
+            m_iconElement = new IconElement();
+            
+            m_labelElement = CreateLabelElement();
+            m_labelElement.text = this.label;
+            m_labelElement.style.display = DisplayStyle.None;
+            if (labelWidth.HasValue) m_labelElement.style.width = labelWidth.Value;
+
+            m_headerContainer.Add(m_iconElement);
+            m_headerContainer.Add(m_labelElement);
+
+            m_contentContainer = new VisualElement();
+            m_contentContainer.style.flexGrow = 1;
+
+            this.hierarchy.Add(m_headerContainer);
+            this.hierarchy.Add(m_contentContainer);
+
+            this.layoutMode = DrawerLayoutMode.Inline;
+            this.style.flexDirection = FlexDirection.Row;
+            this.style.alignItems    = AlignItems.Center;
+            this.MarkStyleDirty();
+        }
 
         object IFieldDrawer.value
         {
@@ -37,6 +135,19 @@ namespace ImTK.UI
         public virtual void SetValueWithoutNotify(T newValue)
         {
             _SetValue(newValue, checkEquality: true, notify: false);
+        }
+
+        void IFieldDrawer.SetValueWithoutNotify(object newValue)
+        {
+            if (newValue == null)
+            {
+                if (default(T) != null) return; // Ignore null for value types
+                SetValueWithoutNotify((T)(object)null);
+            }
+            else if (newValue is T tValue)
+            {
+                SetValueWithoutNotify(tValue);
+            }
         }
 
         public virtual void SetValueWithChanged(T newValue)
@@ -73,6 +184,11 @@ namespace ImTK.UI
             // Base implementation does nothing.
         }
 
+        protected virtual TextElement CreateLabelElement()
+        {
+            return new TextElement();
+        }
+
         public void RegisterValueChangedCallback(Action<ValueChangedEvent<T>> callback)
         {
             RegisterCallback(callback);
@@ -81,111 +197,6 @@ namespace ImTK.UI
         public void UnregisterValueChangedCallback(Action<ValueChangedEvent<T>> callback)
         {
             UnregisterCallback(callback);
-        }
-
-        protected virtual void OnRenderLabel()
-        {
-            if (!string.IsNullOrEmpty(label))
-            {
-                ImGui.AlignTextToFramePadding();
-                ImGui.Text(label);
-            }
-        }
-
-        protected virtual void OnRenderIcon(ImDrawListPtr drawList, Rect iconRect)
-        {
-            // Base implementation does nothing, leaves empty space.
-        }
-
-        private float m_indentCache;
-
-        public override bool OnBeginRender()
-        {
-            if (overrideRenderRect.HasValue)
-            {
-                Rect rect = overrideRenderRect.Value;
-                ImGui.SetCursorScreenPos(rect.position);
-
-                if (!string.IsNullOrEmpty(label))
-                {
-                    Vector2 startPos = ImGui.GetCursorScreenPos();
-                    OnRenderLabel();
-
-                    // We must call SameLine BEFORE reading the cursor position to ensure we measure horizontally
-                    ImGui.SameLine();
-
-                    Vector2 endPos = ImGui.GetCursorScreenPos();
-                    float usedX = endPos.X - startPos.X;
-
-                    float remainingWidth = Math.Max(0, rect.width - usedX);
-                    ImGui.SetNextItemWidth(remainingWidth);
-                }
-                else
-                {
-                    ImGui.SetNextItemWidth(rect.width);
-                }
-            }
-            else
-            {
-                float currentLabelWidth = labelWidth.Value;
-                float frameHeight = ImGui.GetFrameHeight();
-                float iconSize = frameHeight * 0.8f;
-                float yOffset = (frameHeight - iconSize) * 0.5f;
-
-                Vector2 cursorPos = ImGui.GetCursorScreenPos();
-                Rect iconRect = new Rect(
-                    new Vector2(cursorPos.X, cursorPos.Y + yOffset),
-                    new Vector2(iconSize, iconSize)
-                );
-
-                ImGui.Dummy(new Vector2(iconSize, frameHeight));
-                OnRenderIcon(ImGui.GetWindowDrawList(), iconRect);
-
-                if (layoutMode == DrawerLayoutMode.Inline)
-                {
-                    ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
-                    OnRenderLabel();
-
-                    if (!string.IsNullOrEmpty(label))
-                    {
-                        float currentX = ImGui.GetCursorPosX();
-                        float targetX = currentLabelWidth;
-                        if (currentX < targetX)
-                        {
-                            ImGui.SameLine(targetX); // Force all input to start at currentLabelWidth
-                        }
-                        else
-                        {
-                            ImGui.SameLine();
-                        }
-                    }
-                    else
-                    {
-                        ImGui.SameLine();
-                    }
-
-                    ImGui.SetNextItemWidth(-1); // Take remaining width
-                }
-                else if (layoutMode == DrawerLayoutMode.Expand)
-                {
-                    ImGui.SameLine(0, ImGui.GetStyle().ItemInnerSpacing.X);
-                    OnRenderLabel();
-
-                    // Indent content for expand mode
-                    m_indentCache = iconSize + ImGui.GetStyle().ItemInnerSpacing.X;
-                    ImGui.Indent(m_indentCache);
-                    ImGui.SetNextItemWidth(-1);
-                }
-            }
-            return true;
-        }
-
-        public override void OnEndRender()
-        {
-            if (!overrideRenderRect.HasValue && layoutMode == DrawerLayoutMode.Expand)
-            {
-                ImGui.Unindent(m_indentCache);
-            }
         }
     }
 }

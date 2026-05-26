@@ -29,7 +29,7 @@ namespace ImTK.UI
         public bool noDocking { get => GetFlag(ImGuiWindowFlags.NoDocking); set => SetFlag(ImGuiWindowFlags.NoDocking, value); }
     }
 
-    public abstract class Window : VisualElement<Window.Style>
+    public abstract class Window : VisualElement<Window.Style>, IWindow
     {
         public new class StyleKey : VisualElement.StyleKey
         {
@@ -177,12 +177,62 @@ namespace ImTK.UI
             RenderingContext.IsInsideWindow = false;
         }
 
+        internal bool m_isRenderListDirty = true;
+        internal readonly System.Collections.Generic.List<RenderOp> m_renderList = new System.Collections.Generic.List<RenderOp>();
+
+        public void MarkRenderListDirty()
+        {
+            m_isRenderListDirty = true;
+        }
+
+        internal void BuildRenderList()
+        {
+            if (!m_isRenderListDirty) return;
+            m_renderList.Clear();
+            FlattenRecursive(this);
+            m_isRenderListDirty = false;
+        }
+
+        private void FlattenRecursive(VisualElement node)
+        {
+            // If we implement Display.None later, we can check it here and return early.
+
+            int beginIndex = m_renderList.Count;
+            m_renderList.Add(new RenderOp { Element = node, Type = RenderOpType.Begin });
+
+            int childCount = node.hierarchy.childCount;
+            for (int i = 0; i < childCount; i++)
+            {
+                FlattenRecursive(node.hierarchy.ChildAt(i));
+            }
+
+            m_renderList.Add(new RenderOp { Element = node, Type = RenderOpType.End });
+            
+            // Fast forward skipping the children = total nodes added after Begin excluding End
+            m_renderList[beginIndex] = new RenderOp { 
+                Element = node, 
+                Type = RenderOpType.Begin, 
+                SkipCount = m_renderList.Count - 1 - beginIndex - 1
+            };
+        }
+
         private bool m_isOpenForImGuiCache;
 
         public override bool OnBeginRender()
         {
             m_isOpenForImGuiCache = m_isOpen;
             bool isExpanded = Begin(ref m_isOpenForImGuiCache, flags.Value);
+
+            if (isExpanded)
+            {
+                var avail = ImGui.GetContentRegionAvail();
+                var startPos = ImGui.GetCursorScreenPos();
+                
+                var constraint = new LayoutConstraint(avail.X, avail.Y, MeasureMode.Exactly, MeasureMode.Exactly);
+                this.Measure(constraint);
+                this.Arrange(new Rect(startPos.X, startPos.Y, avail.X, avail.Y));
+            }
+
             return isExpanded;
         }
 
@@ -203,7 +253,6 @@ namespace ImTK.UI
 
         protected virtual void OnEnable() { }
         protected virtual void OnDisable() { }
-        public virtual void Update() { }
     }
 
     internal struct WindowKey : IEquatable<WindowKey>

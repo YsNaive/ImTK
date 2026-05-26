@@ -7,18 +7,71 @@ namespace ImTK.UI
     [CustomFieldDrawer(typeof(object), allowInheritType: true)]
     public class ObjectDrawer : FoldoutDrawer<object>
     {
-        private bool m_initialized = false;
+        private bool m_childrenBuilt = false;
+        private bool m_needsRebuild = false;
         private Dictionary<VisualElement, MemberInfo> m_memberMap = new Dictionary<VisualElement, MemberInfo>();
 
         public ObjectDrawer()
         {
-            layoutMode = DrawerLayoutMode.Expand;
+        }
+
+        public override void Update()
+        {
+            base.Update();
+            if (m_needsRebuild)
+            {
+                m_needsRebuild = false;
+                RebuildChildren();
+                m_needsDebugLog = true;
+            }
+        }
+
+        public override DrawerLayoutMode layoutMode
+        {
+            get => base.layoutMode;
+            set
+            {
+                base.layoutMode = value;
+                if (value == DrawerLayoutMode.Expand && !m_childrenBuilt)
+                {
+                    m_needsRebuild = true;
+                }
+            }
         }
 
         public override void SetValueWithoutNotify(object newValue)
         {
+            var oldType = m_value?.GetType();
+            var newType = newValue?.GetType();
+
             base.SetValueWithoutNotify(newValue);
-            RebuildChildren();
+
+            if (oldType != newType)
+            {
+                m_childrenBuilt = false;
+                Clear();
+                m_memberMap.Clear();
+                if (isExpanded)
+                {
+                    m_needsRebuild = true;
+                }
+            }
+            else if (m_childrenBuilt && m_value != null)
+            {
+                // Sync values to existing UI
+                foreach (var kvp in m_memberMap)
+                {
+                    if (kvp.Key is IFieldDrawer drawer)
+                    {
+                        var member = kvp.Value;
+                        object childValue = null;
+                        if (member is FieldInfo f) childValue = f.GetValue(m_value);
+                        else if (member is PropertyInfo p) childValue = p.GetValue(m_value);
+
+                        drawer.SetValueWithoutNotify(childValue);
+                    }
+                }
+            }
         }
 
         public override object value
@@ -26,8 +79,43 @@ namespace ImTK.UI
             get => base.value;
             set
             {
+                // Assign value directly, no need to duplicate SetValueWithoutNotify logic
+                // if we use base.value, it will trigger SetValueWithoutNotify indirectly. Wait, base.value uses _SetValue which invokes SetValueWithoutNotify? 
+                // No, base.value uses _SetValue which just sets m_value and sends event.
+                // We should explicitly use the same type-checking logic as SetValueWithoutNotify.
+                var oldType = m_value?.GetType();
+                var newType = value?.GetType();
+                
                 base.value = value;
-                RebuildChildren();
+                
+                if (oldType != newType)
+                {
+                    m_childrenBuilt = false;
+                    Clear();
+                    m_memberMap.Clear();
+                    if (isExpanded)
+                    {
+                        m_needsRebuild = true;
+                    }
+                }
+                else if (m_childrenBuilt && m_value != null)
+                {
+                    foreach (var kvp in m_memberMap)
+                    {
+                        if (kvp.Key is IFieldDrawer drawer)
+                        {
+                            var member = kvp.Value;
+                            object childValue = null;
+                            if (member is FieldInfo f) childValue = f.GetValue(m_value);
+                            else if (member is PropertyInfo p) childValue = p.GetValue(m_value);
+
+                            // Using SetValueWithChanged to trigger events?
+                            // Wait, if the parent's value was assigned explicitly, the child's value should just silently update to match, because the parent ALREADY triggered a value changed event for the whole object!
+                            // So we just use SetValueWithoutNotify.
+                            drawer.SetValueWithoutNotify(childValue);
+                        }
+                    }
+                }
             }
         }
 
@@ -35,7 +123,7 @@ namespace ImTK.UI
         {
             Clear(); // clear visual children
             m_memberMap.Clear();
-            m_initialized = false;
+            m_childrenBuilt = true;
 
             if (m_value == null) return;
 
@@ -87,7 +175,6 @@ namespace ImTK.UI
                 }
             }
 
-            m_initialized = true;
         }
 
         private void RegisterGenericCallback(VisualElement element, Type valueType)
@@ -128,19 +215,23 @@ namespace ImTK.UI
             NotifyValueChanged();
         }
 
-                protected internal override bool CheckHoverState()
+        public override void OnEndRender()
         {
-            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
-        }
-
-        public override void OnRender()
-        {
-            base.OnRender();
-
-            if (!m_initialized && m_value != null)
+            base.OnEndRender();
+            if (m_needsDebugLog)
             {
-                RebuildChildren();
+                m_needsDebugLog = false;
+                ImTK.Log.LogContext log = new ImTK.Log.LogContext("ObjectDrawer");
+                log.Debug($"ObjectDrawer rect: {this.layoutRect}, m_contentContainer rect: {m_contentContainer.layoutRect}");
+                if (m_contentContainer.hierarchy.childCount > 0)
+                {
+                    log.Debug($"First child rect: {m_contentContainer.hierarchy.ChildAt(0).layoutRect}");
+                }
             }
         }
+        
+        private bool m_needsDebugLog = false;
+        
+        // Removed Update polling as per user request
     }
 }

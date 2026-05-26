@@ -1,4 +1,4 @@
-# ImTK 視覺樹與排版系統設計 (Visual Tree & Layout Architecture)
+# ImTK 視覺元件與渲染架構 (VisualElement & Render Architecture)
 
 ## 1. 摘要與定位 (Abstract & Scope)
 
@@ -34,28 +34,29 @@ ImTK 的 UI 系統目標是**「在 Immediate Mode (ImGui) 的底層上，搭建
 
 ## 3. 渲染管線與 API 權限 (The Render Pipeline)
 
-在 ImGui 的基礎上，`VisualElement` 的渲染流程採用了 **Template Method Pattern (樣板方法模式)**，將渲染過程拆分為三個層次，以確保排版彈性與底層狀態安全的平衡。
+在 ImGui 的基礎上，`VisualElement` 的渲染流程採用了 **Template Method Pattern (樣板方法模式)**，由框架統一控制渲染流程，元件開發者只需覆寫特定的三個生命週期方法。
 
-### 3.1 三層渲染架構
+**特別注意 (Layout Engine 已上線)**：由於全新排版引擎已經全面導入，這些渲染方法**嚴格限定只能處理純粹的視覺繪製**。絕對禁止在實作內呼叫任何會改變游標或影響相鄰節點排版的 ImGui API（如 `ImGui.SameLine`、`ImGui.Indent` 等）。所有的排版與空間計算都已由獨立的 Layout Phase 接管處理。
 
-1. **`internal void Render()`** (防護罩層 / 入口)
-   * **職責**：框架內部調用的絕對入口，不可被子類別覆寫 (`non-virtual`)。
-   * **內容**：執行 `ImGui.PushID`、處理穿透 (`pickingMode`)、呼叫排版層 (`OnRenderLayout`)、計算並推導滑鼠 Hover 狀態、發送生命週期事件，最後 `ImGui.PopID`。
+### 3.1 三層渲染生命週期
 
-2. **`protected virtual void OnRenderLayout()`** (排版與樹狀走訪層)
-   * **職責**：決定自身的視覺內容與子節點的渲染順序，負責 ImGui 範圍排版（如 `ImGui.BeginChild`, `ImGui.Indent`）。
-   * **子類別實作 (如 Composite Container)**：
-     ```csharp
-     protected override void OnRenderLayout() {
-         ImGui.Indent();
-         base.OnRenderLayout(); // base 會繪製本體並用 for 迴圈走訪 child.Render()
-         ImGui.Unindent();
-     }
-     ```
+`RenderEngine.RenderFlat` 在走訪視覺樹時，會嚴格依序呼叫以下三個對外開放的虛擬方法：
 
-3. **`protected virtual void OnRenderSelf()`** (本體渲染層)
-   * **職責**：僅用來使用 ImGui API 繪製元件自身的視覺內容（如 `ImGui.Button`），不需理會子節點。
-   * **子類別實作 (如 Button)**：這是 90% 以上普通 UI 元件唯一需要覆寫的方法。
+1. **`public virtual bool OnBeginRender()`** (渲染前置與範圍定義)
+   * **職責**：用於宣告需要包裹子節點的 ImGui 範圍（例如 `ImGui.BeginChild`、`ImGui.BeginGroup`）。
+   * **回傳值**：決定**是否要繼續渲染子節點**。若回傳 `true`，框架會遞迴走訪並渲染其內部所有的子元件；若回傳 `false` 則會跳過子節點走訪（常用於視窗折疊或被 Clip 裁切時優化效能）。
+
+2. **`public virtual void OnRender()`** (本體渲染)
+   * **職責**：僅用來呼叫 ImGui API 繪製元件自身的純視覺內容（如 `ImGui.Button`、`ImGui.Text`）。對於多數葉節點元件而言，這是唯一需要覆寫的方法。
+
+3. **`public virtual void OnEndRender()`** (渲染後置與範圍收尾)
+   * **職責**：與 `OnBeginRender` 成對出現，負責關閉作用域（例如呼叫 `ImGui.EndChild`、`ImGui.EndGroup`）。
+
+### 3.2 內部防護與事件推導
+框架底層在呼叫這三個方法的過程中，會自動為元件套用以下安全防護：
+* **自動 ID 堆疊**：利用 `PushID/PopID` 避免同名元件發生衝突。
+* **樣式隔離**：執行 `requiredStyle.Push()` 與 `Pop()`，確保元件只受到屬於自己的 CSS/Theme 影響。
+* **事件推導解耦**：在渲染結束後，根據 `pickingMode` 統一計算本體與子節點的 Hover 狀態，並安全地推送 `MouseEnterEvent` 或 `MouseLeaveEvent` 至事件佇列，不在渲染中途觸發 Callback。
 
 ---
 
@@ -118,7 +119,7 @@ ImGui 的元件常需要傳入不同的 Flags (如 `ImGuiWindowFlags`, `ImGuiChi
 
 **實作範例 (`WindowFlags`)**:
 * 子類別只要實作對應 Enum 的 Flags 類別 (例如繼承 `ElementFlags<ImGuiWindowFlags>`)。
-* 將該 Flags 物件掛載為特定元件 (如 `Window.flags`) 的唯讀屬性。
+* 將該 Flags 掛載為特定元件 (如 `Window.flags`) 的唯讀屬性。
 * 元件在 `Render` 底層直接調用 `ImGui.Begin("ID", ref open, flags.Value)`。這保證了極快的位元運算速度與完美的 C# IntelliSense 開發體驗，絕無冗餘的 Boolean 狀態同步問題。
 
 ## 8. 未提及的概念補充 (Concept Supplements)

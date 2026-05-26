@@ -191,7 +191,7 @@ namespace ImTK.Test.Framework
                     }
 
                     ImGui.TableNextColumn();
-                    RenderEngine.RenderNode(record.runButton);
+                    RenderEngine.RenderFlat(record.runButton);
 
                     ImGui.TableNextColumn();
                     if (!string.IsNullOrEmpty(record.ErrorMessage))

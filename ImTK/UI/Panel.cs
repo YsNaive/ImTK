@@ -172,15 +172,16 @@ namespace ImTK.UI
 
             try
             {
-                if (s_hostElement != null)
+                foreach (var window in s_windows.Values)
                 {
-                    RenderEngine.ComputeStyleRecursive(s_hostElement);
-                    RenderEngine.RenderNode(s_hostElement);
+                    window.BuildRenderList();
+                    RenderEngine.ComputeStyleFlat(window.m_renderList);
+                    RenderEngine.RenderFlat(window.m_renderList);
                 }
             }
             catch (Exception ex)
             {
-                s_log.Error(ex, $"Exception in Render of WindowHostElement");
+                s_log.Error(ex, $"Exception in Render of Windows");
             }
 
             if (pushedFont)
