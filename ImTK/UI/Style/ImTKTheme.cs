@@ -568,15 +568,15 @@ namespace ImTK.UI
 
                     // Unity Editor Light Theme styling
                     // Normal (Base)
-                    s_defaultLight.normalColor.surface = new Color(0.95f, 0.95f, 0.95f, 1.0f);       // Pure Light Grey
-                    s_defaultLight.normalColor.container = new Color(0.90f, 0.90f, 0.90f, 1.0f);
-                    s_defaultLight.normalColor.component = new Color(0.85f, 0.85f, 0.85f, 1.0f);
-                    s_defaultLight.normalColor.componentHover = new Color(0.75f, 0.75f, 0.75f, 1.0f); // Pure Grayscale hover
-                    s_defaultLight.normalColor.componentActive = new Color(0.65f, 0.65f, 0.65f, 1.0f);
+                    s_defaultLight.normalColor.surface = new Color(0.82f, 0.82f, 0.82f, 1.0f);       // Pure Light Grey (Darkest low-level)
+                    s_defaultLight.normalColor.container = new Color(0.86f, 0.86f, 0.86f, 1.0f);
+                    s_defaultLight.normalColor.component = new Color(0.90f, 0.90f, 0.90f, 1.0f);
+                    s_defaultLight.normalColor.componentHover = new Color(0.94f, 0.94f, 0.94f, 1.0f); // Pure Grayscale hover (Lighter)
+                    s_defaultLight.normalColor.componentActive = new Color(0.98f, 0.98f, 0.98f, 1.0f); // Active (Lightest high-level)
                     s_defaultLight.normalColor.accent = new Color(0.0f, 0.47f, 0.84f, 1.0f);          // Windows Blue #0078D7
                     s_defaultLight.normalColor.accentHover = new Color(0.1f, 0.57f, 0.94f, 1.0f);
                     s_defaultLight.normalColor.accentActive = new Color(0.0f, 0.37f, 0.74f, 1.0f);
-                    s_defaultLight.normalColor.selection = new Color(0.75f, 0.75f, 0.75f, 0.8f);      // Pure Grayscale selection
+                    s_defaultLight.normalColor.selection = new Color(0.90f, 0.90f, 0.90f, 0.8f);      // Pure Grayscale selection
                     s_defaultLight.normalColor.border = new Color(0.70f, 0.70f, 0.70f, 1.0f);
                     s_defaultLight.normalColor.divider = new Color(0.75f, 0.75f, 0.75f, 1.0f);
                     s_defaultLight.normalColor.text = new Color(0.1f, 0.1f, 0.1f, 1.0f);              // Pure Darkish
@@ -657,7 +657,7 @@ namespace ImTK.UI
                     s_defaultLight.syntax.numberColor = new Color(0.2f, 0.6f, 0.2f, 1.0f);
                     s_defaultLight.syntax.controlColor = new Color(0.7f, 0.2f, 0.4f, 1.0f);
                     s_defaultLight.syntax.commentsColor = new Color(0.2f, 0.5f, 0.1f, 1.0f);
-                    s_defaultLight.syntax.codeBackgroundColor = new Color(0.95f, 0.95f, 0.95f, 1.0f);
+                    s_defaultLight.syntax.codeBackgroundColor = new Color(0.92f, 0.92f, 0.92f, 1.0f);
                     s_defaultLight.syntax.codeTextColor = new Color(0.1f, 0.1f, 0.1f, 1.0f);
 
                     // Global Properties

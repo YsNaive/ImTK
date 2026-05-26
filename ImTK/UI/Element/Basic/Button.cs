@@ -45,11 +45,8 @@ namespace ImTK.UI
                         output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.Button, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component").Hash });
                         output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.ButtonHovered, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component-hover").Hash });
                         output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.ButtonActive, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component-active").Hash });
-                        output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.Text, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-text").Hash });
-                        return;
                     }
-
-                    if (prop.key == VisualElement.StyleKey.BackgroundColor.Hash)
+                    else if (prop.key == VisualElement.StyleKey.BackgroundColor.Hash)
                     {
                         prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
                         prop.key = (int)ImGuiCol.Button;

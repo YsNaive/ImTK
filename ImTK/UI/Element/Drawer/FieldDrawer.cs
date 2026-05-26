@@ -6,8 +6,32 @@ using ImTK.Core;
 
 namespace ImTK.UI
 {
-    public abstract class FieldDrawer<T> : VisualElement, IFieldDrawer<T>
+
+    public abstract class FieldDrawer<T> : VisualElement<FieldDrawer<T>.Style>, IFieldDrawer<T>
     {
+        public new class Style : VisualElement.Style
+        {
+            public override void ComputeHighlevelToken(StyleProperty prop, IList<StyleProperty> output)
+            {
+                if (prop.category == StyleCategory.HighLevelToken && prop.key == VisualElement.StyleKey.ColorFamily.Hash)
+                {
+                    string prefix = "--normal";
+                    if (prop.enumValue == (int)ThemeColorFamily.Success) prefix = "--success";
+                    else if (prop.enumValue == (int)ThemeColorFamily.Info) prefix = "--info";
+                    else if (prop.enumValue == (int)ThemeColorFamily.Warning) prefix = "--warning";
+                    else if (prop.enumValue == (int)ThemeColorFamily.Danger) prefix = "--danger";
+
+                    output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.FrameBg, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component").Hash });
+                    output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.FrameBgHovered, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component-hover").Hash });
+                    output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.FrameBgActive, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component-active").Hash });
+                    
+                    // For BoolDrawer CheckMark
+                    output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.CheckMark, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-accent").Hash });
+                }
+                base.ComputeHighlevelToken(prop, output);
+            }
+        }
+
         protected T m_value;
 
         private string m_label = "";

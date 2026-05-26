@@ -28,6 +28,7 @@ namespace ImTK.UI
                 get => GetPropertyColor(StyleKey.ActiveColor);
                 set => SetPropertyColor(StyleKey.ActiveColor, value);
             }
+
             public override void ComputeHighlevelToken(StyleProperty prop, System.Collections.Generic.IList<StyleProperty> output)
             {
                 if (prop.category == StyleCategory.HighLevelToken)
@@ -43,7 +44,26 @@ namespace ImTK.UI
                         output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.FrameBg, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component").Hash });
                         output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.FrameBgHovered, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component-hover").Hash });
                         output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.FrameBgActive, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-component-active").Hash });
-                        output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.Text, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-text").Hash });
+                    }
+                    else if (prop.key == VisualElement.StyleKey.BackgroundColor.Hash)
+                    {
+                        prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
+                        prop.key = (int)ImGuiCol.FrameBg;
+                        output.Add(prop);
+                        return;
+                    }
+                    else if (prop.key == StyleKey.HoverColor.Hash)
+                    {
+                        prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
+                        prop.key = (int)ImGuiCol.FrameBgHovered;
+                        output.Add(prop);
+                        return;
+                    }
+                    else if (prop.key == StyleKey.ActiveColor.Hash)
+                    {
+                        prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
+                        prop.key = (int)ImGuiCol.FrameBgActive;
+                        output.Add(prop);
                         return;
                     }
                 }

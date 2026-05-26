@@ -152,6 +152,7 @@
 - 全面補齊了 Layout Engine 新增基礎設施（包含 `VisualElement` 測量佈局方法、`LayoutConstraint`、`ResolvedLayoutState` 及 `DrawerLayoutMode`）的 API XML 註解。
 
 ### Fixed (修復)
+- 修復 `FieldDrawer<T>` (包含 `IntDrawer`, `StringDrawer` 等) 在設定 `ColorFamily` 時，輸入框底色未能正確套用主題色的問題。將樣式映射統一提昇至 `FieldDrawer<T>.Style` 基底中處理，並精確對齊 `GlobalTheme` 的映射規範。
 - 修復 ImGui `SetCursorScreenPos()` 無法擴展父視窗邊界的問題 (Assertion failed)。透過預先放置 `ImGui.Dummy` 分配複合 Drawers (`Vector2`, `Rect` 等) 所需的版面空間，確保安全計算並完美支援自訂 Absolute 排版。
 - 引入了 `RenderingContext` 來追蹤與延遲管理依賴 ImGui 視窗狀態的操作，修復了在 `Window` 開啟時直接呼叫 `SetWindowFontScale` 導致 ImGui 出現 Debug 斷言視窗的問題。
 - 修復了 `VisualElement` 在子元件單獨設定字型大小時，因無法取得父元件字型而錯誤退回預設字型的繼承失效問題（現透過 `RenderingContext.CurrentFontFamilyHash` 解決）。

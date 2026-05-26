@@ -151,8 +151,19 @@ namespace ImTK.UI
             return newWindow;
         }
 
+        private bool m_didApplyLocalTheme = false;
+
         protected virtual bool Begin(ref bool isOpenForImGui, ImGuiWindowFlags windowFlags)
         {
+            // 若此視窗有局部 theme，在 ImGui.Begin() 前臨時將其套用為全域 style。
+            // 這是因為 ImGui Docking 在繪製 DockNode 背景時讀取的是全域 style，
+            // 不受 PushStyleColor 的影響，必須在 Begin 前修改全域 style 才能正確顯示。
+            if (m_theme != null)
+            {
+                m_theme.ApplyToImGui();
+                m_didApplyLocalTheme = true;
+            }
+
             bool isExpanded = ImGui.Begin(imguiId, ref isOpenForImGui, windowFlags);
             RenderingContext.IsInsideWindow = true;
             RenderingContext.FlushPendingCommands();
@@ -162,6 +173,14 @@ namespace ImTK.UI
         protected virtual void End()
         {
             ImGui.End();
+
+            // 若曾臨時切換全域 style，在 End 後立即還原，確保後續視窗使用正確的全域 style。
+            if (m_didApplyLocalTheme)
+            {
+                ImTKTheme.GlobalTheme.ApplyToImGui();
+                m_didApplyLocalTheme = false;
+            }
+
             RenderingContext.IsInsideWindow = false;
         }
 

@@ -53,6 +53,12 @@ namespace ImTK.UI
             bool mapped = true;
             if (prop.key == VisualElement.StyleKey.ColorFamily.Hash)
             {
+                if (!prop.isInheritable)
+                {
+                    prop.isInheritable = true;
+                    output.Add(prop);
+                }
+
                 string prefix = "--normal";
                 if (prop.enumValue == (int)ThemeColorFamily.Success) prefix = "--success";
                 else if (prop.enumValue == (int)ThemeColorFamily.Info) prefix = "--info";
@@ -60,9 +66,11 @@ namespace ImTK.UI
                 else if (prop.enumValue == (int)ThemeColorFamily.Danger) prefix = "--danger";
 
                 output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.WindowBg, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-surface").Hash });
+                output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.ChildBg, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-surface").Hash });
+                output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.PopupBg, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-container").Hash });
+                output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.Border, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-border").Hash });
                 output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.Text, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-text").Hash, isInheritable = true });
                 output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.TextDisabled, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-disabled-text").Hash, isInheritable = true });
-                output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.Border, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-border").Hash });
                 return;
             }
             else if (prop.key == VisualElement.StyleKey.BackgroundColor.Hash)
