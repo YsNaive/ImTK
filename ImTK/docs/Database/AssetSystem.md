@@ -3,12 +3,12 @@
 ## 1. 摘要與定位 (Abstract & Scope)
 
 在小型工具與應用程式開發中，頻繁處理檔案讀寫、使用者設定儲存與 GPU 資源（如圖片）是一大痛點。
-ImTK 採用「職責分離與實例化範圍」的雙軌架構，將資源管理劃分為兩大靜態入口：`Resource` (唯讀全域) 與 `ImTKDatabase` (可讀寫本地)。
+ImTK 採用「職責分離 (Importer 模式)」與「雙軌資料庫」架構，將資源管理劃分為兩大靜態入口：`Resource` (唯讀全域) 與 `ImTKDatabase` (可讀寫本地)。
 
 **核心定位**：
-*   **不追求「無所不知」的泛用型推斷**：放棄 Unity 般龐大且複雜的 `Importer / Loader` 註冊系統。
-*   **物件導向封裝**：將檔案的序列化與反序列化邏輯歸還給資源物件本身（透過覆寫虛擬方法 `OnLoad` 與 `OnSave`）。
-*   **執行期快取與生命週期安全**：專注於管理已載入記憶體中的離散資源，確保單一路徑的實例唯一性，並透過 `DatabaseModule` 在系統關閉時安全釋放 C++ 指標。
+*   **純資料容器 (Passive Data Containers)**：`ImTKAsset` 本身不包含任何讀寫 (`OnLoad` / `OnSave`) 邏輯，開發者自訂的設定檔將變成純淨的 POCO。
+*   **Type-based 解析器與 Fail-Fast**：棄用模糊的副檔名推斷，採用「基於請求型別」的明確註冊表。找不到對應的解析器就報錯，不提供暗箱 Fallback。
+*   **執行期快取與生命週期安全**：專注於管理已載入記憶體中的離散資源，確保單一路徑的實例唯一性，並透過 `DatabaseModule` 在系統關閉時安全釋放資源。
 
 ---
 
@@ -17,84 +17,72 @@ ImTK 採用「職責分離與實例化範圍」的雙軌架構，將資源管理
 為解決多開發者協作、多設備存取以及發布模式下權限不同的問題，ImTK 引入了 `ImTKEnvironment` 進行路徑控管，並將操作 API 嚴格區分為唯讀與讀寫。
 
 ### 2.1 ImTKEnvironment (環境變數控管)
-透過靜態的 `ImTKEnvironment`，開發者可以設定應用程式名稱與開發狀態。
+透過靜態的 `ImTKEnvironment`，採用 **延遲載入 (Lazy Evaluation)** 與 **零設定反射**，預設自動汲取專案中的 `[AssemblyCompany]` 與 `[AssemblyProduct]`。
+*   `IsDevelopment`: 自動讀取 `[AssemblyConfiguration]` 判斷是否為 Debug 編譯。
 *   `GlobalAssetPath`: 預設指向 `AppDomain.CurrentDomain.BaseDirectory` (執行檔所在目錄)。
-*   `LocalDataPath`: 預設指向作業系統的 `%AppData%/{OrganizationName}/{ApplicationName}`。
+*   `DevelopmentLocalDataPath`: 開發模式下的路徑隔離。若設定，測試時產生的設定檔就不會污染系統正式的 AppData。
+*   `LocalDataPath`: 預設指向作業系統的 `%AppData%/{CompanyName}/{ApplicationName}`。
 
 ### 2.2 Resource (唯讀全域資源)
 *   **用途**：載入隨應用程式打包發布的固定資源（如預設 Icon、語言檔範本、主題設定）。
-*   **行為限制**：只開放 `GetAsset<T>`。不提供任何建立或寫入的方法，從根本杜絕了在正式環境中觸發 `UnauthorizedAccessException` 的可能性。
+*   **行為限制**：經由此入口載入的 `ImTKAsset` 將被強制注入 `IsReadOnly = true`。呼叫 `MarkDirty()` 將引發安全例外，從根本杜絕覆寫官方檔案的可能。
 *   **存取點**：受限於 `ImTKEnvironment.GlobalAssetPath`。
 
 ### 2.3 ImTKDatabase (可讀寫本地資料庫)
 *   **用途**：管理應用程式執行期間產生的資料，或使用者自訂的偏好設定。
-*   **API 提供**：`GetAsset<T>`, `CreateAsset<T>`, `GetOrCreateAsset<T>`, `MarkDirty()`, `SaveAssets()`。
-*   **存取點**：受限於 `ImTKEnvironment.LocalDataPath`。
+*   **行為**：載入的 `ImTKAsset` 之 `IsReadOnly = false`。可透過 `MarkDirty()` 追蹤變更並寫回磁碟。
+*   **存取點**：受限於 `ImTKEnvironment.LocalDataPath` (或 Development 隔離路徑)。
 
 ---
 
-## 3. 核心架構與 API 設計 (Core Interface & Base Classes)
+## 3. 核心架構與 API 設計 (Core Importer Pattern)
 
-### 3.1 強制泛型載入 (Strict Generic Loading)
-
-捨棄在檔案內部加入 `$type` 或依賴副檔名推斷的做法，採用強制傳入泛型 `T` 的載入模式：
-
-```csharp
-var myConfig = ImTKDatabase.GetOrCreateAsset<AppConfig>("config.json");
-var myIcon = Resource.GetAsset<Texture2D>("assets/icon.png");
-```
-
-這使開發者保有極致的自由度，且路徑與型別在記憶體快取中具有**絕對唯一性保證**。若對同一個路徑呼叫不同型別，會拋出 `AssetTypeMismatchException`。
-
-### 3.2 資源基底類別 (Asset Base Classes)
-
-為避免複雜的外部 Loader 系統，ImTK 要求開發者自訂的資源類別直接繼承對應的基底類別，並自行處理序列化邏輯：
-
-*   **`IAsset` / `ImTKAsset`**:
-    *   基礎唯讀資源。實作 `IDisposable` 以處理如 GPU 紋理的釋放。
-    *   需覆寫 `protected abstract void OnLoad(string absolutePath);`。
-*   **`ISaveableAsset` / `ImTKSaveableAsset`**:
-    *   可寫回磁碟的資源。
-    *   需額外覆寫 `protected abstract void OnSave(string absolutePath);`。
-
-### 3.3 預設實作：JsonAsset&lt;T&gt;
-
-ImTK 內建提供了 `JsonAsset<T>` 來簡化純資料物件 (POCO) 的存檔需求。它使用 `System.Text.Json` 進行序列化，並將資料封裝在 `Data` 屬性中。
+### 3.1 極簡的 Load&lt;T&gt; 對外介面
+API 已全面精簡。不論是圖片、純讀 JSON 或可覆寫設定檔，開發者皆只使用單一入口：
 
 ```csharp
-// 1. 定義你的資料類別 (必須有 public 無參數建構子)
-public class AppConfig
-{
-    public int WindowWidth { get; set; } = 1024;
-    public string Theme { get; set; } = "Dark";
-}
-
-// 2. 獲取或建立資源
-var configAsset = ImTKDatabase.GetOrCreateAsset<JsonAsset<AppConfig>>("config.json");
-
-// 3. 讀寫資料
-Console.WriteLine(configAsset.Data.Theme);
-configAsset.Data.WindowWidth = 1920;
-
-// 4. 標記修改並存檔
-configAsset.MarkDirty();
-ImTKDatabase.SaveAssets(); // 或交由系統關閉時自動儲存
+var myConfig = ImTKDatabase.Load<GameConfig>("config.json");
+var myIcon = Resource.Load<Texture2D>("assets/icon.png");
 ```
+
+「檔案遺失時是直接報錯，還是自動產生一份帶預設值的檔案」這項決策，完全交由底層註冊的 **Importer 實作** 來決定。
+
+### 3.2 唯一的資源基底：ImTKAsset
+萬物皆為 `ImTKAsset`。不再區分是否可儲存，資源是否可被寫回磁碟，取決於**系統中有沒有為它註冊 Exporter**，以及**它是否被定義為唯讀**。
+
+### 3.3 解析器系統 (IAssetImporter / IAssetExporter)
+所有的 I/O 邏輯皆隔離在 `ImTK.Database.Importers` 中：
+*   實作 `IAssetImporter<T>` 提供 `Import(absolutePath, normalizedPath)`。
+*   實作 `IAssetExporter<T>` 提供 `Export(asset, absolutePath)`。
+
+### 3.4 註冊表機制 (Registry)
+AssetManager 內部維護 Type-based 字典。系統支援開放式泛型註冊：
+```csharp
+// 為特定的型別註冊專屬處理器
+ImTKDatabase.RegisterImporter(typeof(Texture2D), new TextureImporter());
+
+// 為泛型容器註冊開放式處理器
+ImTKDatabase.RegisterImporter(typeof(JsonAsset<>), typeof(StrictJsonImporter<>));
+```
+遇到未註冊的型別，將嚴格拋出 `AssetImporterNotFoundException`。
 
 ---
 
 ## 4. 記憶體管理與安全防護 (Memory & Safety)
 
-### 4.1 IsDisposed 安全標記防護
-所有資源實作 `IAsset` 介面，其中包含 `IsDisposed` 屬性。當資源被 `Unload()` 且底層指標被釋放後，其 `IsDisposed` 將被設為 `true`。
+### 4.1 唯讀防護與 Dirty 標記
+開發者修改資料後，**必須主動宣告**這份資料髒了：
+```csharp
+config.MarkDirty(); // 遞增 Version，並標記 IsDirty = true
+```
+若 `config.IsReadOnly == true`，此方法將直接拋出 `InvalidOperationException`。
+
+### 4.2 IsDisposed 安全標記防護
+當資源被 `Unload()` 且底層指標被釋放後，其 `IsDisposed` 將被設為 `true`。
 任何持有該資源參照的 UI 元件（如 `TextureView` 或綁定資料的 Drawer），在渲染前**必須**檢查 `if (asset.IsDisposed) return;`，以防止將失效的指標送入 GPU 導致崩潰。
 
-### 4.2 狀態同步與 Version 機制
-當設定檔透過 `ImTKDatabase.MarkDirty(asset)` 標記為需存檔時，系統會自動將該資源的 `Version++`。
-UI 元件可透過輕量的整數比對來實現零訂閱 (Zero-Subscription) 的高效狀態同步，避免傳統 C# event 常見的 Memory Leak。
-
-### 4.3 內部核心：AssetManager
-`Resource` 和 `ImTKDatabase` 內部實際上都封裝了一個 `AssetManager` 實例。這個管理器負責路徑的標準化（如防禦絕對路徑）、快取字典的管理以及防呆旗標 (`isReadOnly`) 的執行。
+### 4.3 狀態同步與 Version 機制
+呼叫 `MarkDirty()` 會自動將該資源的 `Version++`。UI 元件可透過輕量的整數比對來實現零訂閱 (Zero-Subscription) 的高效狀態同步，避免傳統 C# event 常見的 Memory Leak。
 
 ---
 
@@ -102,13 +90,12 @@ UI 元件可透過輕量的整數比對來實現零訂閱 (Zero-Subscription) �
 
 針對可讀寫資源，採用「髒標記 (Dirty Flag) + 統一存檔」的策略：
 
-1.  當透過 UI 修改資源數值時，呼叫 `ImTKDatabase.MarkDirty(asset)` 或 `asset.MarkDirty()`。
+1.  當透過 UI 修改資源數值時，呼叫 `asset.MarkDirty()`。
 2.  資料**不會**立即寫入磁碟，以避免拖拉 Slider 時的效能衝擊與頻繁 I/O。
-3.  開發者可透過手動點擊「儲存按鈕」，或由系統模組 (`DatabaseModule`) 在 `OnClose` 時統一呼叫 `ImTKDatabase.SaveAssets()`，將所有被標記為髒的資源一次性寫回磁碟。
+3.  開發者可手動呼叫 `ImTKDatabase.SaveAssets()`，或由系統模組 (`DatabaseModule`) 在 `OnClose` 時統一呼叫，將所有髒資源透過對應的 Exporter 寫回磁碟。
 
-## 4. 資源例外處理 (AssetExceptions)
-資源系統包含了一套明確的例外處理型別，以方便開發者精確捕捉各類邊界狀況：
-*   **`AssetNotFoundException`**：資源檔案不存在時拋出。
-*   **`AssetAlreadyExistsException`**：建立資源時發現檔案已存在。
+## 6. 資源例外處理 (AssetExceptions)
+系統具備嚴謹的例外邊界：
+*   **`AssetImporterNotFoundException` / `AssetExporterNotFoundException`**：型別未註冊。
 *   **`AssetTypeMismatchException`**：快取的資源型別與本次請求的泛型型別不一致。
 *   **`AssetPathInvalidException`**：路徑包含非法格式或嘗試進行路徑穿越攻擊時拋出。
