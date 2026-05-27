@@ -27,6 +27,7 @@ namespace ImTK.UI
                     
                     // For BoolDrawer CheckMark
                     output.Add(new StyleProperty { category = StyleCategory.ThemeToken, key = (int)ImGuiCol.CheckMark, dataType = StyleDataType.HashedString, tokenHash = new HashedString(prefix + "-accent").Hash });
+                    
                 }
                 base.ComputeHighlevelToken(prop, output);
             }

@@ -13,6 +13,10 @@
 - 新增 `DevelopmentLocalDataPath`：支援在開發模式 (`IsDevelopment = true`) 下進行路徑隔離，避免測試資料污染系統正式的 `%AppData%` 目錄。
 - **Type-based 資源解析器 (Importer 模式)**：實作了 `IAssetImporter<T>` 與 `IAssetExporter<T>` 介面，將檔案 I/O 邏輯與資料物件 (Asset) 徹底解耦。
 - **嚴謹的 Fail-Fast Registry**：`AssetManager` 現在具備嚴格的泛型註冊表 (`RegisterImporter` / `RegisterExporter`)，支援開放式泛型 (Open Generics) 的自動映射。當請求未註冊的型別時會直接拋出 `AssetImporterNotFoundException`。
+- **ColorDrawer 顏色選擇器**：實作了 `ColorDrawer`，預設採用 `ImGuiColorEditFlags.NoInputs` (標籤 + 純色塊) 的 Unity Inspector 渲染風格，點擊色塊後彈出完整 Color Picker。
+- **SliderDrawer 與範圍約束**：新增 `SliderIntAttribute` 與 `SliderFloatAttribute` 標記，並實作 `SliderIntDrawer` 與 `SliderFloatDrawer`。支援讀取標記中定義的 `min`/`max` 限制範圍進行拖曳渲染，並包含無效範圍的防呆日誌。
+- **全域灰階高亮主題 (Theme Adjustments)**：重新校準了 `DefaultDark` 與 `DefaultLight` 主題中的 `accent` 系列顏色，將原本刺眼的 Windows Blue 改為高對比度的標準灰階。這使得 CheckBox 與 Slider 滑塊等預設採用 `accent` 顏色的元件，能貼近 Unity 等專業編輯器的沉穩質感。
+- **高階樣式映射隔離**：將 `SliderGrab` 與 `SliderGrabActive` 的高階語意 Token 映射自 `FieldDrawer` 移除，下放回 `SliderIntDrawer` 與 `SliderFloatDrawer` 內部的私有 `SliderStyle`，避免樣式污染並維持基底元件純淨。
 - **唯讀保護機制 (Read-Only Protection)**：`ImTKAsset` 新增 `IsReadOnly` 屬性。當資源由唯讀的 `Resource` 全域資料庫載入時，呼叫 `MarkDirty()` 將直接拋出 `InvalidOperationException`。
 - 實作了一代全新的 1-Pass 輕量級 Flexbox 排版引擎 (Layout Engine)。
 - 將視覺樹的生命週期徹底拆分為 `Measure` (測量)、`Arrange` (佈局座標) 與 `Render` (渲染) 等獨立階段，解決了流式排版在對齊與約束上的耦合痛點。

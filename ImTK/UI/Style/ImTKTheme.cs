@@ -455,9 +455,9 @@ namespace ImTK.UI
                     s_defaultDark.normalColor.component = new Color(0.18f, 0.18f, 0.18f, 1.0f);
                     s_defaultDark.normalColor.componentHover = new Color(0.25f, 0.25f, 0.25f, 1.0f); // Pure Grayscale hover
                     s_defaultDark.normalColor.componentActive = new Color(0.30f, 0.30f, 0.30f, 1.0f); 
-                    s_defaultDark.normalColor.accent = new Color(0.0f, 0.47f, 0.84f, 1.0f);          // Windows Blue #0078D7
-                    s_defaultDark.normalColor.accentHover = new Color(0.1f, 0.57f, 0.94f, 1.0f);
-                    s_defaultDark.normalColor.accentActive = new Color(0.0f, 0.37f, 0.74f, 1.0f);
+                    s_defaultDark.normalColor.accent = new Color(0.55f, 0.55f, 0.55f, 1.0f);           // Prominent Grayscale
+                    s_defaultDark.normalColor.accentHover = new Color(0.65f, 0.65f, 0.65f, 1.0f);
+                    s_defaultDark.normalColor.accentActive = new Color(0.45f, 0.45f, 0.45f, 1.0f);
                     s_defaultDark.normalColor.selection = new Color(0.25f, 0.25f, 0.25f, 0.8f);      // Pure Grayscale selection
                     s_defaultDark.normalColor.border = new Color(0.25f, 0.25f, 0.25f, 1.0f);
                     s_defaultDark.normalColor.divider = new Color(0.20f, 0.20f, 0.20f, 1.0f);
@@ -573,9 +573,9 @@ namespace ImTK.UI
                     s_defaultLight.normalColor.component = new Color(0.90f, 0.90f, 0.90f, 1.0f);
                     s_defaultLight.normalColor.componentHover = new Color(0.94f, 0.94f, 0.94f, 1.0f); // Pure Grayscale hover (Lighter)
                     s_defaultLight.normalColor.componentActive = new Color(0.98f, 0.98f, 0.98f, 1.0f); // Active (Lightest high-level)
-                    s_defaultLight.normalColor.accent = new Color(0.0f, 0.47f, 0.84f, 1.0f);          // Windows Blue #0078D7
-                    s_defaultLight.normalColor.accentHover = new Color(0.1f, 0.57f, 0.94f, 1.0f);
-                    s_defaultLight.normalColor.accentActive = new Color(0.0f, 0.37f, 0.74f, 1.0f);
+                    s_defaultLight.normalColor.accent = new Color(0.45f, 0.45f, 0.45f, 1.0f);          // Prominent Grayscale
+                    s_defaultLight.normalColor.accentHover = new Color(0.55f, 0.55f, 0.55f, 1.0f);
+                    s_defaultLight.normalColor.accentActive = new Color(0.35f, 0.35f, 0.35f, 1.0f);
                     s_defaultLight.normalColor.selection = new Color(0.90f, 0.90f, 0.90f, 0.8f);      // Pure Grayscale selection
                     s_defaultLight.normalColor.border = new Color(0.70f, 0.70f, 0.70f, 1.0f);
                     s_defaultLight.normalColor.divider = new Color(0.75f, 0.75f, 0.75f, 1.0f);
