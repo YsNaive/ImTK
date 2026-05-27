@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Added (新增)
+- **DropdownDrawer 內建搜尋功能**：`DropdownDrawer<TValue>` 現已內建 `searchable` 屬性。開啟後會在下拉選單頂部自動生成搜尋列，並實作基於 Levenshtein 距離的智慧模糊匹配演算法，根據修改次數排序選項。
 - **ImTKEnvironment 重構**：實作了全域環境變數的懶漢式延遲載入 (Lazy Evaluation)。現在會自動透過反射汲取 `[AssemblyCompany]` 與 `[AssemblyProduct]` 作為預設的 `CompanyName` 與 `ApplicationName`。
 - 新增 `DevelopmentLocalDataPath`：支援在開發模式 (`IsDevelopment = true`) 下進行路徑隔離，避免測試資料污染系統正式的 `%AppData%` 目錄。
 - **Type-based 資源解析器 (Importer 模式)**：實作了 `IAssetImporter<T>` 與 `IAssetExporter<T>` 介面，將檔案 I/O 邏輯與資料物件 (Asset) 徹底解耦。
@@ -27,6 +28,8 @@
 - **TextElement 自動折行**：為 `TextElement` 實作了 `enableWordWrap` 屬性 (預設為 `true`)。結合排版引擎傳遞的 `AvailableWidth`，精確計算文字折行後的高度，並利用 `PushTextWrapPos` 確保在渲染時不會撐爆畫面。
 
 ### Changed (變更)
+- **EnumDropdownDrawer 泛型重構**：將原有的 `EnumDropdownDrawer` 重構為強型別泛型 `EnumDropdownDrawer<T> where T : struct, Enum`。現在會在建構時自動提取所有列舉值並初始化選項，移除舊有基於 `value` setter 延遲推導型別的設計，大幅提升效能與型別安全。同時 `FieldDrawerFactory` 與註冊表已升級，全面支援開放式泛型 (`IsGenericTypeDefinition`) 的自動推導與動態實例化。
+- **DropdownDrawer 架構翻新**：徹底移除了繁瑣的 `DropdownItem` 繼承體系，重構為基於 `DropdownDrawer<TValue>` 泛型基底與內部嵌套的 `ComboContainer`、`ItemElement` 架構。此改動將下拉選單與內部選項的邏輯高度內聚，並原生利用 Layout Engine 與 Render Engine 生命週期運作。
 - **Asset System 架構翻新**：徹底移除了 `ImTKSaveableAsset` 類別，現在系統中萬物皆為唯一的 `ImTKAsset` 基底，是否支援存檔完全由「註冊表中有沒有該型別的 Exporter」來決定。
 - 移除了 `ImTKAsset` 內建的 `OnLoad` 與 `OnSave` 虛擬方法，現在 Asset 是純粹的資料載體 (POCO Container)。
 - **精簡對外 API**：`ImTKDatabase` 與 `Resource` 的載入方法全面統一精簡為 `Load<T>(path)`。不再區分 Get/Create/GetOrCreate，遺失檔案時的行為與預設值生成現在交由具體的 Importer (例如 `FallbackJsonAssetHandler`) 來定義。

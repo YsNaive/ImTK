@@ -95,6 +95,16 @@ namespace ImTK.UI
                 return null;
             }
 
+            if (drawerType.IsGenericTypeDefinition)
+            {
+                if (m_valueType == typeof(Enum))
+                {
+                    // 無法使用泛型 EnumDrawer 來渲染未知的 Enum 基底型別
+                    return null;
+                }
+                drawerType = drawerType.MakeGenericType(m_valueType);
+            }
+
             var drawer = (IFieldDrawer)Activator.CreateInstance(drawerType);
 
             if (!string.IsNullOrEmpty(m_label))

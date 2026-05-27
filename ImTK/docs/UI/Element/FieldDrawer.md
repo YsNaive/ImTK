@@ -58,8 +58,11 @@ Drawer 在建立後，可透過實作 `ApplyModifier(Attribute)` 來讀取修飾
 ### 4.2 DrawerLayoutMode (排版模式)
 此列舉控制了欄位繪製時的佈局方式（如 `Inline` 行內並排顯示，或是 `Expand` 獨佔整行展開顯示），支援不同風格的表單。
 
-### 4.3 預設 Drawer 實作: StringField, IntField, ObjectDrawer
+### 4.3 預設 Drawer 實作: StringField, IntField, ObjectDrawer, DropdownDrawer
 框架內建了對常見型別的基礎支援：
 *   **StringField**：針對字串的雙向綁定輸入框。
 *   **IntField**：針對整數的輸入框。
 *   **ObjectDrawer**：預設的反射 Fallback 繪製器，能遞迴展開複雜物件內部的屬性，讓自訂類別也能快速具備 UI 編輯能力。
+*   **DropdownDrawer<TValue>**：下拉選單基底類別，透過泛型支援任意資料型別的下拉選擇。內建 `searchable` 屬性，開啟後將自動於選單頂部加入智慧模糊搜尋列，支援子字串比對與 Levenshtein 修改次數排序。
+    *   **StringDropdownDrawer**：`DropdownDrawer<string>` 的具體實作，提供字串陣列的選擇。
+    *   **EnumDropdownDrawer<T>**：強型別列舉選單，建構時自動解析所有列舉值並綁定，提供極致的型別安全與效能。
