@@ -2,7 +2,7 @@ using System;
 
 namespace ImTK.UI
 {
-    public interface IWindow
+    public interface ILayoutRoot
     {
     }
 }

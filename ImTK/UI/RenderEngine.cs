@@ -45,18 +45,15 @@ namespace ImTK.UI
 
 
 
-        private static void BuildRenderListRecursive(VisualElement node, System.Collections.Generic.List<RenderOp> list)
+        internal static void BuildRenderListRecursive(VisualElement node, System.Collections.Generic.List<RenderOp> list)
         {
             list.Add(new RenderOp { Element = node, Type = RenderOpType.Begin, SkipCount = 0 });
             int beginIndex = list.Count - 1;
 
-            if (node.resolvedLayoutState.display != DisplayStyle.None)
+            int childCount = node.hierarchy.childCount;
+            for (int i = 0; i < childCount; i++)
             {
-                int childCount = node.hierarchy.childCount;
-                for (int i = 0; i < childCount; i++)
-                {
-                    BuildRenderListRecursive(node.hierarchy.ChildAt(i), list);
-                }
+                BuildRenderListRecursive(node.hierarchy.ChildAt(i), list);
             }
 
             list.Add(new RenderOp { Element = node, Type = RenderOpType.End, SkipCount = 0 });

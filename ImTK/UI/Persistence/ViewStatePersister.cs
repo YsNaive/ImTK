@@ -21,7 +21,7 @@ namespace ImTK.UI.Persistence
         /// </summary>
         public static void LoadWindowNewStates(Window window)
         {
-            if (window.m_renderList == null || window.m_renderList.Count == 0)
+            if (window.RenderCache.renderList == null || window.RenderCache.renderList.Count == 0)
                 return;
 
             ImTKCacheAsset cacheAsset;
@@ -37,7 +37,7 @@ namespace ImTK.UI.Persistence
 
             StateReader reader = new StateReader(cacheAsset, window.windowId);
 
-            foreach (var op in window.m_renderList)
+            foreach (var op in window.RenderCache.renderList)
             {
                 if (op.Type == RenderOpType.Begin)
                 {
@@ -79,13 +79,13 @@ namespace ImTK.UI.Persistence
 
             foreach (var window in activeWindows)
             {
-                if (window.m_renderList == null)
+                if (window.RenderCache.renderList == null)
                     continue;
 
                 keyCollisionCheck.Clear();
                 StateWriter writer = new StateWriter(cacheAsset, window.windowId);
 
-                foreach (var op in window.m_renderList)
+                foreach (var op in window.RenderCache.renderList)
                 {
                     if (op.Type == RenderOpType.Begin)
                     {

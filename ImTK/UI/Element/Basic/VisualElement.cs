@@ -548,7 +548,7 @@ namespace ImTK.UI
         {
             if (m_isMeasureDirty) return;
             m_isMeasureDirty = true;
-            if (this is IWindow) return;
+            if (this is ILayoutRoot) return;
             hierarchy.parent?.MarkMeasureDirty();
         }
 
@@ -559,7 +559,7 @@ namespace ImTK.UI
         {
             if (m_isArrangeDirty) return;
             m_isArrangeDirty = true;
-            if (this is IWindow) return;
+            if (this is ILayoutRoot) return;
             hierarchy.parent?.MarkArrangeDirty();
         }
 
@@ -1272,6 +1272,18 @@ namespace ImTK.UI
                 current = current.hierarchy.parent;
             }
             return null;
+        }
+
+        public IRenderRoot GetRenderRoot()
+        {
+            IRenderRoot topmostRoot = null;
+            VisualElement current = this;
+            while (current != null)
+            {
+                if (current is IRenderRoot r) topmostRoot = r;
+                current = current.hierarchy.parent;
+            }
+            return topmostRoot;
         }
 
         public virtual void OnRender()

@@ -146,7 +146,9 @@ namespace ImTK.UI
                 // 我們在上面已經加上了 ImGuiWindowFlags.MenuBar。
                 if (m_rootMenu != null)
                 {
-                    RenderEngine.RenderFlat(m_rootMenu);
+                    m_rootMenu.RenderCache.Update(m_rootMenu);
+                    RenderEngine.ComputeStyleFlat(m_rootMenu.RenderCache.renderList);
+                    RenderEngine.RenderFlat(m_rootMenu.RenderCache.renderList);
                 }
             }
 

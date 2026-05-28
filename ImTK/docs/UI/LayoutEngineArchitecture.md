@@ -11,12 +11,12 @@
 在新的架構下，畫面更新不再是單一的遞迴走訪，而是被嚴格拆分為以下四個明確的階段：
 
 1. **Build Phase (建構快取階段)**
-   - **職責**：當視覺樹結構改變（如新增、刪除節點）時，建立或更新一維的走訪快取清單。
-   - **目的**：避免高頻率的遞迴走訪開銷，提升效能。
+   - **職責**：當視覺樹結構改變（如新增、刪除節點）時，建立或更新一維的走訪快取清單 (`RenderListCache`)。
+   - **目的**：避免高頻率的遞迴走訪開銷，提升效能。此階段**不會**過濾 `display: none` 的節點，而是預先算好跳躍步數 (`SkipCount`)，確保在改變 `style.display` 時不需重建快取，達成 O(1) 的動態顯示切換。
 
 2. **Layout Phase (排版階段：整合 Measure 與 Arrange)**
    - **職責**：精準計算出每個元件的絕對與相對座標 (`layoutRect`)。
-   - **流程**：從 `IWindow` 根節點發起的 **Top-Down 遞迴** (`CalculateLayout`)。
+   - **流程**：從 `ILayoutRoot` 根節點發起的 **Top-Down 遞迴** (`CalculateLayout`)。
    - **整合邏輯**：為了處理文字自動換行這種深度耦合的問題，Measure (算大小) 和 Arrange (排位置) 必須在此次遞迴中整合。父節點準備空間約束 -> 呼叫子節點的 `MeasureContent` -> 子節點回報所需尺寸 -> 父節點計算出 `layoutRect`。
 
 3. **Render Phase (渲染階段)**
@@ -59,10 +59,12 @@
 
 ## 5. 隔離機制與樣式效能優化 (Critical Optimizations)
 
-### 5.1 `IWindow` 排版根節點隔離
-* **問題**：「誰來啟動排版？」以及避免視窗被折疊時的不必要計算。
-* **解法**：引入 `IWindow` 作為標記介面。`RenderEngine` 全域走訪時，只對實作 `IWindow` (具有 `Begin()/End()`) 的節點發起獨立的 Layout Phase。
-* **強硬規範**：Window 的任意祖先節點不能是另一個 Window。這確保了排版樹不會發生重疊與死結。
+### 5.1 `ILayoutRoot` 與 `IRenderRoot` 根節點隔離
+* **問題**：「誰來啟動排版與渲染快取？」以及避免視窗被折疊時的不必要計算。
+* **解法**：引入 `ILayoutRoot` 與 `IRenderRoot` 作為標記介面與根節點隔離機制。
+  - `ILayoutRoot`：負責發起獨立的 Layout Phase。
+  - `IRenderRoot`：持有 `RenderListCache`，負責獨立維護該子樹的渲染快取。`RenderEngine` 全域走訪時，只對具有這些介面的根節點（如 `Window`, `MenuView`）發起對應階段。
+* **強硬規範**：Window 的任意祖先節點不能是另一個 Window。這確保了排版樹與快取樹不會發生重疊與死結。
 
 ### 5.2 `StyleProperty.LayoutAffecting` Flag 優化
 * **問題**：在 Layout Phase 呼叫 `MeasureContent` 算字體長度時，如果推入所有的樣式 (包含顏色、背景) 會浪費效能，甚至在沒有 Context 的情況下引發錯誤。

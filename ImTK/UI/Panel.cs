@@ -180,9 +180,9 @@ namespace ImTK.UI
             {
                 foreach (var window in s_windows.Values)
                 {
-                    window.BuildRenderList();
-                    RenderEngine.ComputeStyleFlat(window.m_renderList);
-                    RenderEngine.RenderFlat(window.m_renderList);
+                    window.UpdateRenderCache();
+                    RenderEngine.ComputeStyleFlat(window.RenderCache.renderList);
+                    RenderEngine.RenderFlat(window.RenderCache.renderList);
                 }
             }
             catch (Exception ex)

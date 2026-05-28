@@ -29,7 +29,7 @@ namespace ImTK.UI
         public bool noDocking { get => GetFlag(ImGuiWindowFlags.NoDocking); set => SetFlag(ImGuiWindowFlags.NoDocking, value); }
     }
 
-    public abstract class Window : VisualElement<Window.Style>, IWindow
+    public abstract class Window : VisualElement<Window.Style>, ILayoutRoot, IRenderRoot
     {
         public new class StyleKey : VisualElement.StyleKey
         {
@@ -184,44 +184,15 @@ namespace ImTK.UI
             RenderingContext.IsInsideWindow = false;
         }
 
-        internal bool m_isRenderListDirty = true;
-        internal readonly System.Collections.Generic.List<RenderOp> m_renderList = new System.Collections.Generic.List<RenderOp>();
+        public RenderListCache RenderCache { get; } = new RenderListCache();
 
-        public void MarkRenderListDirty()
+        internal void UpdateRenderCache()
         {
-            m_isRenderListDirty = true;
-        }
-
-        internal void BuildRenderList()
-        {
-            if (!m_isRenderListDirty) return;
-            m_renderList.Clear();
-            FlattenRecursive(this);
-            Persistence.ViewStatePersister.LoadWindowNewStates(this);
-            m_isRenderListDirty = false;
-        }
-
-        private void FlattenRecursive(VisualElement node)
-        {
-            // If we implement Display.None later, we can check it here and return early.
-
-            int beginIndex = m_renderList.Count;
-            m_renderList.Add(new RenderOp { Element = node, Type = RenderOpType.Begin });
-
-            int childCount = node.hierarchy.childCount;
-            for (int i = 0; i < childCount; i++)
+            if (RenderCache.isDirty)
             {
-                FlattenRecursive(node.hierarchy.ChildAt(i));
+                RenderCache.Update(this);
+                Persistence.ViewStatePersister.LoadWindowNewStates(this);
             }
-
-            m_renderList.Add(new RenderOp { Element = node, Type = RenderOpType.End });
-            
-            // Fast forward skipping the children = total nodes added after Begin excluding End
-            m_renderList[beginIndex] = new RenderOp { 
-                Element = node, 
-                Type = RenderOpType.Begin, 
-                SkipCount = m_renderList.Count - 1 - beginIndex - 1
-            };
         }
 
         private bool m_isOpenForImGuiCache;

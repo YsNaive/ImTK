@@ -16,7 +16,6 @@ namespace ImTK.Sandbox
             var config = new ImTKSilkConstant
             {
                 windowTitle = "ImTK Sandbox",
-                configFolderPath = "imgui",
                 windowWidth = 1280,
                 windowHeight = 800
             };
