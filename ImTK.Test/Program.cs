@@ -32,7 +32,6 @@ namespace ImTK.Test
             var config = new ImTKSilkConstant
             {
                 windowTitle = "ImTK Integration Test",
-                configFolderPath = ImTKEnvironment.LocalDataPath,
                 windowWidth = 1024,
                 windowHeight = 768
             };

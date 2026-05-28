@@ -9,7 +9,7 @@ namespace ImTK.Test.Database
     {
         public void Run()
         {
-            string originalOrg = ImTKEnvironment.OrganizationName;
+            string originalOrg = ImTKEnvironment.CompanyName;
             string originalApp = ImTKEnvironment.ApplicationName;
 
             try
@@ -20,8 +20,10 @@ namespace ImTK.Test.Database
             }
             finally
             {
-                ImTKEnvironment.OrganizationName = originalOrg;
+                ImTKEnvironment.CompanyName = originalOrg;
                 ImTKEnvironment.ApplicationName = originalApp;
+                ImTKEnvironment.LocalDataPath = null;
+                ImTKEnvironment.GlobalAssetPath = null;
             }
         }
 
@@ -32,7 +34,8 @@ namespace ImTK.Test.Database
 
         private void TestLocalDataPathWithOrg()
         {
-            ImTKEnvironment.OrganizationName = "TestOrg";
+            ImTKEnvironment.LocalDataPath = null;
+            ImTKEnvironment.CompanyName = "TestOrg";
             ImTKEnvironment.ApplicationName = "TestApp";
 
             string expected = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TestOrg", "TestApp");
@@ -41,14 +44,16 @@ namespace ImTK.Test.Database
 
         private void TestLocalDataPathWithoutOrg()
         {
-            ImTKEnvironment.OrganizationName = "";
+            ImTKEnvironment.LocalDataPath = null;
+            ImTKEnvironment.CompanyName = "";
             ImTKEnvironment.ApplicationName = "TestAppOnly";
 
             string expected = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TestAppOnly");
-            ImTKAssert.AreEqual(expected, ImTKEnvironment.LocalDataPath, "LocalDataPath should ignore empty OrganizationName.");
+            ImTKAssert.AreEqual(expected, ImTKEnvironment.LocalDataPath, "LocalDataPath should ignore empty CompanyName.");
 
-            ImTKEnvironment.OrganizationName = null;
-            ImTKAssert.AreEqual(expected, ImTKEnvironment.LocalDataPath, "LocalDataPath should ignore null OrganizationName.");
+            ImTKEnvironment.LocalDataPath = null;
+            ImTKEnvironment.CompanyName = "   "; // Test whitespace
+            ImTKAssert.AreEqual(expected, ImTKEnvironment.LocalDataPath, "LocalDataPath should ignore whitespace CompanyName.");
         }
     }
 }

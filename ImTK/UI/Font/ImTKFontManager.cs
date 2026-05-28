@@ -19,7 +19,7 @@ namespace ImTK.UI
 
         private static bool s_isFontDirty = true;
 
-        public static readonly int DefaultFontFamilyHash = new ImTK.Core.HashedString("ImGuiDefault").Hash;
+        public static readonly int DefaultFontFamilyHash = new ImTK.HashedString("ImGuiDefault").Hash;
         private static readonly string DefaultFontFamilyName = "ImGuiDefault";
 
         static ImTKFontManager()
@@ -54,7 +54,7 @@ namespace ImTK.UI
 
         public static void RegisterFamily(string name, params FontSource[] sources)
         {
-            int hash = new ImTK.Core.HashedString(name).Hash;
+            int hash = new ImTK.HashedString(name).Hash;
             if (s_fontFamilies.ContainsKey(hash))
             {
                 s_log.Warning($"FontFamily '{name}' already registered. Overwriting.");

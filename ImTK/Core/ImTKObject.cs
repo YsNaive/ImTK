@@ -45,6 +45,10 @@ namespace ImTK.Core
         /// </summary>
         protected void SubscribeEvent<T>(System.Action<T> handler) where T : ImTK.Event.IImTKEvent
         {
+            if (m_activeInHierarchy)
+            {
+                throw new System.InvalidOperationException($"SubscribeEvent for {typeof(T).Name} cannot be called after the object is enabled. Please call it in the constructor.");
+            }
             // 只儲存訂閱函式，不立即呼叫 GlobalSubscribe。
             // 實際訂閱會在 InternalOnEnable() 時才生效，與 Object 的 active 狀態同步。
             System.Func<System.Action> subscribe = () => ImTK.Event.ImTKEventBus.GlobalSubscribe(handler);

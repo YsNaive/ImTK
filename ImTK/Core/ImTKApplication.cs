@@ -120,7 +120,11 @@ namespace ImTK.Core
                 // Sinks must be initialized before anything else to ensure early logs (and fatal errors) are captured.
                 var allTypes = AppDomain.CurrentDomain.GetAssemblies()
                     .Where(a => !a.FullName.StartsWith("System") && !a.FullName.StartsWith("Microsoft"))
-                    .SelectMany(a => a.GetTypes());
+                    .SelectMany(a => 
+                    {
+                        try { return a.GetTypes(); }
+                        catch (ReflectionTypeLoadException e) { return e.Types.Where(t => t != null); }
+                    });
 
                 var sinkTypes = allTypes.Where(t => t.IsClass && !t.IsAbstract && typeof(ILogSink).IsAssignableFrom(t));
 

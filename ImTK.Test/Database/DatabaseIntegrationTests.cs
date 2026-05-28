@@ -12,7 +12,7 @@ namespace ImTK.Test.Database
         public void Run()
         {
             // Setup dummy environment
-            ImTKEnvironment.OrganizationName = "ImTK_Test";
+            ImTKEnvironment.CompanyName = "ImTK_Test";
             ImTKEnvironment.ApplicationName = "IntegrationTestApp";
 
             try
@@ -20,6 +20,10 @@ namespace ImTK.Test.Database
                 // Force Initialization (usually done by DatabaseModule)
                 Resource.Initialize();
                 ImTKDatabase.Initialize();
+
+                Resource.RegisterImporter(typeof(MockReadOnlyAsset), typeof(MockReadOnlyAssetImporter));
+                ImTKDatabase.RegisterImporter(typeof(MockSaveableAsset), typeof(MockSaveableAssetImporter));
+                ImTKDatabase.RegisterExporter(typeof(MockSaveableAsset), typeof(MockSaveableAssetExporter));
 
                 TestResourceAPI();
                 TestDatabaseAPI();
@@ -42,9 +46,10 @@ namespace ImTK.Test.Database
         {
             // Global should be read only
             string testFile = Path.Combine(ImTKEnvironment.GlobalAssetPath, "test_resource.txt");
+            Directory.CreateDirectory(ImTKEnvironment.GlobalAssetPath);
             File.WriteAllText(testFile, "Global Data");
 
-            var asset = Resource.GetAsset<MockReadOnlyAsset>("test_resource.txt");
+            var asset = Resource.Load<MockReadOnlyAsset>("test_resource.txt");
             ImTKAssert.AreEqual("Global Data", asset.Content, "Resource failed to load global data.");
 
             File.Delete(testFile);
@@ -52,11 +57,10 @@ namespace ImTK.Test.Database
 
         private void TestDatabaseAPI()
         {
-            var asset = ImTKDatabase.CreateAsset<MockSaveableAsset>("prefs.json");
+            var asset = ImTKDatabase.Load<MockSaveableAsset>("prefs.json");
             asset.Content = "User Prefs";
 
-            // User can call ImTKDatabase.MarkDirty OR asset.MarkDirty()
-            asset.MarkDirty();
+            asset.IsDirty = true;
 
             ImTKDatabase.SaveAssets();
 
@@ -66,12 +70,12 @@ namespace ImTK.Test.Database
 
         private void TestUnloadAll()
         {
-            var asset = ImTKDatabase.GetAsset<MockSaveableAsset>("prefs.json");
-            ImTKAssert.IsFalse(asset.IsDisposed, "Asset should be active.");
+            var asset = ImTKDatabase.Load<MockSaveableAsset>("prefs2.json");
+            ImTKAssert.IsFalse(asset.WasDisposed, "Asset should be active.");
 
             ImTKDatabase.UnloadAll();
 
-            ImTKAssert.IsTrue(asset.IsDisposed, "Asset should be disposed after UnloadAll.");
+            ImTKAssert.IsTrue(asset.WasDisposed, "Asset should be disposed after UnloadAll.");
         }
     }
 }

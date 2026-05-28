@@ -1,6 +1,6 @@
 using System;
 
-namespace ImTK.Core
+namespace ImTK
 {
     public struct RectInt : IEquatable<RectInt>
     {

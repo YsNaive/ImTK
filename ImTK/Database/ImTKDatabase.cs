@@ -51,5 +51,10 @@ namespace ImTK.Database
         {
             Manager.SaveAssets();
         }
+
+        internal static void UnloadAll()
+        {
+            Manager.UnloadAll();
+        }
     }
 }

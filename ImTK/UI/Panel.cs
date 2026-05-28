@@ -291,18 +291,18 @@ namespace ImTK.UI
 
             ImGui.End();
 
-            try
+            foreach (var window in s_windows.Values)
             {
-                foreach (var window in s_windows.Values)
+                try
                 {
                     window.UpdateRenderCache();
                     RenderEngine.ComputeStyleFlat(window.RenderCache.renderList);
                     RenderEngine.RenderFlat(window.RenderCache.renderList);
                 }
-            }
-            catch (Exception ex)
-            {
-                s_log.Error(ex, $"Exception in Render of Windows");
+                catch (Exception ex)
+                {
+                    s_log.Error(ex, $"Exception in Render of Window: {window.imguiId}");
+                }
             }
 
             if (pushedFont)

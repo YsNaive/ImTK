@@ -22,9 +22,18 @@ public class ConsoleSink : LogSinkBase
     {
         lock (m_lock)
         {
-            // TODO: Implement color formatting based on entry.Level
-            // when the VisualElement Style system is developed.
+            var originalColor = Console.ForegroundColor;
+            switch (entry.Level)
+            {
+                case LogLevel.Trace: Console.ForegroundColor = ConsoleColor.DarkGray; break;
+                case LogLevel.Debug: Console.ForegroundColor = ConsoleColor.Gray; break;
+                case LogLevel.Info: Console.ForegroundColor = ConsoleColor.White; break;
+                case LogLevel.Warning: Console.ForegroundColor = ConsoleColor.Yellow; break;
+                case LogLevel.Error:
+                case LogLevel.Fatal: Console.ForegroundColor = ConsoleColor.Red; break;
+            }
             Console.WriteLine(m_formatter(entry));
+            Console.ForegroundColor = originalColor;
         }
     }
 }

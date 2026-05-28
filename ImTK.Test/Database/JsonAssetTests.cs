@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using ImTK.Database;
+using ImTK.Database.Importers;
 using ImTK.Test.Framework;
 
 namespace ImTK.Test.Database
@@ -10,7 +11,7 @@ namespace ImTK.Test.Database
         private string s_testRoot;
 
         // 一個簡單的測試資料類別
-        public class DummyConfig
+        public class DummyConfigAsset : ImTKAsset
         {
             public int Width { get; set; } = 800;
             public int Height { get; set; } = 600;
@@ -40,16 +41,18 @@ namespace ImTK.Test.Database
         private void TestCreateAndSaveJson()
         {
             var manager = new AssetManager(s_testRoot, false);
+            manager.RegisterImporter(typeof(DummyConfigAsset), new FallbackJsonAssetHandler<DummyConfigAsset>());
+            manager.RegisterExporter(typeof(DummyConfigAsset), new FallbackJsonAssetHandler<DummyConfigAsset>());
 
             // 測試創建新的 JSON
-            var asset = manager.CreateAsset<JsonAsset<DummyConfig>>("config.json");
-            ImTKAssert.NotNull(asset.Data, "Data should not be null after creation.");
-            ImTKAssert.AreEqual(800, asset.Data.Width, "Should have default values.");
+            var asset = manager.Load<DummyConfigAsset>("config.json");
+            ImTKAssert.NotNull(asset, "Asset should not be null after creation.");
+            ImTKAssert.AreEqual(800, asset.Width, "Should have default values.");
 
             // 修改並存檔
-            asset.Data.Width = 1920;
-            asset.Data.Title = "Custom";
-            manager.MarkDirty(asset);
+            asset.Width = 1920;
+            asset.Title = "Custom";
+            asset.IsDirty = true;
             manager.SaveAssets();
 
             // 驗證檔案確實寫入且包含正確格式
@@ -66,11 +69,13 @@ namespace ImTK.Test.Database
             File.WriteAllText(Path.Combine(s_testRoot, "load_test.json"), jsonString);
 
             var manager = new AssetManager(s_testRoot, false);
-            var asset = manager.GetAsset<JsonAsset<DummyConfig>>("load_test.json");
+            manager.RegisterImporter(typeof(DummyConfigAsset), new FallbackJsonAssetHandler<DummyConfigAsset>());
+            
+            var asset = manager.Load<DummyConfigAsset>("load_test.json");
 
             // 驗證資料是否正確反序列化
-            ImTKAssert.AreEqual(1280, asset.Data.Width, "Loaded width mismatch.");
-            ImTKAssert.AreEqual("Loaded", asset.Data.Title, "Loaded title mismatch.");
+            ImTKAssert.AreEqual(1280, asset.Width, "Loaded width mismatch.");
+            ImTKAssert.AreEqual("Loaded", asset.Title, "Loaded title mismatch.");
         }
 
         private void TestHandleMalformedJson()
@@ -80,12 +85,13 @@ namespace ImTK.Test.Database
             File.WriteAllText(Path.Combine(s_testRoot, "bad.json"), badJson);
 
             var manager = new AssetManager(s_testRoot, false);
+            manager.RegisterImporter(typeof(DummyConfigAsset), new FallbackJsonAssetHandler<DummyConfigAsset>());
 
             // OnLoad 應該攔截例外並返回一個擁有預設值的 Data，不應直接 Crash
-            var asset = manager.GetAsset<JsonAsset<DummyConfig>>("bad.json");
+            var asset = manager.Load<DummyConfigAsset>("bad.json");
 
-            ImTKAssert.NotNull(asset.Data, "Fallback data should not be null.");
-            ImTKAssert.AreEqual(800, asset.Data.Width, "Should fallback to default values on parse error.");
+            ImTKAssert.NotNull(asset, "Fallback data should not be null.");
+            ImTKAssert.AreEqual(800, asset.Width, "Should fallback to default values on parse error.");
         }
     }
 }

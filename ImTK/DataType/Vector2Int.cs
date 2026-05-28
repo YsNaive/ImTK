@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace ImTK.Core
+namespace ImTK
 {
     public struct Vector2Int : IEquatable<Vector2Int>
     {

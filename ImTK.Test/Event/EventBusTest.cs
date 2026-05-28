@@ -15,10 +15,14 @@ namespace ImTK.Test.Event
         {
             public int ReceivedValue { get; private set; } = 0;
 
+            public DummyObject()
+            {
+                SubscribeEvent<OnTestMessageEvent>(e => ReceivedValue = e.Value);
+            }
+
             protected internal override void OnEnable()
             {
                 base.OnEnable();
-                SubscribeEvent<OnTestMessageEvent>(e => ReceivedValue = e.Value);
             }
         }
 
@@ -30,8 +34,8 @@ namespace ImTK.Test.Event
 
             var dummy = new DummyObject();
 
-            // Trigger OnEnable to register the subscription
-            dummy.OnEnable();
+            // Trigger InternalOnEnable to register the subscription
+            dummy.InternalOnEnable();
 
             // Publish an event
             ImTKEventBus.Publish(new OnTestMessageEvent { Value = 42 });
@@ -42,7 +46,7 @@ namespace ImTK.Test.Event
             ImTKAssert.AreEqual(42, dummy.ReceivedValue, "DummyObject should have received the event with value 42.");
 
             // Test auto-unbinding
-            dummy.OnDisable(); // Should unbind
+            dummy.InternalOnDisable(); // Should unbind
 
             ImTKEventBus.Publish(new OnTestMessageEvent { Value = 99 });
             ImTKDispatcher.ProcessQueue();

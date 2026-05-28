@@ -34,5 +34,10 @@ namespace ImTK.Database
         {
             Manager.RegisterImporter(assetType, importerTypeOrInstance);
         }
+
+        internal static void UnloadAll()
+        {
+            Manager.UnloadAll();
+        }
     }
 }

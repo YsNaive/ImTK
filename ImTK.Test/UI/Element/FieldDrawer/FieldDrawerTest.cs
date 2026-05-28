@@ -89,7 +89,7 @@ namespace ImTK.Test.UI.Element.FieldDrawer
             ImTKAssert.AreEqual(DrawerLayoutMode.Expand, drawer.layoutMode, "LayoutMode should be modifiable.");
 
             var objDrawer = new ObjectDrawer();
-            ImTKAssert.AreEqual(DrawerLayoutMode.Expand, objDrawer.layoutMode, "ObjectDrawer should default to Expand mode.");
+            ImTKAssert.AreEqual(DrawerLayoutMode.Inline, objDrawer.layoutMode, "ObjectDrawer should default to Inline mode.");
         }
 
 

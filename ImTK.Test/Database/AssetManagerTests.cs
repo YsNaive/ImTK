@@ -34,78 +34,70 @@ namespace ImTK.Test.Database
         private void TestReadOnlyMode()
         {
             var manager = new AssetManager(s_testRoot, true);
+            manager.RegisterImporter(typeof(MockReadOnlyAsset), typeof(MockReadOnlyAssetImporter));
 
-            // Test GetAsset file not found
-            ImTKAssert.Throws<AssetNotFoundException>(() => manager.GetAsset<MockReadOnlyAsset>("notfound.txt"));
+            // Load non-existent file, importer should provide default content
+            var asset = manager.Load<MockReadOnlyAsset>("notfound.txt");
+            ImTKAssert.AreEqual("Default Mock Content", asset.Content, "Importer should handle missing files gracefully.");
+            ImTKAssert.IsTrue(asset.IsReadOnly, "Asset loaded from read-only manager should be read-only.");
 
             // Create a file manually
             File.WriteAllText(Path.Combine(s_testRoot, "readonly.txt"), "Real Content");
 
-            // Test GetAsset
-            var asset = manager.GetAsset<MockReadOnlyAsset>("readonly.txt");
-            ImTKAssert.AreEqual("Real Content", asset.Content, "Should load content correctly.");
-            ImTKAssert.AreEqual(1ul, (ulong)asset.Version, "Initial version should be 1.");
+            // Load existing file
+            var asset2 = manager.Load<MockReadOnlyAsset>("readonly.txt");
+            ImTKAssert.AreEqual("Real Content", asset2.Content, "Should load content correctly.");
 
-            // Test CreateAsset rejected
-            ImTKAssert.Throws<NotSupportedException>(() => manager.CreateAsset<MockSaveableAsset>("new.txt"));
-            ImTKAssert.Throws<NotSupportedException>(() => manager.GetOrCreateAsset<MockSaveableAsset>("new.txt"));
-
-            // Test MarkDirty / SaveAssets ignored
-            var saveable = new MockSaveableAsset { Path = "fake.txt" };
-            manager.MarkDirty(saveable);
-            manager.SaveAssets(); // Should not crash
+            // Test SaveAssets ignored for read-only
+            manager.RegisterExporter(typeof(MockReadOnlyAsset), typeof(MockSaveableAssetExporter)); // fake exporter just to test
+            asset.IsDirty = true;
+            manager.SaveAssets(); // Should not crash, and should not write because of IsReadOnly
         }
 
         private void TestReadWriteMode()
         {
             var manager = new AssetManager(s_testRoot, false);
+            manager.RegisterImporter(typeof(MockSaveableAsset), typeof(MockSaveableAssetImporter));
+            manager.RegisterExporter(typeof(MockSaveableAsset), typeof(MockSaveableAssetExporter));
 
-            // Test CreateAsset
-            var asset = manager.CreateAsset<MockSaveableAsset>("rw_new.txt");
-            ImTKAssert.IsFalse(asset.IsDirty, "Asset should be clean after initial save.");
-            ImTKAssert.IsTrue(File.Exists(Path.Combine(s_testRoot, "rw_new.txt")), "File should be created.");
-            ImTKAssert.AreEqual("Initial Value", File.ReadAllText(Path.Combine(s_testRoot, "rw_new.txt")), "File content mismatch.");
-
-            // Test CreateAsset already exists
-            ImTKAssert.Throws<AssetAlreadyExistsException>(() => manager.CreateAsset<MockSaveableAsset>("rw_new.txt"));
-
-            // Test GetOrCreateAsset (Get)
-            var asset2 = manager.GetOrCreateAsset<MockSaveableAsset>("rw_new.txt");
-            ImTKAssert.IsTrue(ReferenceEquals(asset, asset2), "Should return cached instance.");
-
-            // Test GetOrCreateAsset (Create)
-            var asset3 = manager.GetOrCreateAsset<MockSaveableAsset>("rw_auto.txt");
-            ImTKAssert.IsTrue(File.Exists(Path.Combine(s_testRoot, "rw_auto.txt")), "File should be created automatically.");
-
-            // Test MarkDirty & SaveAssets
-            asset3.Content = "Updated Value";
-            manager.MarkDirty(asset3);
-            ImTKAssert.IsTrue(asset3.IsDirty, "Should be marked as dirty.");
-            ImTKAssert.AreEqual(2ul, (ulong)asset3.Version, "Version should increment.");
-
+            // Test CreateAsset via Save
+            var asset = manager.Load<MockSaveableAsset>("rw_new.txt");
+            ImTKAssert.IsFalse(asset.IsReadOnly, "Should be writable.");
+            
+            asset.Content = "Initial Value From Test";
+            asset.IsDirty = true;
+            
             manager.SaveAssets();
-            ImTKAssert.IsFalse(asset3.IsDirty, "Should be clean after save.");
-            ImTKAssert.AreEqual("Updated Value", File.ReadAllText(Path.Combine(s_testRoot, "rw_auto.txt")), "Updated content mismatch.");
+            ImTKAssert.IsFalse(asset.IsDirty, "Asset should be clean after save.");
+            ImTKAssert.IsTrue(File.Exists(Path.Combine(s_testRoot, "rw_new.txt")), "File should be created.");
+            ImTKAssert.AreEqual("Initial Value From Test", File.ReadAllText(Path.Combine(s_testRoot, "rw_new.txt")), "File content mismatch.");
+
+            // Test Get cached
+            var asset2 = manager.Load<MockSaveableAsset>("rw_new.txt");
+            ImTKAssert.IsTrue(ReferenceEquals(asset, asset2), "Should return cached instance.");
         }
 
         private void TestTypeMismatch()
         {
             var manager = new AssetManager(s_testRoot, false);
-            manager.CreateAsset<MockSaveableAsset>("conflict.txt");
+            manager.RegisterImporter(typeof(MockSaveableAsset), typeof(MockSaveableAssetImporter));
+            manager.RegisterImporter(typeof(MockReadOnlyAsset), typeof(MockReadOnlyAssetImporter));
 
-            ImTKAssert.Throws<AssetTypeMismatchException>(() => manager.GetAsset<MockReadOnlyAsset>("conflict.txt"));
+            manager.Load<MockSaveableAsset>("conflict.txt");
+            ImTKAssert.Throws<AssetTypeMismatchException>(() => manager.Load<MockReadOnlyAsset>("conflict.txt"));
         }
 
         private void TestPathTraversal()
         {
             var manager = new AssetManager(s_testRoot, false);
+            manager.RegisterImporter(typeof(MockReadOnlyAsset), typeof(MockReadOnlyAssetImporter));
 
-            ImTKAssert.Throws<AssetPathInvalidException>(() => manager.GetAsset<MockReadOnlyAsset>("/absolute.txt"));
+            ImTKAssert.Throws<AssetPathInvalidException>(() => manager.Load<MockReadOnlyAsset>("/absolute.txt"));
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
-                ImTKAssert.Throws<AssetPathInvalidException>(() => manager.GetAsset<MockReadOnlyAsset>("C:\\absolute.txt"));
+                ImTKAssert.Throws<AssetPathInvalidException>(() => manager.Load<MockReadOnlyAsset>("C:\\absolute.txt"));
             }
-            ImTKAssert.Throws<AssetPathInvalidException>(() => manager.GetAsset<MockReadOnlyAsset>("../../escape.txt"));
+            ImTKAssert.Throws<AssetPathInvalidException>(() => manager.Load<MockReadOnlyAsset>("../../escape.txt"));
         }
     }
 }

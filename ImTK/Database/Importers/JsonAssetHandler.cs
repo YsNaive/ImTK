@@ -63,6 +63,7 @@ namespace ImTK.Database.Importers
     /// </summary>
     public class FallbackJsonAssetHandler<T> : IAssetImporter<T>, IAssetExporter<T> where T : ImTKAsset, new()
     {
+        private static readonly ImTK.Log.LogContext s_log = new ImTK.Log.LogContext("FallbackJsonAssetHandler");
         private readonly JsonAssetHandler<T> _underlyingHandler;
 
         public FallbackJsonAssetHandler(JsonSerializerOptions? options = null)
@@ -74,15 +75,28 @@ namespace ImTK.Database.Importers
         {
             if (!File.Exists(absolutePath))
             {
-                // 如果檔案不存在，直接建立一個新的實例，並標記為 Dirty 以便之後自動存檔
-                var newAsset = new T();
-                newAsset.Path = normalizedPath;
-                newAsset.Version = 1;
-                newAsset.IsDirty = true; // 強制在下次 SaveAssets 時產生檔案
-                return newAsset;
+                return CreateFallback(normalizedPath);
             }
 
-            return _underlyingHandler.Import(absolutePath, normalizedPath);
+            try
+            {
+                return _underlyingHandler.Import(absolutePath, normalizedPath);
+            }
+            catch (Exception ex)
+            {
+                s_log.Error(ex, $"Failed to load JSON asset from {absolutePath}. File might be corrupted. Falling back to default values.");
+                return CreateFallback(normalizedPath);
+            }
+        }
+
+        private T CreateFallback(string normalizedPath)
+        {
+            // 如果檔案不存在或損毀，直接建立一個新的實例，並標記為 Dirty 以便之後自動存檔
+            var newAsset = new T();
+            newAsset.Path = normalizedPath;
+            newAsset.Version = 1;
+            newAsset.IsDirty = true; // 強制在下次 SaveAssets 時產生檔案
+            return newAsset;
         }
 
         public void Export(T asset, string absolutePath)

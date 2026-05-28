@@ -12,6 +12,8 @@ namespace ImTK.Database
     /// </summary>
     internal class AssetManager
     {
+        private static readonly ImTK.Log.LogContext s_log = new ImTK.Log.LogContext("AssetManager");
+
         private readonly string _baseDirectory;
         private readonly bool _isReadOnly;
 
@@ -104,6 +106,37 @@ namespace ImTK.Database
 
         #endregion
 
+        #region Wrapper Cache
+
+        private interface IAssetExporterWrapper { void Export(IAsset asset, string path); }
+        private class AssetExporterWrapper<T> : IAssetExporterWrapper where T : IAsset
+        {
+            private readonly IAssetExporter<T> _exporter;
+            public AssetExporterWrapper(IAssetExporter<T> exporter) { _exporter = exporter; }
+            public void Export(IAsset asset, string path) => _exporter.Export((T)asset, path);
+        }
+
+        private readonly ConcurrentDictionary<Type, IAssetExporterWrapper> _exporterWrappers = new();
+
+        private IAssetExporterWrapper GetExporterWrapper(Type assetType)
+        {
+            if (_exporterWrappers.TryGetValue(assetType, out var wrapper))
+                return wrapper;
+
+            var getExporterMethod = typeof(AssetManager)
+                .GetMethod(nameof(GetExporter), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                .MakeGenericMethod(assetType);
+            
+            var exporter = getExporterMethod.Invoke(this, null);
+            var wrapperType = typeof(AssetExporterWrapper<>).MakeGenericType(assetType);
+            wrapper = (IAssetExporterWrapper)Activator.CreateInstance(wrapperType, exporter)!;
+            
+            _exporterWrappers.TryAdd(assetType, wrapper);
+            return wrapper;
+        }
+
+        #endregion
+
         #region Core IO
 
         public T Load<T>(string relativePath) where T : IAsset
@@ -128,8 +161,17 @@ namespace ImTK.Database
             }
 
             // 尋找 Importer 並執行
-            var importer = GetImporter<T>();
-            var newAsset = importer.Import(absolutePath, normalizedPath);
+            IAsset newAsset;
+            try
+            {
+                var importer = GetImporter<T>();
+                newAsset = importer.Import(absolutePath, normalizedPath);
+            }
+            catch (Exception ex)
+            {
+                s_log.Error(ex, $"Exception occurred while loading asset from {normalizedPath}");
+                throw;
+            }
 
             // 注入狀態
             if (newAsset is ImTKAsset implAsset)
@@ -138,7 +180,7 @@ namespace ImTK.Database
             }
 
             _cache.TryAdd(normalizedPath, newAsset);
-            return newAsset;
+            return (T)newAsset;
         }
 
         public void SaveAssets()
@@ -159,19 +201,19 @@ namespace ImTK.Database
             Type assetType = asset.GetType();
             string absolutePath = Path.Combine(_baseDirectory, normalizedPath);
 
-            // 這裡必須透過反射呼叫 GetExporter<T>() 和 Export()，因為我們在迴圈中只知道它是 IAsset
-            var methodInfo = typeof(AssetManager)
-                .GetMethod(nameof(GetExporter), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-                .MakeGenericMethod(assetType);
-
-            var exporter = methodInfo.Invoke(this, null);
-
-            var exportMethod = exporter!.GetType().GetMethod("Export")!;
-            exportMethod.Invoke(exporter, new object[] { asset, absolutePath });
-
-            if (asset is ImTKAsset implAsset)
+            try
             {
-                implAsset.IsDirty = false;
+                var wrapper = GetExporterWrapper(assetType);
+                wrapper.Export(asset, absolutePath);
+
+                if (asset is ImTKAsset implAsset)
+                {
+                    implAsset.IsDirty = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                s_log.Error(ex, $"Failed to export asset to {normalizedPath}");
             }
         }
 
