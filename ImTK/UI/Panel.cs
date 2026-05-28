@@ -22,6 +22,9 @@ namespace ImTK.UI
 
         private static WindowHostElement s_hostElement;
 
+        private float m_cacheSaveTimer = 0f;
+        private const float CacheSaveInterval = 10f;
+
         protected Panel() { }
 
         internal static void RegisterWindow(Window window)
@@ -50,6 +53,13 @@ namespace ImTK.UI
 
         protected internal override void OnLogicUpdate()
         {
+            m_cacheSaveTimer += (float)Time.UnscaledDeltaTime;
+            if (m_cacheSaveTimer >= CacheSaveInterval)
+            {
+                Persistence.ViewStatePersister.SaveAllWindowStates(s_windows.Values);
+                m_cacheSaveTimer = 0f;
+            }
+
             if (ImTKTheme.isGlobalThemeDirty)
             {
                 ImTKTheme.GlobalTheme.ApplyToImGui();
@@ -193,6 +203,7 @@ namespace ImTK.UI
 
         protected internal override void OnClose()
         {
+            Persistence.ViewStatePersister.SaveAllWindowStates(s_windows.Values);
             ImTKTheme.onGlobalThemeChanged -= OnGlobalThemeChanged;
             s_hostElement = null;
             s_windows.Clear();

@@ -18,6 +18,6 @@ namespace ImTK.Silk
         /// <summary>
         /// The path where ImGui configuration (.ini) and ImTK window states are saved.
         /// </summary>
-        public string configFolderPath = "Config";
+        public string configFolderPath = "imgui";
     }
 }

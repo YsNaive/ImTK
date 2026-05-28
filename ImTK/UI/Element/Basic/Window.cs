@@ -197,6 +197,7 @@ namespace ImTK.UI
             if (!m_isRenderListDirty) return;
             m_renderList.Clear();
             FlattenRecursive(this);
+            Persistence.ViewStatePersister.LoadWindowNewStates(this);
             m_isRenderListDirty = false;
         }
 

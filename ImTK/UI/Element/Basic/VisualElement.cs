@@ -500,6 +500,12 @@ namespace ImTK.UI
         public PickingMode pickingMode { get; set; } = PickingMode.Position;
         internal bool m_wasHovered = false;
         internal bool m_useAutoId = true;
+        
+        public string persistenceKey { get; set; } = null;
+        internal bool m_hasLoadedState = false;
+
+        protected internal virtual void OnWriteState(Persistence.StateWriter writer) { }
+        protected internal virtual void OnReadState(Persistence.StateReader reader) { }
 
         private Dictionary<Type, Delegate> m_callbacks;
 

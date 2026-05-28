@@ -21,8 +21,9 @@ namespace ImTK.Database
             ImTKDatabase.Initialize();
 
             // 2. 註冊內建的解析器 (開放式泛型)
-            // 開發者如果需要自訂，可以在系統啟動後覆蓋這些註冊，或註冊具體的類別。
-            // （此處示範留空，開發者需在應用層級手動註冊，或者我們可以在這裡預先註冊幾個常用介面）
+            var cacheHandler = new FallbackJsonAssetHandler<ImTKCacheAsset>();
+            ImTKDatabase.RegisterImporter(typeof(ImTKCacheAsset), cacheHandler);
+            ImTKDatabase.RegisterExporter(typeof(ImTKCacheAsset), cacheHandler);
         }
 
         protected internal override void OnClose()
