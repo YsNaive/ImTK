@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Added (新增)
+- **自動復原視窗 (Workspace Restoration)**：實作了基於 `ImTKCacheAsset` 的工作區持久化機制。系統現在會自動紀錄當前所有開啟的視窗 (`WindowSession`)，並於應用程式下次啟動時透過反射自動復原。支援透過 `WindowFlags.dontSaveOpenState` 過濾暫時性對話框。
 - **RenderListCache 渲染快取架構**：新增 `IRenderRoot` 介面與 `RenderListCache` 類別，為渲染樹的快取建立獨立生命週期。`GetRenderRoot()` 取代了以往直接依賴 `GetWindow()` 的髒標記傳遞機制，讓非 `Window` 的根節點（如 `MenuView`）也能獨立維護自身的渲染快取。
 - **ImTKEnvironment 重構**：實作了全域環境變數的懶漢式延遲載入 (Lazy Evaluation)。現在會自動透過反射汲取 `[AssemblyCompany]` 與 `[AssemblyProduct]` 作為預設的 `CompanyName` 與 `ApplicationName`。
 - 新增 `DevelopmentLocalDataPath`：支援在開發模式 (`IsDevelopment = true`) 下進行路徑隔離，避免測試資料污染系統正式的 `%AppData%` 目錄。
@@ -32,6 +33,7 @@
 - **TextElement 自動折行**：為 `TextElement` 實作了 `enableWordWrap` 屬性 (預設為 `true`)。結合排版引擎傳遞的 `AvailableWidth`，精確計算文字折行後的高度，並利用 `PushTextWrapPos` 確保在渲染時不會撐爆畫面。
 
 ### Changed (變更)
+- **ImTKApplication 生命週期升級**：在 `ImTKApplication.Initialize()` 流程中正式補上 `Phase 3: Enable` 階段。現在所有註冊的 `ImTKModule` 皆會正確觸發 `OnEnable()`，完善了原本缺失的模組啟動事件鏈。
 - **RenderEngine 扁平化渲染統一**：移除了 `Window` 獨立的 `FlattenRecursive`，全面統一改由 `RenderEngine.BuildRenderListRecursive` 負責渲染清單建立。
 - **ILayoutRoot 語意更名**：將原有的 `IWindow` 介面更名為 `ILayoutRoot`，使其更精確地反映其作為「排版引擎計算起始點」的職責。
 - **O(1) 渲染過濾最佳化**：修正 `RenderEngine.BuildRenderListRecursive`，使其不再剃除 `display: none` 的節點。現在所有節點都會被加入快取中，並於繪製時依賴 `SkipCount` 進行 O(1) 的渲染跳躍。此舉確保動態修改 `style.display` 時不需要昂貴地重建 `RenderListCache`。
@@ -46,6 +48,9 @@
 - **`StyleFontSize` 升級**：將其重構為支援隱式轉換的中繼型別，允許同時綁定 `FontSize` 列舉或是絕對像素大小 (Int)，並與底層的 `StyleProperty` 記憶體佈局完美映射。
 
 ### Fixed (修復)
+- **ImTKLog 早期日誌遺失問題**：修復了 `ImTKLog` 在系統尚未完成 Sink (如 `ConsoleSink`) 註冊前，直接丟棄日誌的缺陷。現已導入 `ConcurrentQueue` 作為早期緩衝區，確保框架在極早期階段（Phase 0 之前）發出的所有偵錯日誌皆能在第一個 Sink 掛載時完整回放 (Replay)。
+- **視窗復原型別解析錯誤**：修復了 `RestoreWorkspace` 使用 `Type.GetType` 無法精確命中非核心組件的問題。現已加入 Fallback 機制，當解析失敗時主動掃描 `AppDomain.CurrentDomain.GetAssemblies()` 以確保型別載入的百分百成功率。
+- **ImGui SetWindowFocus 崩潰問題**：修復了在視窗尚未進行第一幀繪製 (`OnBeginRender`) 前，呼叫 `ImGui.SetWindowFocus` 會導致崩潰的底層 Bug。在 `Window` 加入 `m_hasRenderedAtLeastOnce` 追蹤機制，完美解決延遲與自動復原的焦點衝突。
 - **RenderEngine 渲染重入 (Re-entrancy) 漏洞**：修復 `RenderEngine.RenderFlat` 共用單一 `t_tempRenderList` 靜態列表，導致嵌套呼叫 (Nested RenderFlat) 時外層迴圈被強制覆寫並截斷的問題。已將其替換為基於 `Stack<List<RenderOp>>` 的執行緒安全物件池，解決 `Missing PopID` 與 `Debug##Default` 幽靈視窗崩潰。
 - **單行容器交叉軸溢出拉伸 Bug**：修復了單行彈性容器 (Single-line Flex Container) 在 `ArrangeContent` 佈局時，錯誤地因內部子元件溢出而將容器交叉軸 (Cross Axis) 撐開，導致其他設定為 `Stretch` 的子元件跟著異常變大的 Bug。現已嚴格遵守容器自身的尺寸約束。
 - 修復了 `ImGuiStyleHandler.PushFontOnly` 與 `GetLayoutHash` 未正確對齊 `StyleFontSize` 新記憶體結構 (Enum / Int) 的問題，確保字型絕對縮放大小測量精準且雜湊比對安全。

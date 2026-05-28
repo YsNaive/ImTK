@@ -27,6 +27,15 @@ namespace ImTK.UI
         public bool noNavFocus { get => GetFlag(ImGuiWindowFlags.NoNavFocus); set => SetFlag(ImGuiWindowFlags.NoNavFocus, value); }
         public bool unsavedDocument { get => GetFlag(ImGuiWindowFlags.UnsavedDocument); set => SetFlag(ImGuiWindowFlags.UnsavedDocument, value); }
         public bool noDocking { get => GetFlag(ImGuiWindowFlags.NoDocking); set => SetFlag(ImGuiWindowFlags.NoDocking, value); }
+        /// <summary>
+        /// 是否隱藏右上角的關閉按鈕 (X)。此非 ImGui 原生 Flag，而是透過是否傳入 isOpen 參數來控制。
+        /// </summary>
+        public bool noClose { get; set; } = false;
+
+        /// <summary>
+        /// 若為 true，此視窗將不會被加入自動復原的持久化清單中。適合用於暫時性的 Dialog 或報表視窗。
+        /// </summary>
+        public bool dontSaveOpenState { get; set; } = false;
     }
 
     public abstract class Window : VisualElement<Window.Style>, ILayoutRoot, IRenderRoot
@@ -136,7 +145,10 @@ namespace ImTK.UI
             if (Panel.TryGetWindow(key, out Window existingWindow))
             {
                 s_log.Trace($"Window '{key.WindowId}' of type {key.Type.Name} already open. Focusing.");
-                ImGui.SetWindowFocus(existingWindow.imguiId);
+                if (existingWindow.m_hasRenderedAtLeastOnce)
+                {
+                    ImGui.SetWindowFocus(existingWindow.imguiId);
+                }
                 return (T)existingWindow;
             }
 
@@ -151,7 +163,39 @@ namespace ImTK.UI
             return newWindow;
         }
 
+        public static Window Open(Type windowType, string windowId = "")
+        {
+            if (!typeof(Window).IsAssignableFrom(windowType))
+            {
+                s_log.Error($"Type {windowType.Name} is not a Window.");
+                return null;
+            }
+
+            WindowKey key = new WindowKey(windowType, windowId);
+
+            if (Panel.TryGetWindow(key, out Window existingWindow))
+            {
+                s_log.Trace($"Window '{key.WindowId}' of type {key.Type.Name} already open. Focusing.");
+                if (existingWindow.m_hasRenderedAtLeastOnce)
+                {
+                    ImGui.SetWindowFocus(existingWindow.imguiId);
+                }
+                return existingWindow;
+            }
+
+            s_log.Debug($"Creating new window instance for type {windowType.Name} with ID '{windowId}'.");
+            Window newWindow = (Window)Activator.CreateInstance(windowType);
+            if (!string.IsNullOrEmpty(windowId))
+            {
+                newWindow.windowId = windowId;
+            }
+
+            newWindow.Open();
+            return newWindow;
+        }
+
         private bool m_didApplyLocalTheme = false;
+        private bool m_hasRenderedAtLeastOnce = false;
 
         protected virtual bool Begin(ref bool isOpenForImGui, ImGuiWindowFlags windowFlags)
         {
@@ -164,7 +208,15 @@ namespace ImTK.UI
                 m_didApplyLocalTheme = true;
             }
 
-            bool isExpanded = ImGui.Begin(imguiId, ref isOpenForImGui, windowFlags);
+            bool isExpanded;
+            if (!flags.noClose)
+            {
+                isExpanded = ImGui.Begin(imguiId, ref isOpenForImGui, windowFlags);
+            }
+            else
+            {
+                isExpanded = ImGui.Begin(imguiId, windowFlags);
+            }
             RenderingContext.IsInsideWindow = true;
             RenderingContext.FlushPendingCommands();
             return isExpanded;
@@ -201,6 +253,7 @@ namespace ImTK.UI
         {
             m_isOpenForImGuiCache = m_isOpen;
             bool isExpanded = Begin(ref m_isOpenForImGuiCache, flags.Value);
+            m_hasRenderedAtLeastOnce = true;
 
             if (isExpanded)
             {

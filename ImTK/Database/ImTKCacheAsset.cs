@@ -14,5 +14,13 @@ namespace ImTK.Database
         public Dictionary<string, int> Ints { get; set; } = new Dictionary<string, int>();
         public Dictionary<string, string> Strings { get; set; } = new Dictionary<string, string>();
         public Dictionary<string, bool> Bools { get; set; } = new Dictionary<string, bool>();
+
+        public List<WindowSession> OpenWindows { get; set; } = new List<WindowSession>();
+    }
+
+    public struct WindowSession
+    {
+        public string TypeName { get; set; }
+        public string WindowId { get; set; }
     }
 }

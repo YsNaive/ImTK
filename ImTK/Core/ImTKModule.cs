@@ -8,7 +8,7 @@ namespace ImTK.Core
     {
         // Internal state tracked by the Application
         internal bool m_enabled = true;
-        internal bool m_activeInHierarchy = true;
+        internal bool m_activeInHierarchy = false;
 
         // 儲存取消訂閱的 Action，供 InternalOnDisable 使用
         private readonly System.Collections.Generic.List<System.Action> m_eventUnsubscribers = new System.Collections.Generic.List<System.Action>();
