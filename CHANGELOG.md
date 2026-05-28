@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Added (新增)
+- **多視窗支援 (Multi-Viewports)**：透過替換底層函式庫為 `Hexa.NET.ImGui`，正式啟用 `ImGuiConfigFlags.ViewportsEnable`，完美支援將 UI 視窗拖出主視窗形成獨立的作業系統級視窗，大幅提升多螢幕開發者的使用體驗。
 - **[UI 系統] 元件持久化 Attribute 語法糖與深層遞迴**：新增了 `[Persistent]` 標籤與 `PersistentTypeCache`。開發者現在可以直接在 `VisualElement` 的 Field 與 Property 上標記 `[Persistent]`，系統便會透過反射自動將其納入 `ViewStatePersister` 的自動存檔與讀取機制中。
 - 支援複雜物件 (Class / Struct) 的無限深度遞迴拆解 (Recursive Flattening)。
 - 實作了「父層回推 (Recursive Push-back)」邏輯，完美突破 C# Reflection 修改 Struct 的裝箱副本限制，確保任意深度的 `struct` 設值皆能生效。
@@ -41,6 +42,8 @@
 - **HashedString 容量防呆機制**：在 `ImTKEnvironment` 新增 `HashedStringCapacityWarningThreshold`（預設 50000）。當 `HashedString` 全域註冊表超過此容量時會觸發 `ImTKLog.Error`，防範開發者誤將動態字串傳入導致 Memory Leak。
 
 ### Changed (變更)
+- **底層 ImGui 封裝替換**：將專案從 `ImGui.NET` 與 `Silk.NET.OpenGL.Extensions.ImGui` 徹底遷移至 `Hexa.NET.ImGui` 以及 `Hexa.NET.ImGui.Backends.GLFW` / `OpenGL3`。此重構移除了舊版對多視窗不支援的限制，並全面更新了 48 個內部元件的命名空間依賴。
+- **ImTKSilk 渲染迴圈重構**：移除了 `ImGuiController`，改由原生的 Hexa Backends 實作初始化與渲染迴圈，並加入 `ImGui.UpdatePlatformWindows()` 與 `ImGui.RenderPlatformWindowsDefault()` 處理。
 - **HashedString 效能極限優化**：修正了 `default(HashedString)` 的邊界問題，現在所有合法字串的 Hash 絕對不會是 `0`（將 `0` 保留給未初始化的結構體）。基於此保證，大幅優化了 `Equals` 與 `==` 運算子，完全移除字串比對，使其效能等同於原生整數比較。
 - **ImTKApplication 生命週期升級**：在 `ImTKApplication.Initialize()` 流程中正式補上 `Phase 3: Enable` 階段。現在所有註冊的 `ImTKModule` 皆會正確觸發 `OnEnable()`，完善了原本缺失的模組啟動事件鏈。
 - **RenderEngine 扁平化渲染統一**：移除了 `Window` 獨立的 `FlattenRecursive`，全面統一改由 `RenderEngine.BuildRenderListRecursive` 負責渲染清單建立。

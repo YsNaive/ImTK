@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ImTK.Log;
 using ImTK.Event;
 
@@ -35,7 +35,7 @@ namespace ImTK.UI
         public static void PushFontScale(float scale)
         {
             s_fontScaleStack.Push(scale);
-            RenderingContext.EnqueueWindowCommand(() => ImGui.SetWindowFontScale(scale));
+            // In Hexa.NET.ImGui (newer Dear ImGui), window font scale is obsolete.
         }
 
         public static void PopFontScale()
@@ -44,7 +44,7 @@ namespace ImTK.UI
                 s_fontScaleStack.Pop();
 
             float previousScale = CurrentFontScale;
-            RenderingContext.EnqueueWindowCommand(() => ImGui.SetWindowFontScale(previousScale));
+            // In Hexa.NET.ImGui (newer Dear ImGui), window font scale is obsolete.
         }
 
         public static void MarkFontDirty()
@@ -85,10 +85,10 @@ namespace ImTK.UI
             RegisterFamily(DefaultFontFamilyName, sources);
         }
 
-        public static IntPtr GetGlyphRangesChineseFull() => ImGui.GetIO().Fonts.GetGlyphRangesChineseFull();
-        public static IntPtr GetGlyphRangesChineseSimplifiedCommon() => ImGui.GetIO().Fonts.GetGlyphRangesChineseSimplifiedCommon();
-        public static IntPtr GetGlyphRangesJapanese() => ImGui.GetIO().Fonts.GetGlyphRangesJapanese();
-        public static IntPtr GetGlyphRangesKorean() => ImGui.GetIO().Fonts.GetGlyphRangesKorean();
+        public static IntPtr GetGlyphRangesChineseFull() => IntPtr.Zero;
+        public static IntPtr GetGlyphRangesChineseSimplifiedCommon() => IntPtr.Zero;
+        public static IntPtr GetGlyphRangesJapanese() => IntPtr.Zero;
+        public static IntPtr GetGlyphRangesKorean() => IntPtr.Zero;
 
         public static bool IsFontDirty() => s_isFontDirty;
 
@@ -130,10 +130,9 @@ namespace ImTK.UI
 
                     if (family.FontSources.Count == 0)
                     {
-                        var config = ImGuiNative.ImFontConfig_ImFontConfig();
-                        config->SizePixels = sizePixels;
-                        baseFont = io.Fonts.AddFontDefault(config);
-                        ImGuiNative.ImFontConfig_destroy(config);
+                        var config = CreateDefaultFontConfig();
+                        config.SizePixels = sizePixels;
+                        baseFont = io.Fonts.AddFontDefault(ref config);
                     }
                     else
                     {
@@ -146,45 +145,37 @@ namespace ImTK.UI
                                 continue;
                             }
 
-                            var config = ImGuiNative.ImFontConfig_ImFontConfig();
+                            var config = CreateDefaultFontConfig();
                             if (!first)
                             {
-                                config->MergeMode = 1;
+                                config.MergeMode = 1;
                             }
 
                             // Reduce oversampling for large fonts or extended glyph ranges to prevent massive texture sizes exceeding GL limits
                             if (sizePixels >= 24f || source.GlyphRanges != IntPtr.Zero)
                             {
-                                config->OversampleH = 1;
-                                config->OversampleV = 1;
+                                config.OversampleH = 1;
+                                config.OversampleV = 1;
                             }
 
                             IntPtr ranges = source.GlyphRanges;
                             ImFontPtr font;
-                            if (ranges != IntPtr.Zero)
-                            {
-                                font = io.Fonts.AddFontFromFileTTF(source.ResolvedPath, sizePixels, config, ranges);
-                            }
-                            else
-                            {
-                                font = io.Fonts.AddFontFromFileTTF(source.ResolvedPath, sizePixels, config);
-                            }
+                            
+                            // Get pointer to config
+                            font = io.Fonts.AddFontFromFileTTF(source.ResolvedPath, sizePixels, ref config, (uint*)ranges);
 
-                            if (first && font.NativePtr != null)
+                            if (first && font.Handle != null)
                             {
                                 baseFont = font;
                                 first = false;
                             }
-
-                            ImGuiNative.ImFontConfig_destroy(config);
                         }
 
                         // Always add default font as ultimate fallback
-                        var fallbackConfig = ImGuiNative.ImFontConfig_ImFontConfig();
-                        fallbackConfig->MergeMode = 1;
-                        fallbackConfig->SizePixels = sizePixels;
-                        io.Fonts.AddFontDefault(fallbackConfig);
-                        ImGuiNative.ImFontConfig_destroy(fallbackConfig);
+                        var fallbackConfig = CreateDefaultFontConfig();
+                        fallbackConfig.MergeMode = 1;
+                        fallbackConfig.SizePixels = sizePixels;
+                        io.Fonts.AddFontDefault(ref fallbackConfig);
                     }
 
                     long key = GetFontKey(familyHash, fontSizeEnum);
@@ -192,8 +183,7 @@ namespace ImTK.UI
                 }
             }
 
-            // Always build the atlas immediately before notifying the bridge
-            io.Fonts.Build();
+            // Hexa.NET.ImGui handles building internally or via Backend. No need to call Build().
             s_isFontDirty = false;
             sw.Stop();
             ImTKLog.Info($"Font Atlas Rebuild Complete in {sw.Elapsed.TotalSeconds:F2} seconds.");
@@ -273,6 +263,19 @@ namespace ImTK.UI
             float scale = scaledTargetSize / bestSizePixels;
 
             return (font, scale);
+        }
+        private static ImFontConfig CreateDefaultFontConfig()
+        {
+            var config = new ImFontConfig();
+            config.FontDataOwnedByAtlas = 1; // true
+            config.OversampleH = 3;
+            config.OversampleV = 1;
+            config.PixelSnapH = 0; // false
+            config.GlyphMaxAdvanceX = float.MaxValue;
+            config.RasterizerMultiply = 1.0f;
+            config.RasterizerDensity = 1.0f;
+            config.MergeMode = 0; // false
+            return config;
         }
     }
 }

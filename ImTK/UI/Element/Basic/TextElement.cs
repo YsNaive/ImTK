@@ -1,5 +1,5 @@
 using System;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace ImTK.UI
 {
@@ -41,12 +41,22 @@ namespace ImTK.UI
             
             if (enableWordWrap && constraint.WidthMode != MeasureMode.Undefined && constraint.AvailableWidth > 0)
             {
-                var size = ImGui.CalcTextSize(m_text, 0, m_text.Length, false, constraint.AvailableWidth);
+                System.Numerics.Vector2 size;
+                unsafe {
+                    fixed (byte* pText = System.Text.Encoding.UTF8.GetBytes(m_text + "\0")) {
+                        size = ImGui.CalcTextSize(pText, (byte*)null, false, constraint.AvailableWidth);
+                    }
+                }
                 return size;
             }
             else
             {
-                var size = ImGui.CalcTextSize(m_text);
+                System.Numerics.Vector2 size;
+                unsafe {
+                    fixed (byte* pText = System.Text.Encoding.UTF8.GetBytes(m_text + "\0")) {
+                        size = ImGui.CalcTextSize(pText);
+                    }
+                }
                 return new System.Numerics.Vector2(size.X, ImGui.GetTextLineHeight());
             }
         }
@@ -59,7 +69,7 @@ namespace ImTK.UI
 
                 protected internal override bool CheckHoverState()
         {
-            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+            return ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
         }
 
         public override void OnRender()

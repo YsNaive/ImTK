@@ -1,5 +1,5 @@
 using System;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using System.Numerics;
 
 namespace ImTK.UI
@@ -33,7 +33,12 @@ namespace ImTK.UI
         {
             if (string.IsNullOrEmpty(text)) return;
 
-            var textSize = ImGui.CalcTextSize(text);
+            System.Numerics.Vector2 textSize;
+            unsafe {
+                fixed (byte* pText = System.Text.Encoding.UTF8.GetBytes(text + "\0")) {
+                    textSize = ImGui.CalcTextSize(pText);
+                }
+            }
             float frameHeight = ImGui.GetFrameHeight();
             
             // Optional: allow subsequent items to overlap this button
@@ -46,7 +51,7 @@ namespace ImTK.UI
             bool isDragActive = ImGui.IsItemActive();
             if (ImGui.IsItemHovered())
             {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEW);
+                ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEw);
             }
 
             var endPos = ImGui.GetCursorScreenPos();

@@ -1,5 +1,5 @@
 using System;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ImTK.Core;
 using System.Numerics;
 
@@ -53,7 +53,7 @@ namespace ImTK.UI
 
         protected internal override bool CheckHoverState()
         {
-            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+            return ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
         }
     }
 }

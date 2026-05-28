@@ -1,6 +1,6 @@
 using System;
 using System.Numerics;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace ImTK.UI
 {
@@ -23,14 +23,14 @@ namespace ImTK.UI
 
             protected override Vector2 MeasureContent(LayoutConstraint constraint)
             {
-                return new Vector2(0, ImGuiNET.ImGui.GetFrameHeight());
+                return new Vector2(0, ImGui.GetFrameHeight());
             }
 
             public override void OnRender()
             {
-                ImGuiNET.ImGui.SetNextItemWidth(this.layoutRect.width);
+                ImGui.SetNextItemWidth(this.layoutRect.width);
                 bool v = m_drawer.value;
-                if (ImGuiNET.ImGui.Checkbox("##" + m_drawer.label, ref v))
+                if (ImGui.Checkbox("##" + m_drawer.label, ref v))
                 {
                     m_drawer.SetValueWithChanged(v);
                 }

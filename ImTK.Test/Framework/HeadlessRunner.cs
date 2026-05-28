@@ -24,9 +24,12 @@ namespace ImTK.Test.Framework
             ImTKLog.Info("========== Starting Headless Tests ==========");
             LastResults.Clear();
 
-            if (ImGuiNET.ImGui.GetCurrentContext() == IntPtr.Zero)
-            {
-                ImGuiNET.ImGui.CreateContext();
+            var context = Hexa.NET.ImGui.ImGui.GetCurrentContext();
+            unsafe {
+                if (context.Handle == null)
+                {
+                    Hexa.NET.ImGui.ImGui.CreateContext();
+                }
             }
 
             var testTypes = Assembly.GetExecutingAssembly()

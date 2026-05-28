@@ -1,6 +1,6 @@
 using System;
 using System.Numerics;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace ImTK.UI
 {
@@ -68,42 +68,61 @@ namespace ImTK.UI
             protected override Vector2 MeasureContent(LayoutConstraint constraint)
             {
                 string v = m_drawer.value ?? string.Empty;
-                bool hasNewline = !string.IsNullOrEmpty(v) && v.Contains("\n");
-                if (m_drawer.m_multiline || hasNewline)
+                if (v != null)
                 {
-                    float height = Math.Max(ImGuiNET.ImGui.GetFrameHeight(), ImGuiNET.ImGui.CalcTextSize(v).Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2);
-                    return new Vector2(0, height);
+                    bool hasNewline = !string.IsNullOrEmpty(v) && v.Contains("\n");
+                    if (m_drawer.m_multiline || hasNewline)
+                    {
+                        System.Numerics.Vector2 textSize;
+                        unsafe {
+                            fixed (byte* pText = System.Text.Encoding.UTF8.GetBytes(v + "\0")) {
+                                textSize = ImGui.CalcTextSize(pText);
+                            }
+                        }
+                        float height = Math.Max(ImGui.GetFrameHeight(), textSize.Y + ImGui.GetStyle().FramePadding.Y * 2);
+                        return new Vector2(0, height);
+                    }
+                    else
+                    {
+                        return new Vector2(0, ImGui.GetFrameHeight());
+                    }
                 }
-                else
-                {
-                    return new Vector2(0, ImGuiNET.ImGui.GetFrameHeight());
-                }
+
+                return Vector2.Zero;
             }
 
             public override void OnRender()
             {
-                string v = m_drawer.value ?? string.Empty;
-                ImGuiNET.ImGuiInputTextFlags flags = ImGuiNET.ImGuiInputTextFlags.None;
-                bool changed = false;
+                if (this.layoutRect.width > 0)
+                {
+                    string v = m_drawer.value ?? string.Empty;
+                    ImGuiInputTextFlags flags = ImGuiInputTextFlags.None;
+                    bool changed = false;
 
-                bool hasNewline = !string.IsNullOrEmpty(v) && v.Contains("\n");
-                if (m_drawer.m_multiline || hasNewline)
-                {
-                    float height = Math.Max(ImGuiNET.ImGui.GetFrameHeight(), ImGuiNET.ImGui.CalcTextSize(v).Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2);
-                    changed = ImGuiNET.ImGui.InputTextMultiline("##" + m_drawer.label, ref v, 32768, new Vector2(this.layoutRect.width, height), flags);
-                }
-                else
-                {
-                    ImGuiNET.ImGui.SetNextItemWidth(this.layoutRect.width);
-                    changed = ImGuiNET.ImGui.InputText("##" + m_drawer.label, ref v, 32768, flags);
-                }
+                    bool hasNewline = !string.IsNullOrEmpty(v) && v.Contains("\n");
+                    if (m_drawer.m_multiline || hasNewline)
+                    {
+                        System.Numerics.Vector2 textSize;
+                        unsafe {
+                            fixed (byte* pText = System.Text.Encoding.UTF8.GetBytes(v + "\0")) {
+                                textSize = ImGui.CalcTextSize(pText);
+                            }
+                        }
+                        float height = Math.Max(ImGui.GetFrameHeight(), textSize.Y + ImGui.GetStyle().FramePadding.Y * 2);
+                        changed = ImGui.InputTextMultiline("##" + m_drawer.label, ref v, 32768, new Vector2(this.layoutRect.width, height), flags);
+                    }
+                    else
+                    {
+                        ImGui.SetNextItemWidth(this.layoutRect.width);
+                        changed = ImGui.InputText("##" + m_drawer.label, ref v, 32768, flags);
+                    }
 
-                if (changed || ImGuiNET.ImGui.IsItemDeactivatedAfterEdit())
-                {
-                    m_drawer.SetValueWithChanged(v);
+                    if (changed || ImGui.IsItemDeactivatedAfterEdit())
+                    {
+                        m_drawer.SetValueWithChanged(v);
+                    }
                 }
             }
-
         }
     }
 }

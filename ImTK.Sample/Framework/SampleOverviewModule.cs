@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ImTK.Core;
 using ImTK.UI;
 

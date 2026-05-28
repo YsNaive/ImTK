@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ImTK.Log;
 
 using ImTK.Core;

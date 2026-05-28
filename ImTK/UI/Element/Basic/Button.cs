@@ -1,5 +1,5 @@
 using System;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ImTK.Core;
 
 namespace ImTK.UI
@@ -105,12 +105,17 @@ namespace ImTK.UI
 
                 protected internal override bool CheckHoverState()
         {
-            return ImGuiNET.ImGui.IsItemHovered(ImGuiNET.ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+            return ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
         }
 
         protected override System.Numerics.Vector2 MeasureContent(LayoutConstraint constraint)
         {
-            var textSize = ImGui.CalcTextSize(text);
+            System.Numerics.Vector2 textSize;
+            unsafe {
+                fixed (byte* pText = System.Text.Encoding.UTF8.GetBytes(text + "\0")) {
+                    textSize = ImGui.CalcTextSize(pText);
+                }
+            }
             var padding = ImGui.GetStyle().FramePadding;
             if (resolvedStyle.TryGetVector2((int)ImGuiStyleVar.FramePadding, out var overridePadding))
                 padding = overridePadding;

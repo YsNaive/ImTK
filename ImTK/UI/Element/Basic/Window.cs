@@ -1,5 +1,5 @@
 using System;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ImTK.Log;
 using ImTK.Core;
 

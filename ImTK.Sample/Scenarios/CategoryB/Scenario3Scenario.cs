@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using ImTK.Sample.Framework;
 using ImTK.UI;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace ImTK.Sample.Scenarios.CategoryB
 {

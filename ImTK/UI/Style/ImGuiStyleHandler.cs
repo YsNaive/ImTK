@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ImTK.Core;
 
 namespace ImTK.UI
@@ -267,10 +267,10 @@ namespace ImTK.UI
                     fontPtr = ImTKFontManager.GetFont(familyHash, fontSizeEnum);
                 }
 
-                m_fontWasPushed = fontPtr.NativePtr != null;
+                m_fontWasPushed = fontPtr.Handle != null;
                 if (m_fontWasPushed)
                 {
-                    ImGui.PushFont(fontPtr);
+                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)fontPtr.Handle, 0.0f);
                 }
             }
         }
@@ -331,12 +331,12 @@ namespace ImTK.UI
                     ImGui.PushStyleColor((ImGuiCol)prop.key, prop.colorValue);
                     colorCount++;
                 }
-                else if (prop.dataType == StyleDataType.Float && prop.key < (int)ImGuiStyleVar.COUNT)
+                else if (prop.dataType == StyleDataType.Float && prop.key < (int)ImGuiStyleVar.Count)
                 {
                     ImGui.PushStyleVar((ImGuiStyleVar)prop.key, prop.floatValue);
                     varCount++;
                 }
-                else if (prop.dataType == StyleDataType.Vector2 && prop.key < (int)ImGuiStyleVar.COUNT)
+                else if (prop.dataType == StyleDataType.Vector2 && prop.key < (int)ImGuiStyleVar.Count)
                 {
                     ImGui.PushStyleVar((ImGuiStyleVar)prop.key, prop.vector2Value);
                     varCount++;
@@ -356,7 +356,7 @@ namespace ImTK.UI
             {
                 if (prop.category != StyleCategory.ImGuiStyle) continue;
                 if (prop.dataType == StyleDataType.Color) colorCount++;
-                else if ((prop.dataType == StyleDataType.Float || prop.dataType == StyleDataType.Vector2) && prop.key < (int)ImGuiStyleVar.COUNT) varCount++;
+                else if ((prop.dataType == StyleDataType.Float || prop.dataType == StyleDataType.Vector2) && prop.key < (int)ImGuiStyleVar.Count) varCount++;
             }
 
             if (varCount > 0) ImGui.PopStyleVar(varCount);

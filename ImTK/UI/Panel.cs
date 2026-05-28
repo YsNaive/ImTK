@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using ImTK.Core;
 using ImTK.Log;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using System.Numerics;
 
 namespace ImTK.UI
@@ -268,9 +268,9 @@ namespace ImTK.UI
 
             unsafe
             {
-                if (font.NativePtr != null)
+                if (font.Handle != null)
                 {
-                    ImGui.PushFont(font);
+                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, 0.0f);
                     RenderingContext.PushFontState(globalFontFamilyHash);
                     pushedFont = true;
                 }

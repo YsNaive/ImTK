@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ImTK.Core;
 using ImTK.UI;
 using ImTK.Test.Framework;
