@@ -504,9 +504,15 @@ namespace ImTK.UI
         public string persistenceKey { get; set; } = null;
         internal bool m_hasLoadedState = false;
 
-        protected internal virtual void OnWriteState(Persistence.StateWriter writer) { }
-        protected internal virtual void OnReadState(Persistence.StateReader reader) { }
-
+        protected internal virtual void OnWriteState(Persistence.StateWriter writer) 
+        {
+            Persistence.PersistentTypeCache.WriteState(this, writer);
+        }
+        
+        protected internal virtual void OnReadState(Persistence.StateReader reader) 
+        {
+            Persistence.PersistentTypeCache.ReadState(this, reader);
+        }
         private Dictionary<Type, Delegate> m_callbacks;
 
         public IVisualElementStyle internalStyle { get; set; }

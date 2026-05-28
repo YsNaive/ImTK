@@ -8,6 +8,7 @@
 * **[`EventSystem.md`](EventSystem.md)**：說明事件解耦延遲派發、事件冒泡路由、Object Pool 設計，以及利用 ImGui 原生狀態推導滑鼠事件的混合架構。
 * **[`PanelLayout.md`](PanelLayout.md)**：記載全域佈局管理者 (`Panel`) 透過註冊 Rect 切割函式實作 MenuBar / StatusBar 等預留空間演算法的設計。
 * **[`MenuSystem.md`](MenuSystem.md)**：選單系統設計，包含 `MenuView` 與 `MenuItem` 職責拆分、Priority 自動排序與分隔線，以及路徑衝突處理機制。
+* **[`Persistence.md`](Persistence.md)**：UI 狀態持久化，包含自動讀寫 `imtk_cache.json` 的時機，以及利用 `[Persistent]` 標籤進行深層遞迴狀態管理的架構。
 
 * [**Element/**](Element/)
   存放並記錄各種內建的高階 UI 元件規格與事件綁定模式：

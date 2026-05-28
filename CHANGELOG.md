@@ -8,6 +8,11 @@
 ## [Unreleased]
 
 ### Added (新增)
+- **[UI 系統] 元件持久化 Attribute 語法糖與深層遞迴**：新增了 `[Persistent]` 標籤與 `PersistentTypeCache`。開發者現在可以直接在 `VisualElement` 的 Field 與 Property 上標記 `[Persistent]`，系統便會透過反射自動將其納入 `ViewStatePersister` 的自動存檔與讀取機制中。
+- 支援複雜物件 (Class / Struct) 的無限深度遞迴拆解 (Recursive Flattening)。
+- 實作了「父層回推 (Recursive Push-back)」邏輯，完美突破 C# Reflection 修改 Struct 的裝箱副本限制，確保任意深度的 `struct` 設值皆能生效。
+- 提供 `Flatten` 與 `IncludeAllMembers` 參數控制下拆行為，支援隱式收集公開成員。
+- 支援基礎型別包含 `int`, `float`, `string`, `bool`，並針對不支援的型別或循環參考實作了非阻斷式的 `ImTKLog.Error` 防呆警告。
 - **自動復原視窗 (Workspace Restoration)**：實作了基於 `ImTKCacheAsset` 的工作區持久化機制。系統現在會自動紀錄當前所有開啟的視窗 (`WindowSession`)，並於應用程式下次啟動時透過反射自動復原。支援透過 `WindowFlags.dontSaveOpenState` 過濾暫時性對話框。
 - **RenderListCache 渲染快取架構**：新增 `IRenderRoot` 介面與 `RenderListCache` 類別，為渲染樹的快取建立獨立生命週期。`GetRenderRoot()` 取代了以往直接依賴 `GetWindow()` 的髒標記傳遞機制，讓非 `Window` 的根節點（如 `MenuView`）也能獨立維護自身的渲染快取。
 - **ImTKEnvironment 重構**：實作了全域環境變數的懶漢式延遲載入 (Lazy Evaluation)。現在會自動透過反射汲取 `[AssemblyCompany]` 與 `[AssemblyProduct]` 作為預設的 `CompanyName` 與 `ApplicationName`。
