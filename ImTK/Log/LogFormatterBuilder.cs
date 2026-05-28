@@ -84,12 +84,22 @@ public class LogFormatterBuilder
             if (entry.Exception != null)
             {
                 sb.AppendLine();
-                sb.Append(entry.Exception.ToString());
+                if (entry.IncludeStackTrace)
+                {
+                    sb.Append(entry.Exception.ToString());
+                }
+                else
+                {
+                    sb.Append($"[{entry.Exception.GetType().Name}] {entry.Exception.Message}");
+                }
             }
             if (postfix != null) sb.Append(postfix);
         });
         return this;
     }
+
+    [ThreadStatic]
+    private static StringBuilder t_sb;
 
     public Func<LogEntry, string> Build()
     {
@@ -97,12 +107,13 @@ public class LogFormatterBuilder
         var actionsArray = m_actions.ToArray();
         return entry =>
         {
-            var sb = new StringBuilder();
+            if (t_sb == null) t_sb = new StringBuilder(512);
+            t_sb.Clear();
             for (int i = 0; i < actionsArray.Length; i++)
             {
-                actionsArray[i](sb, entry);
+                actionsArray[i](t_sb, entry);
             }
-            return sb.ToString();
+            return t_sb.ToString();
         };
     }
 }

@@ -3,10 +3,9 @@ using ImTK.UI;
 
 namespace ImTK.Test.UI.Event
 {
-    public class EventBubbleTest : IIntegrationTest
+    public class EventBubbleTest : IHeadlessTest
     {
         public string TestName => "Event Bubble Logic";
-        public bool IsManualOnly => false;
 
         private class DummyEvent : UIEventBase
         {

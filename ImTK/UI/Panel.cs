@@ -22,9 +22,6 @@ namespace ImTK.UI
 
         private static WindowHostElement s_hostElement;
 
-        private float m_cacheSaveTimer = 0f;
-        private const float CacheSaveInterval = 10f;
-
         protected Panel() { }
 
         internal static void RegisterWindow(Window window)
@@ -59,6 +56,10 @@ namespace ImTK.UI
             else
             {
                 WindowKey key = new WindowKey(window.GetType(), window.windowId);
+                
+                // Save window state before unregistering
+                Persistence.ViewStatePersister.SaveAllWindowStates(new[] { window });
+
                 s_windows.Remove(key);
                 if (s_hostElement != null)
                 {
@@ -189,13 +190,6 @@ namespace ImTK.UI
         {
             while (s_windowsToAdd.Count > 0) RegisterWindow(s_windowsToAdd.Dequeue());
             while (s_windowsToRemove.Count > 0) UnregisterWindow(s_windowsToRemove.Dequeue());
-
-            m_cacheSaveTimer += (float)Time.UnscaledDeltaTime;
-            if (m_cacheSaveTimer >= CacheSaveInterval)
-            {
-                Persistence.ViewStatePersister.SaveAllWindowStates(s_windows.Values);
-                m_cacheSaveTimer = 0f;
-            }
 
             if (ImTKTheme.isGlobalThemeDirty)
             {

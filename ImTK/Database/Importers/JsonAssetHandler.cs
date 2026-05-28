@@ -84,7 +84,7 @@ namespace ImTK.Database.Importers
             }
             catch (Exception ex)
             {
-                s_log.Error(ex, $"Failed to load JSON asset from {absolutePath}. File might be corrupted. Falling back to default values.");
+                s_log.Error(ex, $"Failed to load JSON asset from {absolutePath}. File might be corrupted. Falling back to default values.", false);
                 return CreateFallback(normalizedPath);
             }
         }

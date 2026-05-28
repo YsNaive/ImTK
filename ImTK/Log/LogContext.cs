@@ -12,9 +12,9 @@ public class LogContext
         ModuleName = moduleName;
     }
 
-    private void Log(LogLevel level, string message, Exception exception = null)
+    private void Log(LogLevel level, string message, Exception exception = null, bool includeStackTrace = true)
     {
-        var entry = new LogEntry(DateTime.Now, level, ModuleName, message, exception);
+        var entry = new LogEntry(DateTime.Now, level, ModuleName, message, exception, includeStackTrace);
         ImTKLog.Emit(entry);
     }
 
@@ -23,9 +23,9 @@ public class LogContext
     public void Info(string message) => Log(LogLevel.Info, message);
     public void Warning(string message) => Log(LogLevel.Warning, message);
     public void Error(string message) => Log(LogLevel.Error, message);
-    public void Error(Exception ex, string message) => Log(LogLevel.Error, message, ex);
+    public void Error(Exception ex, string message, bool includeStackTrace = true) => Log(LogLevel.Error, message, ex, includeStackTrace);
     public void Fatal(string message) => Log(LogLevel.Fatal, message);
-    public void Fatal(Exception ex, string message) => Log(LogLevel.Fatal, message, ex);
+    public void Fatal(Exception ex, string message, bool includeStackTrace = true) => Log(LogLevel.Fatal, message, ex, includeStackTrace);
 
     public void TraceIf(bool condition, [InterpolatedStringHandlerArgument("condition")] ref LogIfInterpolatedStringHandler message)
     {
