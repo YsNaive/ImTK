@@ -31,6 +31,8 @@
 - **主題色系智能映射**：在 `VisualElement.Style` 新增了 `colorFamily` 屬性。在基礎元件會自動設定背景與文字顏色；在 `Button` 等互動元件中，更能一鍵綁定 `Hovered` 與 `Active` 等互動狀態的標準主題色。
 - **高階意圖繼承 (Inheritable HighLevelToken)**：將 `ImGuiStyleHandler` 的底層資料結構由固定陣列全面重構為動態串列 `List<StyleProperty>`，成功解鎖儲存未知屬性 (如 `colorFamily`) 的能力。同時升級 `RenderEngineStylePipeline` 的擴展順序，允許設定為 `isInheritable = true` 的高階意圖在計算過程中不被消耗，完美繼承給所有子元件。
 - **TextElement 自動折行**：為 `TextElement` 實作了 `enableWordWrap` 屬性 (預設為 `true`)。結合排版引擎傳遞的 `AvailableWidth`，精確計算文字折行後的高度，並利用 `PushTextWrapPos` 確保在渲染時不會撐爆畫面。
+- **全域日誌語法糖 (Log Syntactic Sugar)**：在 `ImTKLog` 中全面加入了帶有 `[CallerFilePath]` 的 `Info`, `Error`, `Trace` 等靜態方法，取代了以往每個類別都需要手動宣告 `private static readonly LogContext s_log` 的冗長寫法。
+- **單元測試補齊**：新增了 `LogSystemTests.cs`, `HashedStringTests.cs`, 與 `TimeTests.cs` 來確保核心底層邏輯與日誌模組的穩定性。
 
 ### Changed (變更)
 - **ImTKApplication 生命週期升級**：在 `ImTKApplication.Initialize()` 流程中正式補上 `Phase 3: Enable` 階段。現在所有註冊的 `ImTKModule` 皆會正確觸發 `OnEnable()`，完善了原本缺失的模組啟動事件鏈。
@@ -46,9 +48,14 @@
 - **`ImTKApplication`**：所有對 Module/Object 的 `OnEnable()`/`OnDisable()` 直接呼叫改為對應的 `InternalOnEnable()`/`InternalOnDisable()`。
 - **`VisualElement.m_theme`**：存取修飾由 `private` 改為 `internal`，供 `RenderEngine` 在計算管線中判斷是否需要注入 Theme 樣式。
 - **`StyleFontSize` 升級**：將其重構為支援隱式轉換的中繼型別，允許同時綁定 `FontSize` 列舉或是絕對像素大小 (Int)，並與底層的 `StyleProperty` 記憶體佈局完美映射。
+- **基礎資料型別 (DataType) 架構遷移**：將 `Color`, `HashedString`, `Rect`, `RectInt`, `Vector2Int`, `Vector3Int` 等基礎資料型別移至獨立的 `ImTK/DataType/` 資料夾，並將命名空間統一為 `ImTK`，確保框架核心的高內聚與低耦合。
+- **UI 視窗狀態儲存優化**：移除了 `Panel.cs` 中每 10 秒自動觸發的 `SaveAllWindowStates` 輪詢機制，改為在 `UnregisterWindow` 與 `OnClose` 時透過 `ScheduleDeferred` 主動觸發儲存，消除定時輪詢造成的微小效能開銷。
+- **日誌字串格式化零分配優化**：在 `LogFormatterBuilder.cs` 中導入了 `[ThreadStatic] StringBuilder` 快取，移除了每次印出日誌時的高頻字串分配，進一步降低 GC 壓力。
 
 ### Fixed (修復)
 - **ImTKLog 早期日誌遺失問題**：修復了 `ImTKLog` 在系統尚未完成 Sink (如 `ConsoleSink`) 註冊前，直接丟棄日誌的缺陷。現已導入 `ConcurrentQueue` 作為早期緩衝區，確保框架在極早期階段（Phase 0 之前）發出的所有偵錯日誌皆能在第一個 Sink 掛載時完整回放 (Replay)。
+- **ImTKApplication 反射載入崩潰修復**：加入了對 `ReflectionTypeLoadException` 的防呆捕捉機制。當專案因載入外部或不完整 DLL 而導致反射掃描失敗時，現在會紀錄錯誤日誌並優雅地忽略問題模組，不再導致啟動初期直接閃退。
+- **ImTKObject 遲來事件訂閱防護**：在 `ImTKObject.cs` (與 `ImTKModule.cs`) 的 `SubscribeEvent` 中加入了狀態防呆機制。若開發者在 `OnEnable` 之後才呼叫訂閱，系統將拋出 `InvalidOperationException` 警告，防堵潛在的事件綁定漏洞。
 - **視窗復原型別解析錯誤**：修復了 `RestoreWorkspace` 使用 `Type.GetType` 無法精確命中非核心組件的問題。現已加入 Fallback 機制，當解析失敗時主動掃描 `AppDomain.CurrentDomain.GetAssemblies()` 以確保型別載入的百分百成功率。
 - **ImGui SetWindowFocus 崩潰問題**：修復了在視窗尚未進行第一幀繪製 (`OnBeginRender`) 前，呼叫 `ImGui.SetWindowFocus` 會導致崩潰的底層 Bug。在 `Window` 加入 `m_hasRenderedAtLeastOnce` 追蹤機制，完美解決延遲與自動復原的焦點衝突。
 - **RenderEngine 渲染重入 (Re-entrancy) 漏洞**：修復 `RenderEngine.RenderFlat` 共用單一 `t_tempRenderList` 靜態列表，導致嵌套呼叫 (Nested RenderFlat) 時外層迴圈被強制覆寫並截斷的問題。已將其替換為基於 `Stack<List<RenderOp>>` 的執行緒安全物件池，解決 `Missing PopID` 與 `Debug##Default` 幽靈視窗崩潰。

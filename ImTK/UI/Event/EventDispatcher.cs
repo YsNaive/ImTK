@@ -6,7 +6,7 @@ namespace ImTK.UI
 {
     public static class EventDispatcher
     {
-        private static readonly LogContext s_log = new LogContext("EventDispatcher");
+
         private static readonly Queue<UIEventBase> s_eventQueue = new Queue<UIEventBase>();
 
         private static HashSet<VisualElement> s_dirtyBufferA = new HashSet<VisualElement>();
@@ -42,7 +42,7 @@ namespace ImTK.UI
                 }
                 catch (Exception ex)
                 {
-                    s_log.Error(ex, "Exception occurred during HierarchyChangedEvent dispatch");
+                    ImTKLog.Error(ex, "Exception occurred during HierarchyChangedEvent dispatch");
                 }
                 finally
                 {
@@ -89,7 +89,7 @@ namespace ImTK.UI
                 }
                 catch (Exception ex)
                 {
-                    s_log.Error(ex, $"Exception occurred during event dispatch: {evt.GetType().Name}");
+                    ImTKLog.Error(ex, $"Exception occurred during event dispatch: {evt.GetType().Name}");
                 }
                 finally
                 {

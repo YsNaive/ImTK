@@ -13,7 +13,6 @@ namespace ImTK.Test.UI.Element.FieldDrawer
 
     public class FieldDrawerIntegrationTestWindow : Window
     {
-        private static readonly LogContext s_log = new LogContext("FieldDrawerIntegration");
 
         private ObjectDrawer m_drawer;
         private TestPersonData m_data;
@@ -28,14 +27,14 @@ namespace ImTK.Test.UI.Element.FieldDrawer
 
             m_drawer.RegisterCallback<ValueChangedEvent<object>>(evt =>
             {
-                s_log.Info($"Object Drawer Triggered: isInternalChange={evt.isInternalChange}");
+                ImTKLog.Info($"Object Drawer Triggered: isInternalChange={evt.isInternalChange}");
             });
 
             Add(m_drawer);
 
             var checkBtn = new Button("Check Current Data", evt =>
             {
-                s_log.Info($"Current Data - Name: {m_data.name}, Age: {m_data.age}");
+                ImTKLog.Info($"Current Data - Name: {m_data.name}, Age: {m_data.age}");
             });
             Add(checkBtn);
 
@@ -44,7 +43,7 @@ namespace ImTK.Test.UI.Element.FieldDrawer
                 var newData = new TestPersonData { name = "Jane Doe", age = 25 };
                 m_data = newData;
                 m_drawer.SetValueWithoutNotify(newData);
-                s_log.Info("Assigned new external data without notify.");
+                ImTKLog.Info("Assigned new external data without notify.");
             });
             Add(assignExtBtn);
         }

@@ -12,7 +12,7 @@ namespace ImTK.Event
     /// </summary>
     public static class ImTKEventBus
     {
-        private static readonly LogContext s_log = new LogContext("ImTKEventBus");
+
 
         // Use a dictionary where the key is the event type and the value is a list of delegates
         private static readonly ConcurrentDictionary<Type, List<Delegate>> s_subscribers = new ConcurrentDictionary<Type, List<Delegate>>();
@@ -85,7 +85,7 @@ namespace ImTK.Event
                         }
                         catch (Exception ex)
                         {
-                            s_log.Error(ex, $"Exception in event handler for {eventType.Name}");
+                            ImTKLog.Error(ex, $"Exception in event handler for {eventType.Name}");
                         }
                     }
                 });

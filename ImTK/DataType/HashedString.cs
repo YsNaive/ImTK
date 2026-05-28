@@ -1,3 +1,4 @@
+using ImTK.Log;
 using System;
 
 namespace ImTK
@@ -7,7 +8,7 @@ namespace ImTK
     /// </summary>
     public readonly struct HashedString : IEquatable<HashedString>
     {
-        private static readonly ImTK.Log.LogContext s_log = new ImTK.Log.LogContext("HashedString");
+
         
         // 全域字串到 Hash 的對應 (加速查找)
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> s_stringToHash = new System.Collections.Concurrent.ConcurrentDictionary<string, int>();
@@ -54,7 +55,7 @@ namespace ImTK
                         else
                         {
                             // 發生了真實的雜湊碰撞！發出警告並自動解決 (Linear Probing)
-                            s_log.Warning($"Hash collision detected between '{registeredValue}' and '{Value}'. Resolving automatically.");
+                            ImTKLog.Warning($"Hash collision detected between '{registeredValue}' and '{Value}'. Resolving automatically.");
                             hash = hash + 1;
                         }
                     }

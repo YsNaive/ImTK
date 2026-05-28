@@ -12,7 +12,7 @@ namespace ImTK.UI
     {
         private MenuView m_rootMenu;
         private Rect m_reservedRect;
-        private static readonly LogContext s_log = new LogContext("MainMenuModule");
+
 
         protected MainMenuModule()
         {
@@ -60,7 +60,7 @@ namespace ImTK.UI
                         }
                         else
                         {
-                            s_log.Error($"Method '{method.Name}' with MainMenuAttribute must have either no parameters or a single ClickEvent parameter.");
+                            ImTKLog.Error($"Method '{method.Name}' with MainMenuAttribute must have either no parameters or a single ClickEvent parameter.");
                         }
                     }
                 }
@@ -79,7 +79,7 @@ namespace ImTK.UI
                         }
                         else
                         {
-                            s_log.Error($"Field '{field.Name}' with MainMenuAttribute must be of type MenuView.");
+                            ImTKLog.Error($"Field '{field.Name}' with MainMenuAttribute must be of type MenuView.");
                         }
                     }
                 }
@@ -98,7 +98,7 @@ namespace ImTK.UI
                         }
                         else
                         {
-                            s_log.Error($"Property '{prop.Name}' with MainMenuAttribute must be of type MenuView and be readable.");
+                            ImTKLog.Error($"Property '{prop.Name}' with MainMenuAttribute must be of type MenuView and be readable.");
                         }
                     }
                 }

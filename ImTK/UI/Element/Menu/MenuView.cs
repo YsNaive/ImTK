@@ -40,7 +40,7 @@ namespace ImTK.UI
         public bool isMenuBar { get; set; } = false;
 
         private List<IMenuElement> m_sortedMenuElements = new List<IMenuElement>();
-        private static readonly LogContext s_log = new LogContext("MenuView");
+
         private const int SEPARATOR_THRESHOLD = 50;
 
         public MenuView(string name, int priority = 0)
@@ -146,7 +146,7 @@ namespace ImTK.UI
         {
             if (!(child is IMenuElement))
             {
-                s_log.Error($"Cannot add '{child.GetType().Name}' to MenuView '{name}'. Only objects implementing IMenuElement can be added.");
+                ImTKLog.Error($"Cannot add '{child.GetType().Name}' to MenuView '{name}'. Only objects implementing IMenuElement can be added.");
                 return;
             }
             base.Add(child);
@@ -231,7 +231,7 @@ namespace ImTK.UI
                 }
                 else
                 {
-                    s_log.Error($"Path conflict at '{partName}': Expected a MenuView, but found {(existingNode is MenuItem ? "MenuItem" : "unknown type")}. Path: {path}");
+                    ImTKLog.Error($"Path conflict at '{partName}': Expected a MenuView, but found {(existingNode is MenuItem ? "MenuItem" : "unknown type")}. Path: {path}");
                     return null;
                 }
             }
@@ -242,7 +242,7 @@ namespace ImTK.UI
 
             if (existingFinalNode != null)
             {
-                s_log.Warning($"Item '{finalPartName}' already exists at path '{path}'. It will not be replaced.");
+                ImTKLog.Warning($"Item '{finalPartName}' already exists at path '{path}'. It will not be replaced.");
                 return existingFinalNode as MenuItem; // 假設它是 MenuItem
             }
 
@@ -266,7 +266,7 @@ namespace ImTK.UI
                 var existingRootNode = this.hierarchy.Children().FirstOrDefault(c => (c as IMenuElement)?.name == view.name);
                 if (existingRootNode != null)
                 {
-                    s_log.Error($"Cannot add menu '{view.name}' at root because an element with the same name already exists.");
+                    ImTKLog.Error($"Cannot add menu '{view.name}' at root because an element with the same name already exists.");
                     return;
                 }
                 this.Add(view);
@@ -293,7 +293,7 @@ namespace ImTK.UI
                 }
                 else
                 {
-                    s_log.Error($"Path conflict at '{partName}': Expected a MenuView, but found {(existingNode is MenuItem ? "MenuItem" : "unknown type")}. Cannot attach menu '{view.name}'.");
+                    ImTKLog.Error($"Path conflict at '{partName}': Expected a MenuView, but found {(existingNode is MenuItem ? "MenuItem" : "unknown type")}. Cannot attach menu '{view.name}'.");
                     return;
                 }
             }
@@ -302,7 +302,7 @@ namespace ImTK.UI
             var existingFinalNode = currentView.hierarchy.Children().FirstOrDefault(c => (c as IMenuElement)?.name == view.name);
             if (existingFinalNode != null)
             {
-                s_log.Error($"Cannot add menu '{view.name}' at path '{parentPath}' because an element with the same name already exists.");
+                ImTKLog.Error($"Cannot add menu '{view.name}' at path '{parentPath}' because an element with the same name already exists.");
                 return;
             }
 

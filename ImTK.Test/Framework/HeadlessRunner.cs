@@ -9,7 +9,6 @@ namespace ImTK.Test.Framework
 {
     public static class HeadlessRunner
     {
-        private static readonly LogContext s_log = new LogContext("HeadlessRunner");
 
         public class HeadlessTestResult
         {
@@ -22,7 +21,7 @@ namespace ImTK.Test.Framework
 
         public static bool RunAllHeadlessTests()
         {
-            s_log.Info("========== Starting Headless Tests ==========");
+            ImTKLog.Info("========== Starting Headless Tests ==========");
             LastResults.Clear();
 
             if (ImGuiNET.ImGui.GetCurrentContext() == IntPtr.Zero)
@@ -37,7 +36,7 @@ namespace ImTK.Test.Framework
 
             if (testTypes.Count == 0)
             {
-                s_log.Info("No IHeadlessTest implementations found.");
+                ImTKLog.Info("No IHeadlessTest implementations found.");
                 return true;
             }
 
@@ -54,7 +53,7 @@ namespace ImTK.Test.Framework
                     EventDispatcher.ClearQueue();
 
                     var testInstance = (IHeadlessTest)Activator.CreateInstance(type);
-                    s_log.Info($"Running {type.Name}...");
+                    ImTKLog.Info($"Running {type.Name}...");
                     testInstance.Run();
 
                     // Cleanup after test in case it left dangling events
@@ -62,7 +61,7 @@ namespace ImTK.Test.Framework
 
                     passed++;
                     result.Passed = true;
-                    s_log.Info($"[PASS] {type.Name}");
+                    ImTKLog.Info($"[PASS] {type.Name}");
                 }
                 catch (Exception ex)
                 {
@@ -73,14 +72,14 @@ namespace ImTK.Test.Framework
                     result.Passed = false;
                     result.ErrorMessage = ex.Message;
                     Console.WriteLine($"[FAIL] {type.Name}: {ex.Message}\n{ex.StackTrace}");
-                    s_log.Error($"[FAIL] {type.Name}: {ex.Message}");
+                    ImTKLog.Error($"[FAIL] {type.Name}: {ex.Message}");
                 }
 
                 LastResults.Add(result);
             }
 
-            s_log.Info($"========== Headless Tests Completed ==========");
-            s_log.Info($"Total: {testTypes.Count}, Passed: {passed}, Failed: {failed}");
+            ImTKLog.Info($"========== Headless Tests Completed ==========");
+            ImTKLog.Info($"Total: {testTypes.Count}, Passed: {passed}, Failed: {failed}");
 
             return failed == 0;
         }

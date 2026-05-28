@@ -12,7 +12,6 @@ namespace ImTK.Test.UI.Element.Menu
     /// </summary>
     public static class MenuAttributeTestHelper
     {
-        private static readonly LogContext s_log = new LogContext("MenuAttributeTestHelper");
 
         [MainMenu("Test/Open Cache Directory", priority = 900)]
         private static void OpenCacheDirectory()
@@ -23,10 +22,10 @@ namespace ImTK.Test.UI.Element.Menu
                 if (!Directory.Exists(path))
                 {
                     Directory.CreateDirectory(path);
-                    s_log.Info($"Created cache directory at {path}");
+                    ImTKLog.Info($"Created cache directory at {path}");
                 }
 
-                s_log.Info($"Opening cache directory: {path}");
+                ImTKLog.Info($"Opening cache directory: {path}");
 
                 // 跨平台開啟資料夾的簡單實作
                 Process.Start(new ProcessStartInfo()
@@ -38,7 +37,7 @@ namespace ImTK.Test.UI.Element.Menu
             }
             catch (Exception ex)
             {
-                s_log.Error(ex, "Failed to open cache directory.");
+                ImTKLog.Error(ex, "Failed to open cache directory.");
             }
         }
     }

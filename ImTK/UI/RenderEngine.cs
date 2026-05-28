@@ -1,6 +1,7 @@
-using System;
 using ImGuiNET;
 using ImTK.Core;
+using ImTK.Log;
+using System;
 
 namespace ImTK.UI
 {
@@ -19,7 +20,7 @@ namespace ImTK.UI
 
     public static partial class RenderEngine
     {
-        private static readonly ImTK.Log.LogContext s_log = new ImTK.Log.LogContext("RenderEngine");
+
 
         [ThreadStatic]
         private static System.Collections.Generic.Stack<System.Collections.Generic.List<RenderOp>> t_listPool;
@@ -118,7 +119,7 @@ namespace ImTK.UI
                     }
                     catch (Exception ex)
                     {
-                        s_log.Error(ex, $"Exception during Begin/Render of {node.GetType().Name}");
+                        ImTKLog.Error(ex, $"Exception during Begin/Render of {node.GetType().Name}");
                         if (op.SkipCount > 0)
                         {
                             i += op.SkipCount; // Skip children to prevent cascading errors

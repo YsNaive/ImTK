@@ -9,7 +9,7 @@ namespace ImTK.UI
     [CustomFieldDrawer(typeof(int), requiredModifier: typeof(SliderIntAttribute), allowInheritType: false)]
     public class SliderIntDrawer : FieldDrawer<int>
     {
-        private static readonly LogContext s_log = new LogContext("SliderIntDrawer");
+
         
         public int min { get; private set; } = 0;
         public int max { get; private set; } = 100;
@@ -26,7 +26,7 @@ namespace ImTK.UI
             {
                 if (sliderAttr.min >= sliderAttr.max)
                 {
-                    s_log.Error($"Invalid SliderInt range: min ({sliderAttr.min}) is greater than or equal to max ({sliderAttr.max}).");
+                    ImTKLog.Error($"Invalid SliderInt range: min ({sliderAttr.min}) is greater than or equal to max ({sliderAttr.max}).");
                 }
                 this.min = sliderAttr.min;
                 this.max = sliderAttr.max;

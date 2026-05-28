@@ -11,7 +11,7 @@ namespace ImTK.UI.Persistence
     /// </summary>
     public static class ViewStatePersister
     {
-        private static readonly LogContext s_log = new LogContext("ViewStatePersister");
+
         
         private const string CacheAssetPath = "imgui/imtk_cache.json";
 
@@ -31,7 +31,7 @@ namespace ImTK.UI.Persistence
             }
             catch (Exception e)
             {
-                s_log.Error(e, "Failed to load cache asset for reading.");
+                ImTKLog.Error(e, "Failed to load cache asset for reading.");
                 return;
             }
 
@@ -51,7 +51,7 @@ namespace ImTK.UI.Persistence
                         }
                         catch (Exception e)
                         {
-                            s_log.Error(e, $"Exception in OnReadState for element {element.GetType().Name} with key {element.persistenceKey}");
+                            ImTKLog.Error(e, $"Exception in OnReadState for element {element.GetType().Name} with key {element.persistenceKey}");
                         }
                     }
                 }
@@ -70,7 +70,7 @@ namespace ImTK.UI.Persistence
             }
             catch (Exception e)
             {
-                s_log.Error(e, "Failed to load cache asset for writing.");
+                ImTKLog.Error(e, "Failed to load cache asset for writing.");
                 return;
             }
 
@@ -94,7 +94,7 @@ namespace ImTK.UI.Persistence
                         {
                             if (!keyCollisionCheck.Add(element.persistenceKey))
                             {
-                                s_log.Error($"PersistenceKey Collision Detected! The key '{element.persistenceKey}' is duplicated within Window '{window.windowId}'. UI state may be overwritten.");
+                                ImTKLog.Error($"PersistenceKey Collision Detected! The key '{element.persistenceKey}' is duplicated within Window '{window.windowId}'. UI state may be overwritten.");
                             }
 
                             try
@@ -103,7 +103,7 @@ namespace ImTK.UI.Persistence
                             }
                             catch (Exception e)
                             {
-                                s_log.Error(e, $"Exception in OnWriteState for element {element.GetType().Name} with key {element.persistenceKey}");
+                                ImTKLog.Error(e, $"Exception in OnWriteState for element {element.GetType().Name} with key {element.persistenceKey}");
                             }
                         }
                     }

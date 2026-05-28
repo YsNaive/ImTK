@@ -1,8 +1,9 @@
+using ImTK.Database.Importers;
+using ImTK.Log;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using ImTK.Database.Importers;
 
 namespace ImTK.Database
 {
@@ -12,7 +13,7 @@ namespace ImTK.Database
     /// </summary>
     internal class AssetManager
     {
-        private static readonly ImTK.Log.LogContext s_log = new ImTK.Log.LogContext("AssetManager");
+
 
         private readonly string _baseDirectory;
         private readonly bool _isReadOnly;
@@ -169,7 +170,7 @@ namespace ImTK.Database
             }
             catch (Exception ex)
             {
-                s_log.Error(ex, $"Exception occurred while loading asset from {normalizedPath}");
+                ImTKLog.Error(ex, $"Exception occurred while loading asset from {normalizedPath}");
                 throw;
             }
 
@@ -213,7 +214,7 @@ namespace ImTK.Database
             }
             catch (Exception ex)
             {
-                s_log.Error(ex, $"Failed to export asset to {normalizedPath}");
+                ImTKLog.Error(ex, $"Failed to export asset to {normalizedPath}");
             }
         }
 

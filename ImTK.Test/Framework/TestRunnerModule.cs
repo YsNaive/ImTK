@@ -11,7 +11,6 @@ namespace ImTK.Test.Framework
 {
     public class TestRunnerModule : ImTKModule
     {
-        private static readonly LogContext s_log = new LogContext("TestRunnerModule");
 
         private TestRunnerModule() { }
 
@@ -73,19 +72,19 @@ namespace ImTK.Test.Framework
         {
             try
             {
-                s_log.Info($"Running Integration Test: {record.Instance.TestName}");
+                ImTKLog.Info($"Running Integration Test: {record.Instance.TestName}");
                 record.Instance.Run();
                 record.Passed = true;
                 record.HasRun = true;
                 record.ErrorMessage = "";
-                s_log.Info($"[PASS] {record.Instance.TestName}");
+                ImTKLog.Info($"[PASS] {record.Instance.TestName}");
             }
             catch (Exception ex)
             {
                 record.Passed = false;
                 record.HasRun = true;
                 record.ErrorMessage = ex.Message;
-                s_log.Error($"[FAIL] {record.Instance.TestName}: {ex.Message}");
+                ImTKLog.Error($"[FAIL] {record.Instance.TestName}: {ex.Message}");
             }
         }
     }

@@ -12,7 +12,7 @@ namespace ImTK.Event
     /// </summary>
     public static class ImTKDispatcher
     {
-        private static readonly LogContext s_log = new LogContext("ImTKDispatcher");
+
         private static readonly ConcurrentQueue<Action> s_actionQueue = new ConcurrentQueue<Action>();
         private static int s_mainThreadId = -1;
 
@@ -48,7 +48,7 @@ namespace ImTK.Event
                 }
                 catch (Exception ex)
                 {
-                    s_log.Error(ex, "Exception occurred while executing action synchronously on main thread.");
+                    ImTKLog.Error(ex, "Exception occurred while executing action synchronously on main thread.");
                 }
             }
             else
@@ -65,7 +65,7 @@ namespace ImTK.Event
         {
             if (!IsMainThread)
             {
-                s_log.Error("ProcessQueue must be called from the main thread.");
+                ImTKLog.Error("ProcessQueue must be called from the main thread.");
                 return;
             }
 
@@ -77,7 +77,7 @@ namespace ImTK.Event
                 }
                 catch (Exception ex)
                 {
-                    s_log.Error(ex, "Exception occurred during dispatched action execution.");
+                    ImTKLog.Error(ex, "Exception occurred during dispatched action execution.");
                 }
             }
         }

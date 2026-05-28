@@ -16,7 +16,6 @@ namespace ImTK.Silk
     /// </summary>
     public static class ImTKSilk
     {
-        private static readonly LogContext s_log = new LogContext("ImTKSilk");
 
         private static IWindow s_window;
         private static GL s_gl;
@@ -110,11 +109,11 @@ namespace ImTK.Silk
                 if (method != null)
                 {
                     method.Invoke(s_imguiController, null);
-                    s_log.Info("Successfully invoked RecreateFontDeviceTexture via reflection.");
+                    ImTKLog.Info("Successfully invoked RecreateFontDeviceTexture via reflection.");
                 }
                 else
                 {
-                    s_log.Error("Failed to find RecreateFontDeviceTexture method via reflection on ImGuiController!");
+                    ImTKLog.Error("Failed to find RecreateFontDeviceTexture method via reflection on ImGuiController!");
                 }
             }
         }

@@ -1,5 +1,6 @@
 #nullable enable
 
+using ImTK.Log;
 using System;
 using System.IO;
 using System.Text.Json;
@@ -63,7 +64,7 @@ namespace ImTK.Database.Importers
     /// </summary>
     public class FallbackJsonAssetHandler<T> : IAssetImporter<T>, IAssetExporter<T> where T : ImTKAsset, new()
     {
-        private static readonly ImTK.Log.LogContext s_log = new ImTK.Log.LogContext("FallbackJsonAssetHandler");
+
         private readonly JsonAssetHandler<T> _underlyingHandler;
 
         public FallbackJsonAssetHandler(JsonSerializerOptions? options = null)
@@ -84,7 +85,7 @@ namespace ImTK.Database.Importers
             }
             catch (Exception ex)
             {
-                s_log.Error(ex, $"Failed to load JSON asset from {absolutePath}. File might be corrupted. Falling back to default values.", false);
+                ImTKLog.Error(ex, $"Failed to load JSON asset from {absolutePath}. File might be corrupted. Falling back to default values.", false);
                 return CreateFallback(normalizedPath);
             }
         }

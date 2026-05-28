@@ -7,7 +7,7 @@ namespace ImTK.UI
 {
     public class VisualElementHierarchy : IVisualElementHierarchy
     {
-        private static readonly LogContext s_log = new LogContext("VisualElementHierarchy");
+
         private readonly VisualElement m_owner;
         private readonly List<VisualElement> m_children = new List<VisualElement>();
 
@@ -26,7 +26,7 @@ namespace ImTK.UI
         {
             if (ImTKApplication.CurrentState == ApplicationState.GuiRender)
             {
-                s_log.Error("Cannot modify VisualElement hierarchy during GuiRender state. Use Event System or delay the operation.");
+                ImTKLog.Error("Cannot modify VisualElement hierarchy during GuiRender state. Use Event System or delay the operation.");
                 return false;
             }
             return true;

@@ -9,7 +9,7 @@
 3. **命名規範檢查 (Naming Conventions)**
    - 確保所有新增或修改的類別、屬性、變量與 UI 元件皆符合 [命名規範](./NamingConventions.md)。
 4. **日誌完整性檢查 (Log Completeness)**
-   - 確認核心邏輯、模組生命週期、全域管理系統等皆已加入適當的日誌追蹤 (`s_log.Trace`/`Debug`)。
+   - 確認核心邏輯、模組生命週期、全域管理系統等皆已加入適當的日誌追蹤 (`ImTKLog.Trace`/`Debug`)。
    - 確認高頻率呼叫的底層機制避免加入過量日誌以免影響效能。
    - 確認例外與錯誤邊界皆有 `Error` 或 `Warning` 日誌紀錄。
 5. **回歸測試與維護檢查 (Regression Testing & Maintenance)**

@@ -96,7 +96,7 @@ namespace ImTK.UI
             }
 }
 
-        private static readonly LogContext s_log = new LogContext("Window");
+
 
         public string displayName { get; protected set; }
         public string windowId { get; protected set; }
@@ -122,7 +122,7 @@ namespace ImTK.UI
         {
             if (m_isOpen) return;
 
-            s_log.Trace($"Opening window: {imguiId}");
+            ImTKLog.Trace($"Opening window: {imguiId}");
             Panel.RegisterWindow(this);
             m_isOpen = true;
             OnEnable();
@@ -132,7 +132,7 @@ namespace ImTK.UI
         {
             if (!m_isOpen) return;
 
-            s_log.Trace($"Closing window: {imguiId}");
+            ImTKLog.Trace($"Closing window: {imguiId}");
             OnDisable();
             m_isOpen = false;
             Panel.UnregisterWindow(this);
@@ -144,7 +144,7 @@ namespace ImTK.UI
 
             if (Panel.TryGetWindow(key, out Window existingWindow))
             {
-                s_log.Trace($"Window '{key.WindowId}' of type {key.Type.Name} already open. Focusing.");
+                ImTKLog.Trace($"Window '{key.WindowId}' of type {key.Type.Name} already open. Focusing.");
                 if (existingWindow.m_hasRenderedAtLeastOnce)
                 {
                     ImGui.SetWindowFocus(existingWindow.imguiId);
@@ -152,7 +152,7 @@ namespace ImTK.UI
                 return (T)existingWindow;
             }
 
-            s_log.Debug($"Creating new window instance for type {typeof(T).Name} with ID '{windowId}'.");
+            ImTKLog.Debug($"Creating new window instance for type {typeof(T).Name} with ID '{windowId}'.");
             T newWindow = new T();
             if (!string.IsNullOrEmpty(windowId))
             {
@@ -167,7 +167,7 @@ namespace ImTK.UI
         {
             if (!typeof(Window).IsAssignableFrom(windowType))
             {
-                s_log.Error($"Type {windowType.Name} is not a Window.");
+                ImTKLog.Error($"Type {windowType.Name} is not a Window.");
                 return null;
             }
 
@@ -175,7 +175,7 @@ namespace ImTK.UI
 
             if (Panel.TryGetWindow(key, out Window existingWindow))
             {
-                s_log.Trace($"Window '{key.WindowId}' of type {key.Type.Name} already open. Focusing.");
+                ImTKLog.Trace($"Window '{key.WindowId}' of type {key.Type.Name} already open. Focusing.");
                 if (existingWindow.m_hasRenderedAtLeastOnce)
                 {
                     ImGui.SetWindowFocus(existingWindow.imguiId);
@@ -183,7 +183,7 @@ namespace ImTK.UI
                 return existingWindow;
             }
 
-            s_log.Debug($"Creating new window instance for type {windowType.Name} with ID '{windowId}'.");
+            ImTKLog.Debug($"Creating new window instance for type {windowType.Name} with ID '{windowId}'.");
             Window newWindow = (Window)Activator.CreateInstance(windowType);
             if (!string.IsNullOrEmpty(windowId))
             {

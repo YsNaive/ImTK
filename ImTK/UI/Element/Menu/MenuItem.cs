@@ -132,7 +132,7 @@ namespace ImTK.UI
         /// 在 VisualElement 的預設設計中，Add 會取用 contentContainer。
         /// 這裡直接回傳自己但如果在 Add 中被呼叫，後續有需要可以配合其他約束。
         /// </summary>
-        private static readonly LogContext s_log = new LogContext("MenuItem");
+
 
         /// <summary>
         /// 為了防止從外部直接透過邏輯樹加入子物件，覆寫此屬性。
@@ -142,7 +142,7 @@ namespace ImTK.UI
         {
             get
             {
-                s_log.Error($"MenuItem '{name}' is a terminal node and cannot act as a container for children.");
+                ImTKLog.Error($"MenuItem '{name}' is a terminal node and cannot act as a container for children.");
                 return this;
             }
         }

@@ -10,7 +10,7 @@ namespace ImTK.UI
 {
     public static class ImTKFontManager
     {
-        private static readonly LogContext s_log = new LogContext("ImTKFontManager");
+
 
         private static Dictionary<int, FontFamily> s_fontFamilies = new Dictionary<int, FontFamily>();
 
@@ -57,7 +57,7 @@ namespace ImTK.UI
             int hash = new ImTK.HashedString(name).Hash;
             if (s_fontFamilies.ContainsKey(hash))
             {
-                s_log.Warning($"FontFamily '{name}' already registered. Overwriting.");
+                ImTKLog.Warning($"FontFamily '{name}' already registered. Overwriting.");
             }
 
             var family = new FontFamily(name);
@@ -97,7 +97,7 @@ namespace ImTK.UI
             if (!s_isFontDirty) return;
 
             var sw = Stopwatch.StartNew();
-            s_log.Info("Rebuilding Font Atlas...");
+            ImTKLog.Info("Rebuilding Font Atlas...");
             s_loadedFonts.Clear();
 
             var io = ImGui.GetIO();
@@ -142,7 +142,7 @@ namespace ImTK.UI
                         {
                             if (string.IsNullOrEmpty(source.ResolvedPath) || !File.Exists(source.ResolvedPath))
                             {
-                                s_log.Warning($"Font file not found: {source.Path}. Skipping.");
+                                ImTKLog.Warning($"Font file not found: {source.Path}. Skipping.");
                                 continue;
                             }
 
@@ -196,7 +196,7 @@ namespace ImTK.UI
             io.Fonts.Build();
             s_isFontDirty = false;
             sw.Stop();
-            s_log.Info($"Font Atlas Rebuild Complete in {sw.Elapsed.TotalSeconds:F2} seconds.");
+            ImTKLog.Info($"Font Atlas Rebuild Complete in {sw.Elapsed.TotalSeconds:F2} seconds.");
 
             ImTKEventBus.Publish(new OnFontChangedEvent());
         }

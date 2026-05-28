@@ -9,7 +9,7 @@ namespace ImTK.UI
 {
     public class Panel : ImTKModule
     {
-        private static readonly LogContext s_log = new LogContext("Panel");
+
         private readonly List<(Func<Rect, Rect> func, int priority)> m_reservedAreas = new();
 
         private static readonly Dictionary<WindowKey, Window> s_windows = new Dictionary<WindowKey, Window>();
@@ -35,7 +35,7 @@ namespace ImTK.UI
                 WindowKey key = new WindowKey(window.GetType(), window.windowId);
                 if (s_windows.ContainsKey(key))
                 {
-                    s_log.Error($"Failed to register window. Type '{key.Type.Name}' with ID '{key.WindowId}' is already open.");
+                    ImTKLog.Error($"Failed to register window. Type '{key.Type.Name}' with ID '{key.WindowId}' is already open.");
                     throw new InvalidOperationException($"A window of type '{key.Type}' with windowId '{key.WindowId}' is already open.");
                 }
                 s_windows[key] = window;
@@ -109,56 +109,56 @@ namespace ImTK.UI
                 }
 
                 cache.MarkDirty();
-                s_log.Trace("Workspace saved.");
+                ImTKLog.Trace("Workspace saved.");
             }
             catch (Exception e)
             {
-                s_log.Error(e, "Failed to save workspace.");
+                ImTKLog.Error(e, "Failed to save workspace.");
             }
         }
 
         private static void RestoreWorkspace()
         {
-            s_log.Info("Attempting to RestoreWorkspace...");
+            ImTKLog.Info("Attempting to RestoreWorkspace...");
             try
             {
                 var cache = ImTK.Database.ImTKDatabase.Load<ImTK.Database.ImTKCacheAsset>("imgui/imtk_cache.json");
                 if (cache == null)
                 {
-                    s_log.Warning("RestoreWorkspace: cache is null.");
+                    ImTKLog.Warning("RestoreWorkspace: cache is null.");
                     return;
                 }
                 
                 if (cache.OpenWindows == null)
                 {
-                    s_log.Warning("RestoreWorkspace: cache.OpenWindows is null.");
+                    ImTKLog.Warning("RestoreWorkspace: cache.OpenWindows is null.");
                     return;
                 }
 
                 if (cache.OpenWindows.Count == 0)
                 {
-                    s_log.Info("RestoreWorkspace: No windows to restore (OpenWindows is empty).");
+                    ImTKLog.Info("RestoreWorkspace: No windows to restore (OpenWindows is empty).");
                     return;
                 }
 
-                s_log.Info($"Restoring {cache.OpenWindows.Count} windows from workspace cache.");
+                ImTKLog.Info($"Restoring {cache.OpenWindows.Count} windows from workspace cache.");
 
                 foreach (var session in cache.OpenWindows)
                 {
-                    s_log.Info($"Trying to restore window type: '{session.TypeName}' with ID: '{session.WindowId}'");
+                    ImTKLog.Info($"Trying to restore window type: '{session.TypeName}' with ID: '{session.WindowId}'");
                     try
                     {
                         Type type = Type.GetType(session.TypeName);
                         if (type == null)
                         {
                             string typeFullName = session.TypeName.Split(',')[0].Trim();
-                            s_log.Debug($"Type.GetType returned null. Searching assemblies for '{typeFullName}'...");
+                            ImTKLog.Debug($"Type.GetType returned null. Searching assemblies for '{typeFullName}'...");
                             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
                             {
                                 type = asm.GetType(typeFullName);
                                 if (type != null) 
                                 {
-                                    s_log.Debug($"Found type in assembly: {asm.FullName}");
+                                    ImTKLog.Debug($"Found type in assembly: {asm.FullName}");
                                     break;
                                 }
                             }
@@ -166,23 +166,23 @@ namespace ImTK.UI
 
                         if (type != null)
                         {
-                            s_log.Info($"Calling Window.Open for type {type.Name}");
+                            ImTKLog.Info($"Calling Window.Open for type {type.Name}");
                             Window.Open(type, session.WindowId);
                         }
                         else
                         {
-                            s_log.Warning($"Failed to resolve window type: {session.TypeName}");
+                            ImTKLog.Warning($"Failed to resolve window type: {session.TypeName}");
                         }
                     }
                     catch (Exception ex)
                     {
-                        s_log.Error(ex, $"Exception while restoring window {session.TypeName}");
+                        ImTKLog.Error(ex, $"Exception while restoring window {session.TypeName}");
                     }
                 }
             }
             catch (Exception e)
             {
-                s_log.Error(e, "Failed to restore workspace.");
+                ImTKLog.Error(e, "Failed to restore workspace.");
             }
         }
 
@@ -205,7 +205,7 @@ namespace ImTK.UI
                 }
                 catch (Exception ex)
                 {
-                    s_log.Error(ex, $"Exception in Update of window: {window.imguiId}");
+                    ImTKLog.Error(ex, $"Exception in Update of window: {window.imguiId}");
                 }
             }
         }
@@ -237,7 +237,7 @@ namespace ImTK.UI
         {
             if (ImTKApplication.CurrentState != ApplicationState.InitializeSelf && ImTKApplication.CurrentState != ApplicationState.InitializeDependencies)
             {
-                s_log.Error($"Cannot require area outside of initialization phase. Current state: {ImTKApplication.CurrentState}");
+                ImTKLog.Error($"Cannot require area outside of initialization phase. Current state: {ImTKApplication.CurrentState}");
                 return;
             }
 
@@ -295,7 +295,7 @@ namespace ImTK.UI
                 }
                 catch (Exception ex)
                 {
-                    s_log.Error(ex, $"Exception in Render of Window: {window.imguiId}");
+                    ImTKLog.Error(ex, $"Exception in Render of Window: {window.imguiId}");
                 }
             }
 
