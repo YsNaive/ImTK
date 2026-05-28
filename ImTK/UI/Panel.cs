@@ -263,14 +263,14 @@ namespace ImTK.UI
             ImGuiWindowFlags windowFlags = ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground;
 
             int globalFontFamilyHash = ImTKTheme.GlobalTheme.fontFamilyHash;
-            var font = ImTKFontManager.GetFont(globalFontFamilyHash, FontSize.Normal);
+            var font = ImTKFontManager.GetFont(globalFontFamilyHash);
             bool pushedFont = false;
 
             unsafe
             {
                 if (font.Handle != null)
                 {
-                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, 0.0f);
+                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal);
                     RenderingContext.PushFontState(globalFontFamilyHash);
                     pushedFont = true;
                 }

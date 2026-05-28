@@ -42,6 +42,9 @@
 - **HashedString 容量防呆機制**：在 `ImTKEnvironment` 新增 `HashedStringCapacityWarningThreshold`（預設 50000）。當 `HashedString` 全域註冊表超過此容量時會觸發 `ImTKLog.Error`，防範開發者誤將動態字串傳入導致 Memory Leak。
 
 ### Changed (變更)
+- **字型圖集 (Font Atlas) 減肥與動態縮放**：移除原先的「多尺寸烘焙」機制，現在每個字型家族只會烘焙單一基準尺寸 (`FontSize.Normal`)，較大或較小的字級需求將交由 ImGui 1.92+ 的 `ImGui.PushFont(fontPtr, targetSize)` 原生動態縮放處理，大幅減少 VRAM 佔用。
+- **全域預設字體烘焙順序修復**：修復了 `ImTKFontManager` 在烘焙字型時因 `Dictionary` 遍歷順序不固定，導致未指定字體的普通 UI 元件可能會繼承到錯誤的預設字體大小的問題。現在確保 `ImGuiDefault` 永遠是第一個被烘焙的字型，確保與全域 `fontSizeNormal` 完美同步。
+- **DPI 適應性重構**：全面廢除 `globalFontScale` 手動放大機制，改為映射至 `ImGui.GetStyle().FontScaleMain`，這使得 Hexa.NET.ImGui 的 Multi-Viewport 能正確接管跨螢幕的 `RasterizerDensity` DPI 縮放。
 - **底層 ImGui 封裝替換**：將專案從 `ImGui.NET` 與 `Silk.NET.OpenGL.Extensions.ImGui` 徹底遷移至 `Hexa.NET.ImGui` 以及 `Hexa.NET.ImGui.Backends.GLFW` / `OpenGL3`。此重構移除了舊版對多視窗不支援的限制，並全面更新了 48 個內部元件的命名空間依賴。
 - **ImTKSilk 渲染迴圈重構**：移除了 `ImGuiController`，改由原生的 Hexa Backends 實作初始化與渲染迴圈，並加入 `ImGui.UpdatePlatformWindows()` 與 `ImGui.RenderPlatformWindowsDefault()` 處理。
 - **HashedString 效能極限優化**：修正了 `default(HashedString)` 的邊界問題，現在所有合法字串的 Hash 絕對不會是 `0`（將 `0` 保留給未初始化的結構體）。基於此保證，大幅優化了 `Equals` 與 `==` 運算子，完全移除字串比對，使其效能等同於原生整數比較。

@@ -70,12 +70,12 @@ namespace ImTK.Silk
             s_iniFilePath = Path.Combine(folderPath, "imgui.ini");
             io.IniFilename = (byte*)System.Runtime.InteropServices.Marshal.StringToCoTaskMemUTF8(s_iniFilePath);
 
-            io.ConfigFlags |= ImGuiConfigFlags.DockingEnable; 
+            io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
             if (s_config.enableViewports)
             {
                 io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+                io.ConfigViewportsNoDecoration = false;
             }
-
             ImGuiImplGLFW.SetCurrentContext(ImGui.GetCurrentContext());
             ImGuiImplOpenGL3.SetCurrentContext(ImGui.GetCurrentContext());
 

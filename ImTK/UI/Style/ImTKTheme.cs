@@ -174,7 +174,8 @@ namespace ImTK.UI
                 if (m_globalFontScale != value)
                 {
                     m_globalFontScale = value;
-                    ImTKFontManager.MarkFontDirty();
+                    isGlobalThemeDirty = true;
+                    onGlobalThemeChanged?.Invoke();
                 }
             }
         }
@@ -190,11 +191,11 @@ namespace ImTK.UI
         // --- Font System ---
         private Dictionary<FontSize, float> m_fontSizes = new Dictionary<FontSize, float>
         {
-            { FontSize.Small, 14f },
+            { FontSize.Small, 16f },
             { FontSize.Normal, 18f },
             { FontSize.H3, 24f },
-            { FontSize.H2, 32f },
-            { FontSize.H1, 48f }
+            { FontSize.H2, 30f },
+            { FontSize.H1, 36f }
         };
 
         internal IReadOnlyDictionary<FontSize, float> GetFontSizes() => m_fontSizes;
@@ -315,6 +316,7 @@ namespace ImTK.UI
                 style.TabBorderSize = borderWidth;
 
                 style.DisabledAlpha = disabledAlpha;
+                style.FontScaleMain = m_globalFontScale;
             }
         }
 

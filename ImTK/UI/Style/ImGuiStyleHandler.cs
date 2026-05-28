@@ -13,13 +13,11 @@ namespace ImTK.UI
 
         private readonly List<StyleProperty> m_properties = new List<StyleProperty>();
         private bool m_fontWasPushed = false;
-        private bool m_fontScaleWasPushed = false;
 
         public void Clear()
         {
             m_properties.Clear();
             m_fontWasPushed = false;
-            m_fontScaleWasPushed = false;
         }
 
         public bool TrySetProperty(StyleProperty prop)
@@ -253,24 +251,26 @@ namespace ImTK.UI
                     RenderingContext.PushFontState(familyHash);
                 }
 
-                ImFontPtr fontPtr;
-                if (hasSize && fontSize.dataType == StyleDataType.Int)
+                ImFontPtr fontPtr = ImTKFontManager.GetFont(familyHash);
+                float targetSize = ImTKTheme.GlobalTheme.fontSizeNormal;
+
+                if (hasSize)
                 {
-                    var (f, scale) = ImTKFontManager.GetFontWithScale(familyHash, fontSize.intValue);
-                    fontPtr = f;
-                    ImTKFontManager.PushFontScale(scale);
-                    m_fontScaleWasPushed = true;
-                }
-                else
-                {
-                    var fontSizeEnum = hasSize ? (ImTK.UI.FontSize)fontSize.enumValue : ImTK.UI.FontSize.Normal;
-                    fontPtr = ImTKFontManager.GetFont(familyHash, fontSizeEnum);
+                    if (fontSize.dataType == StyleDataType.Int)
+                    {
+                        targetSize = fontSize.intValue;
+                    }
+                    else if (fontSize.dataType == StyleDataType.Enum)
+                    {
+                        var fontSizeEnum = (ImTK.UI.FontSize)fontSize.enumValue;
+                        targetSize = ImTKTheme.GlobalTheme.GetFontSizes()[fontSizeEnum];
+                    }
                 }
 
                 m_fontWasPushed = fontPtr.Handle != null;
                 if (m_fontWasPushed)
                 {
-                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)fontPtr.Handle, 0.0f);
+                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)fontPtr.Handle, targetSize);
                 }
             }
         }
@@ -311,7 +311,6 @@ namespace ImTK.UI
 
             if (hasFamily || hasSize)
             {
-                if (m_fontScaleWasPushed) ImTKFontManager.PopFontScale();
                 if (m_fontWasPushed) ImGui.PopFont();
                 if (hasFamily) RenderingContext.PopFontState();
             }
