@@ -461,7 +461,7 @@ namespace ImTK.UI
                     s_defaultDark.normalColor.accentHover = new Color(0.65f, 0.65f, 0.65f, 1.0f);
                     s_defaultDark.normalColor.accentActive = new Color(0.45f, 0.45f, 0.45f, 1.0f);
                     s_defaultDark.normalColor.selection = new Color(0.25f, 0.25f, 0.25f, 0.8f);      // Pure Grayscale selection
-                    s_defaultDark.normalColor.border = new Color(0.25f, 0.25f, 0.25f, 1.0f);
+                    s_defaultDark.normalColor.border = new Color(0.32f, 0.32f, 0.32f, 1.0f);
                     s_defaultDark.normalColor.divider = new Color(0.20f, 0.20f, 0.20f, 1.0f);
                     s_defaultDark.normalColor.text = new Color(0.9f, 0.9f, 0.9f, 1.0f);              // Pure Whiteish
                     s_defaultDark.normalColor.subText = new Color(0.6f, 0.6f, 0.6f, 1.0f);

@@ -16,8 +16,8 @@ namespace ImTK.Sandbox
             var config = new ImTKSilkConstant
             {
                 windowTitle = "ImTK Sandbox",
-                windowWidth = 1280,
-                windowHeight = 800
+                windowWidth = 1600,
+                windowHeight = 900
             };
 
             // Developer can add their own module or scenario here, e.g.:

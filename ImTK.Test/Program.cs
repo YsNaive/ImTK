@@ -33,11 +33,14 @@ namespace ImTK.Test
             var config = new ImTKSilkConstant
             {
                 windowTitle = "ImTK Integration Test",
-                windowWidth = 1024,
-                windowHeight = 768
+                windowWidth = 1600,
+                windowHeight = 900
             };
 
-            ImTKFontManager.OverrideDefaultFamily(new FontSource("consola"));
+            ImTKFontManager.OverrideDefaultFamily(
+                new FontSource("consola"),
+                new FontSource("jf-openhuninn-2.1")
+                );
 
             // Drive the entire ImTK application using the Silk.NET entry point
             ImTKSilk.Run(config);

@@ -107,7 +107,30 @@ namespace ImTK.UI
 
         private Rect RequireMenuArea(Rect available)
         {
-            float menuHeight = ImGui.GetFrameHeight() * 1.25f; // 上下 padding 0.125
+            float frameHeight = 0f;
+            int globalFontFamilyHash = ImTKTheme.GlobalTheme.fontFamilyHash;
+            var font = ImTK.UI.ImTKFontManager.GetFont(globalFontFamilyHash);
+            bool pushedFont = false;
+
+            unsafe
+            {
+                if (font.Handle != null)
+                {
+                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal); 
+                    pushedFont = true;
+                }
+            }
+
+            frameHeight = ImGui.GetFrameHeight();
+
+            if (pushedFont)
+            {
+                ImGui.PopFont();
+            }
+
+            float padding = frameHeight * 0.125f;
+            float borderHeight = 2.0f;
+            float menuHeight = frameHeight + (padding * 2) + borderHeight;
 
             // 記錄自己取得的空間，供 OnGuiRender 繪製使用
             m_reservedRect = new Rect(available.x, available.y, available.width, menuHeight);
@@ -118,6 +141,20 @@ namespace ImTK.UI
 
         protected internal override void OnGuiRender()
         {
+            int globalFontFamilyHash = ImTKTheme.GlobalTheme.fontFamilyHash;
+            var font = ImTK.UI.ImTKFontManager.GetFont(globalFontFamilyHash);
+            bool pushedFont = false;
+
+            unsafe
+            {
+                if (font.Handle != null)
+                {
+                    // 仿照 Panel.cs，確保傳入正確的字體大小參數 (如果您的 Hexa.NET.ImGui 版本或擴充方法支援此參數)
+                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal); 
+                    RenderingContext.PushFontState(globalFontFamilyHash);
+                    pushedFont = true;
+                }
+            }
             // 由於 m_reservedRect 的高度為 FrameHeight * 1.25f (包含 padding)
             // 若視窗高度也設為 1.25f，多出的 0.25f 透明區域會阻擋滑鼠點擊下方的 Docking 標題列。
             // 因此，視窗本身的高度只設為 MenuBar 需要的標準 FrameHeight，並根據 padding 調整位置。
@@ -154,6 +191,18 @@ namespace ImTK.UI
 
             // ImGui.Begin() 無論回傳 true 或 false，都必須配對呼叫 ImGui.End()
             ImGui.End();
+
+            // 繪製下方分隔線 (Border)
+            var drawList = ImGui.GetForegroundDrawList();
+            uint borderColor = ImTKTheme.GlobalTheme.normalColor.border.u32;
+            float borderY = m_reservedRect.y + m_reservedRect.height - 2.0f; // y 座標取底端 - 半個粗度
+            drawList.AddLine(new Vector2(m_reservedRect.x, borderY), new Vector2(m_reservedRect.x + m_reservedRect.width, borderY), borderColor, 4.0f);
+
+            if (pushedFont)
+            {
+                ImGui.PopFont();
+                RenderingContext.PopFontState();
+            }
         }
 
         protected internal override void OnLogicUpdate()

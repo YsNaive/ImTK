@@ -8,6 +8,10 @@
 ## [Unreleased]
 
 ### Added (新增)
+- **日誌除錯工具 (Log Viewer)**：新增 `LogViewerWindow` 與 `DebugToolsModule`。在開發模式 (`IsDevelopment`) 下，會自動於主選單加入「偵錯/日誌 (Log)」選項。
+- 支援基於 `ConcurrentQueue` 的跨執行緒日誌擷取，確保框架背景執行緒的日誌不漏接。
+- 實作了專屬的 `LogEntryElement` 游離元件 (Detached Element)，結合 `ImGuiListClipper` 進行虛擬化渲染，支援超過上萬筆日誌的流暢捲動 (60 FPS)，並且完美整合了 `ImTKTheme` 的顏色映射 (依據 Log Level 套用主題色)。
+- 內建進階過濾器，包含多選的 Context Name (動態蒐集所有模組)、Log Level 開關以及關鍵字搜尋。
 - **多視窗支援 (Multi-Viewports)**：透過替換底層函式庫為 `Hexa.NET.ImGui`，正式啟用 `ImGuiConfigFlags.ViewportsEnable`，完美支援將 UI 視窗拖出主視窗形成獨立的作業系統級視窗，大幅提升多螢幕開發者的使用體驗。
 - **[UI 系統] 元件持久化 Attribute 語法糖與深層遞迴**：新增了 `[Persistent]` 標籤與 `PersistentTypeCache`。開發者現在可以直接在 `VisualElement` 的 Field 與 Property 上標記 `[Persistent]`，系統便會透過反射自動將其納入 `ViewStatePersister` 的自動存檔與讀取機制中。
 - 支援複雜物件 (Class / Struct) 的無限深度遞迴拆解 (Recursive Flattening)。
@@ -217,6 +221,7 @@
 - 優化 `EventDispatcher` 階層髒標記處理邏輯，透過雙緩衝區 (Double-Buffering) 徹底消除每幀陣列複製造成的 GC 配置。
 - 修復了無頭測試中全域 `EventDispatcher` 駐列污染的架構漏洞，實作 `ClearQueue` 強制在每次測試前後隔離環境。
 - 修正 `MainMenuModule` 在繪製 MenuBar 容器時，由於 ImGui 預設 `WindowMinSize` 大於我們給定的高度，導致產生透明 Hit-box 擋住下方 Docking 標題列滑鼠拖曳事件的問題（透過推送 `ImGuiStyleVar.WindowMinSize` 至 `0,0` 解決）。
+- 修正 `MainMenuModule` 排版錯位與溢出問題：原本空間計算 (`RequireMenuArea`) 與繪製 (`OnGuiRender`) 之間的字型尚未同步推入，導致高度計算不準確而覆蓋到下方 DockSpace；現已確保字型精確同步，並在下方加入主題色 `normalColor.border` 的分隔線。
 - 修正 `TestRunnerModule` 內的 `TestReportWindow` 統計狀態異常問題（修正 Pending 顯示判斷與顏色標示）。
 - 修正 `EventBubbleTest` 測試失敗問題：將原有的 `ImGui.Button` 替換為 `ImTK.UI.Button` 以解決在 `GuiRender` 階段因直接修改視覺樹而觸發的生命週期保護機制 (CheckSafeState)。
 - **架構重構**：將 `VisualElement.Render()` 中的防護層、樣式管理與事件走訪邏輯徹底抽離至靜態 `RenderEngine.RenderNode()`。
