@@ -37,6 +37,8 @@ namespace ImTK.Core
         private static readonly List<ImTKObject> s_pendingAdd = new List<ImTKObject>();
         private static readonly List<ImTKObject> s_pendingRemove = new List<ImTKObject>();
 
+        private static readonly List<Action> s_deferredActions = new List<Action>();
+
         // Frame phase tracking to prevent reverse-order calls
         private static ApplicationState s_minAllowedFrameState = ApplicationState.LogicUpdate;
 
@@ -71,6 +73,19 @@ namespace ImTK.Core
         {
             if (obj == null) return;
             s_pendingRemove.Add(obj);
+        }
+
+        /// <summary>
+        /// Schedules an action to be executed safely at the end of the current frame (LateUpdate).
+        /// Useful for modifying UI structures or state during restricted phases like GuiRender.
+        /// </summary>
+        public static void ScheduleDeferred(Action action)
+        {
+            if (action == null) return;
+            lock (s_deferredActions)
+            {
+                s_deferredActions.Add(action);
+            }
         }
 
         /// <summary>
@@ -286,6 +301,9 @@ namespace ImTK.Core
                 // Process main thread dispatcher queue
                 ImTK.Event.ImTKDispatcher.ProcessQueue();
 
+                // Process deferred actions scheduled during the frame
+                ProcessDeferredActions();
+
                 // Process pending collections and Enable/Disable state changes
                 ProcessPendingQueuesAndStateChanges();
 
@@ -324,12 +342,35 @@ namespace ImTK.Core
 
                 s_objects.Clear();
                 s_modules.Clear();
+                s_deferredActions.Clear();
 
                 SetState(ApplicationState.Closed);
                 s_log.Info("ImTKApplication shutdown complete.");
             }
 
-                        private static void ProcessPendingQueuesAndStateChanges()
+            private static void ProcessDeferredActions()
+            {
+                Action[] actionsToRun = null;
+                lock (s_deferredActions)
+                {
+                    if (s_deferredActions.Count > 0)
+                    {
+                        actionsToRun = s_deferredActions.ToArray();
+                        s_deferredActions.Clear();
+                    }
+                }
+
+                if (actionsToRun != null)
+                {
+                    foreach (var action in actionsToRun)
+                    {
+                        try { action(); }
+                        catch (Exception ex) { s_log.Error(ex, "Exception occurred during deferred action execution."); }
+                    }
+                }
+            }
+
+            private static void ProcessPendingQueuesAndStateChanges()
         {
                 // Add pending objects (copy to array to prevent modification during iteration)
                 if (s_pendingAdd.Count > 0)

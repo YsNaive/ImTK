@@ -13,8 +13,6 @@ namespace ImTK.UI
         private readonly List<(Func<Rect, Rect> func, int priority)> m_reservedAreas = new();
 
         private static readonly Dictionary<WindowKey, Window> s_windows = new Dictionary<WindowKey, Window>();
-        private static readonly List<Window> s_windowsToAdd = new List<Window>();
-        private static readonly List<Window> s_windowsToRemove = new List<Window>();
 
         private class WindowHostElement : VisualElement
         {
@@ -36,14 +34,30 @@ namespace ImTK.UI
                 throw new InvalidOperationException($"A window of type '{key.Type}' with windowId '{key.WindowId}' is already open.");
             }
             s_windows[key] = window;
-            s_windowsToAdd.Add(window);
+            
+            ImTKApplication.ScheduleDeferred(() =>
+            {
+                if (s_hostElement != null)
+                {
+                    s_hostElement.hierarchy.Add(window);
+                }
+            });
 
             s_log.Trace($"Window registered in Panel: {window.imguiId}");
         }
 
         internal static void UnregisterWindow(Window window)
         {
-            s_windowsToRemove.Add(window);
+            ImTKApplication.ScheduleDeferred(() =>
+            {
+                WindowKey key = new WindowKey(window.GetType(), window.windowId);
+                s_windows.Remove(key);
+                if (s_hostElement != null)
+                {
+                    s_hostElement.hierarchy.Remove(window);
+                }
+                s_log.Trace($"Window unregistered from Panel: {window.imguiId}");
+            });
         }
 
         internal static bool TryGetWindow(WindowKey key, out Window window)
@@ -66,27 +80,6 @@ namespace ImTK.UI
                 ImTKTheme.isGlobalThemeDirty = false;
             }
 
-            foreach (var window in s_windowsToAdd)
-            {
-                if (s_hostElement != null)
-                {
-                    s_hostElement.hierarchy.Add(window);
-                }
-            }
-            s_windowsToAdd.Clear();
-
-            foreach (var window in s_windowsToRemove)
-            {
-                WindowKey key = new WindowKey(window.GetType(), window.windowId);
-                s_windows.Remove(key);
-                if (s_hostElement != null)
-                {
-                    s_hostElement.hierarchy.Remove(window);
-                }
-                s_log.Trace($"Window unregistered from Panel: {window.imguiId}");
-            }
-            s_windowsToRemove.Clear();
-
             foreach (var window in s_windows.Values)
             {
                 try
@@ -107,11 +100,14 @@ namespace ImTK.UI
 
             foreach (var window in s_windows.Values)
             {
-                // Push existing windows to the add queue to be processed safely
-                if (!s_windowsToAdd.Contains(window))
+                var w = window;
+                ImTKApplication.ScheduleDeferred(() =>
                 {
-                    s_windowsToAdd.Add(window);
-                }
+                    if (s_hostElement != null)
+                    {
+                        s_hostElement.hierarchy.Add(w);
+                    }
+                });
             }
         }
 
@@ -207,8 +203,6 @@ namespace ImTK.UI
             ImTKTheme.onGlobalThemeChanged -= OnGlobalThemeChanged;
             s_hostElement = null;
             s_windows.Clear();
-            s_windowsToAdd.Clear();
-            s_windowsToRemove.Clear();
         }
     }
 }

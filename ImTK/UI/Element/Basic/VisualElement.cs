@@ -1295,6 +1295,15 @@ namespace ImTK.UI
             }
         }
 
+        /// <summary>
+        /// Schedules an action to be executed safely at the end of the current frame.
+        /// Useful for modifying UI structures or state during restricted phases like GuiRender.
+        /// </summary>
+        public void ScheduleDeferred(Action action)
+        {
+            ImTKApplication.ScheduleDeferred(action);
+        }
+
         internal bool HasAnyCallback()
         {
             return m_callbacks != null && m_callbacks.Count > 0;
