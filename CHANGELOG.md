@@ -38,8 +38,10 @@
 - **TextElement 自動折行**：為 `TextElement` 實作了 `enableWordWrap` 屬性 (預設為 `true`)。結合排版引擎傳遞的 `AvailableWidth`，精確計算文字折行後的高度，並利用 `PushTextWrapPos` 確保在渲染時不會撐爆畫面。
 - **全域日誌語法糖 (Log Syntactic Sugar)**：在 `ImTKLog` 中全面加入了帶有 `[CallerFilePath]` 的 `Info`, `Error`, `Trace` 等靜態方法，取代了以往每個類別都需要手動宣告 `private static readonly LogContext s_log` 的冗長寫法。
 - **單元測試補齊**：新增了 `LogSystemTests.cs`, `HashedStringTests.cs`, 與 `TimeTests.cs` 來確保核心底層邏輯與日誌模組的穩定性。
+- **HashedString 容量防呆機制**：在 `ImTKEnvironment` 新增 `HashedStringCapacityWarningThreshold`（預設 50000）。當 `HashedString` 全域註冊表超過此容量時會觸發 `ImTKLog.Error`，防範開發者誤將動態字串傳入導致 Memory Leak。
 
 ### Changed (變更)
+- **HashedString 效能極限優化**：修正了 `default(HashedString)` 的邊界問題，現在所有合法字串的 Hash 絕對不會是 `0`（將 `0` 保留給未初始化的結構體）。基於此保證，大幅優化了 `Equals` 與 `==` 運算子，完全移除字串比對，使其效能等同於原生整數比較。
 - **ImTKApplication 生命週期升級**：在 `ImTKApplication.Initialize()` 流程中正式補上 `Phase 3: Enable` 階段。現在所有註冊的 `ImTKModule` 皆會正確觸發 `OnEnable()`，完善了原本缺失的模組啟動事件鏈。
 - **RenderEngine 扁平化渲染統一**：移除了 `Window` 獨立的 `FlattenRecursive`，全面統一改由 `RenderEngine.BuildRenderListRecursive` 負責渲染清單建立。
 - **ILayoutRoot 語意更名**：將原有的 `IWindow` 介面更名為 `ILayoutRoot`，使其更精確地反映其作為「排版引擎計算起始點」的職責。

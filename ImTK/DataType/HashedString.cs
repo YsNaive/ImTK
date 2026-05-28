@@ -1,4 +1,5 @@
 using ImTK.Log;
+using ImTK.Core;
 using System;
 
 namespace ImTK
@@ -28,8 +29,14 @@ namespace ImTK
                 return;
             }
 
+            if (s_stringToHash.Count >= ImTKEnvironment.HashedStringCapacityWarningThreshold)
+            {
+                ImTKLog.Error($"HashedString registry capacity exceeded threshold ({ImTKEnvironment.HashedStringCapacityWarningThreshold}). Potential memory leak from dynamically generated strings.");
+            }
+
             // 1. 計算初始 Hash (使用決定性的 FNV-1a 32-bit 演算法)
             int hash = ComputeFNV1a(Value);
+            if (hash == 0) hash = 1;
 
             // 2. 註冊與自動防碰撞機制
             while (true)
@@ -57,6 +64,7 @@ namespace ImTK
                             // 發生了真實的雜湊碰撞！發出警告並自動解決 (Linear Probing)
                             ImTKLog.Warning($"Hash collision detected between '{registeredValue}' and '{Value}'. Resolving automatically.");
                             hash = hash + 1;
+                            if (hash == 0) hash = 1;
                         }
                     }
                 }
@@ -82,15 +90,15 @@ namespace ImTK
         // 隱式轉換：回傳字串 (主要用於 Log 或 Debug)
         public static implicit operator string(HashedString hs) => hs.Value;
 
-        public bool Equals(HashedString other) => Hash == other.Hash && Value == other.Value;
+        public bool Equals(HashedString other) => Hash == other.Hash;
 
         public override bool Equals(object obj) => obj is HashedString other && Equals(other);
 
         public override int GetHashCode() => Hash;
 
-        public static bool operator ==(HashedString left, HashedString right) => left.Hash == right.Hash && left.Value == right.Value;
+        public static bool operator ==(HashedString left, HashedString right) => left.Hash == right.Hash;
 
-        public static bool operator !=(HashedString left, HashedString right) => left.Hash != right.Hash || left.Value != right.Value;
+        public static bool operator !=(HashedString left, HashedString right) => left.Hash != right.Hash;
 
         public override string ToString() => Value;
     }

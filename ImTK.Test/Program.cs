@@ -1,6 +1,7 @@
 using System;
 using ImTK.Silk;
 using ImTK.Core;
+using ImTK.UI;
 
 namespace ImTK.Test
 {
@@ -35,6 +36,8 @@ namespace ImTK.Test
                 windowWidth = 1024,
                 windowHeight = 768
             };
+
+            ImTKFontManager.OverrideDefaultFamily(new FontSource("consola"));
 
             // Drive the entire ImTK application using the Silk.NET entry point
             ImTKSilk.Run(config);

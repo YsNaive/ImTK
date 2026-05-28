@@ -150,5 +150,17 @@ namespace ImTK.Core
             }
             set => _localDataPath = value;
         }
+
+        private static int? _hashedStringCapacityWarningThreshold;
+        /// <summary>
+        /// 全域 HashedString 註冊表的防呆容量上限。
+        /// 當註冊的唯一字串數量超過此數值時，會觸發 Error Log 警告可能有 Memory Leak (動態字串濫用)。
+        /// 預設為 50000。
+        /// </summary>
+        public static int HashedStringCapacityWarningThreshold
+        {
+            get => _hashedStringCapacityWarningThreshold ?? 50000;
+            set => _hashedStringCapacityWarningThreshold = value;
+        }
     }
 }

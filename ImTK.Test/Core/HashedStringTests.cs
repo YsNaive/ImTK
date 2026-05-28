@@ -10,6 +10,7 @@ namespace ImTK.Test.Core
         {
             TestBasicHashing();
             TestEquality();
+            TestDefaultEquality();
             TestImplicitConversion();
         }
 
@@ -35,6 +36,21 @@ namespace ImTK.Test.Core
             ImTKAssert.IsFalse(hs1 == hs3, "Equality operator should detect difference.");
             ImTKAssert.IsTrue(hs1 != hs3, "Inequality operator should work.");
             ImTKAssert.IsTrue(hs1.Equals(hs2), "Equals method should work.");
+        }
+
+        private void TestDefaultEquality()
+        {
+            HashedString defaultHs = default;
+            HashedString defaultHs2 = new HashedString();
+            HashedString validHs = new HashedString("Valid");
+            HashedString emptyHs = new HashedString(string.Empty);
+
+            ImTKAssert.IsTrue(defaultHs == defaultHs2, "Default structs should be equal.");
+            ImTKAssert.IsFalse(defaultHs == validHs, "Default struct should not equal valid struct.");
+            ImTKAssert.IsFalse(defaultHs == emptyHs, "Default struct should not equal empty string struct.");
+            ImTKAssert.IsTrue(defaultHs.Hash == 0, "Default hash should be 0.");
+            ImTKAssert.IsTrue(validHs.Hash != 0, "Valid hash should not be 0.");
+            ImTKAssert.IsTrue(emptyHs.Hash != 0, "Empty string hash should not be 0.");
         }
 
         private void TestImplicitConversion()
