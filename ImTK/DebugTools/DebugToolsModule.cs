@@ -20,7 +20,7 @@ namespace ImTK.DebugTools
                 var mainMenu = ImTKApplication.GetModule<MainMenuModule>();
                 if (mainMenu != null)
                 {
-                    mainMenu.AddItem("偵錯/日誌 (Log)", _ => Window.Open<LogViewerWindow>(), 1000);
+                    mainMenu.AddItem("偵錯/日誌 (Log)", _ => Window.Open<LogViewerWindow>(LogViewerWindow.WindowId), 1000);
                 }
             }
         }

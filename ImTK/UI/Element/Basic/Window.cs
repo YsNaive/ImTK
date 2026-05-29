@@ -99,7 +99,8 @@ namespace ImTK.UI
 
 
         public string displayName { get; protected set; }
-        public string windowId { get; protected set; }
+        
+        public string windowId { get; init; }
 
         public bool isFocused { get; private set; }
 
@@ -157,11 +158,7 @@ namespace ImTK.UI
             }
 
             ImTKLog.Debug($"Creating new window instance for type {typeof(T).Name} with ID '{windowId}'.");
-            T newWindow = new T();
-            if (!string.IsNullOrEmpty(windowId))
-            {
-                newWindow.windowId = windowId;
-            }
+            T newWindow = string.IsNullOrEmpty(windowId) ? new T() : new T { windowId = windowId };
 
             newWindow.Open();
             return newWindow;
@@ -191,7 +188,11 @@ namespace ImTK.UI
             Window newWindow = (Window)Activator.CreateInstance(windowType);
             if (!string.IsNullOrEmpty(windowId))
             {
-                newWindow.windowId = windowId;
+                var prop = typeof(Window).GetProperty(nameof(Window.windowId));
+                if (prop != null && prop.CanWrite)
+                {
+                    prop.SetValue(newWindow, windowId);
+                }
             }
 
             newWindow.Open();

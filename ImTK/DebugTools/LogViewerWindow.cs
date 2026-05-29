@@ -40,7 +40,9 @@ namespace ImTK.DebugTools
         // ILogSink 介面
         public bool enabled { get; set; } = true;
 
-        public LogViewerWindow() : base("偵錯: 日誌", "ImTK.LogViewerWindow")
+        public const string WindowId = "ImTK.LogViewerWindow";
+
+        public LogViewerWindow() : base("偵錯: 日誌", WindowId)
         {
             m_logEntryElement = new LogEntryElement();
         }

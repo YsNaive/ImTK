@@ -182,9 +182,9 @@ namespace ImTK.Test.UI.Style
             bool HasFontFamily(ImGuiStyleHandler handler) => handler.GetActiveProperties().Any(p => p.key == ImGuiStyleHandler.s_fontFamilyImGuiKey.Hash);
             bool HasFontSize(ImGuiStyleHandler handler) => handler.GetActiveProperties().Any(p => p.key == ImGuiStyleHandler.s_fontSizeImGuiKey.Hash);
 
-            // Verify parent has font family but no font size
+            // Verify parent has font family and font size (from GlobalTheme)
             ImTKAssert.IsTrue(HasFontFamily(parent.resolvedStyle), "Parent should have font family");
-            ImTKAssert.IsFalse(HasFontSize(parent.resolvedStyle), "Parent should not have font size");
+            ImTKAssert.IsTrue(HasFontSize(parent.resolvedStyle), "Parent should have font size from global theme");
             ImTKAssert.IsTrue(HasFontFamily(parent.requiredStyle), "Parent required style should push font family");
 
             // Verify child inherited font family, and has font size

@@ -73,6 +73,7 @@
 - **日誌字串格式化零分配優化**：在 `LogFormatterBuilder.cs` 中導入了 `[ThreadStatic] StringBuilder` 快取，移除了每次印出日誌時的高頻字串分配，進一步降低 GC 壓力。
 
 ### Fixed (修復)
+- **動態視窗 ID 命名衝突與不可變性修復 (Window ID Immutability)**：修復了 `LogViewerWindow` 等動態創建視窗因在建構子中指定特定 `windowId`，導致 `Window.Open<T>()` 多次呼叫時引發 ID 註冊衝突並報錯的問題。現已透過 C# 9 的 `init` 屬性將 `windowId` 設為嚴格不可變 (Immutable)，保證僅能在實例化階段分配，徹底防堵運行期任意修改導致全域字典脫節的潛在崩潰。
 - **ImTKLog 早期日誌遺失問題**：修復了 `ImTKLog` 在系統尚未完成 Sink (如 `ConsoleSink`) 註冊前，直接丟棄日誌的缺陷。現已導入 `ConcurrentQueue` 作為早期緩衝區，確保框架在極早期階段（Phase 0 之前）發出的所有偵錯日誌皆能在第一個 Sink 掛載時完整回放 (Replay)。
 - **ImTKApplication 反射載入崩潰修復**：加入了對 `ReflectionTypeLoadException` 的防呆捕捉機制。當專案因載入外部或不完整 DLL 而導致反射掃描失敗時，現在會紀錄錯誤日誌並優雅地忽略問題模組，不再導致啟動初期直接閃退。
 - **ImTKObject 遲來事件訂閱防護**：在 `ImTKObject.cs` (與 `ImTKModule.cs`) 的 `SubscribeEvent` 中加入了狀態防呆機制。若開發者在 `OnEnable` 之後才呼叫訂閱，系統將拋出 `InvalidOperationException` 警告，防堵潛在的事件綁定漏洞。
