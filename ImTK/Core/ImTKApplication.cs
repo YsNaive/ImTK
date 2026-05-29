@@ -229,7 +229,7 @@ namespace ImTK.Core
 
                 SetState(ApplicationState.LogicUpdate);
 
-                using (ImTKProfiler.ScopeAbsolute("Lifecycle", "LogicUpdate"))
+                using (ImTKProfiler.Scope("Lifecycle/LogicUpdate"))
                 {
                     foreach (var module in s_modules.Values)
                     {
@@ -255,7 +255,7 @@ namespace ImTK.Core
                 EnforceFrameOrder(ApplicationState.GuiRender);
                 SetState(ApplicationState.GuiRender);
 
-                using (ImTKProfiler.ScopeAbsolute("Lifecycle", "Gui"))
+                using (ImTKProfiler.Scope("Lifecycle/Gui"))
                 {
                     foreach (var module in s_modules.Values)
                     {
@@ -281,7 +281,7 @@ namespace ImTK.Core
                 EnforceFrameOrder(ApplicationState.GizmoRender);
                 SetState(ApplicationState.GizmoRender);
 
-                using (ImTKProfiler.ScopeAbsolute("Lifecycle", "Gizmo"))
+                using (ImTKProfiler.Scope("Lifecycle/Gizmo"))
                 {
                     foreach (var module in s_modules.Values)
                     {
@@ -307,7 +307,7 @@ namespace ImTK.Core
                 EnforceFrameOrder(ApplicationState.LateUpdate);
                 SetState(ApplicationState.LateUpdate);
 
-                using (ImTKProfiler.ScopeAbsolute("Lifecycle", "LateUpdate"))
+                using (ImTKProfiler.Scope("Lifecycle/LateUpdate"))
                 {
                     // Run normal LateUpdate
                     foreach (var module in s_modules.Values)

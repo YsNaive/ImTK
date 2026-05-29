@@ -1,5 +1,6 @@
 using Hexa.NET.ImGui;
 using ImTK.Core;
+using ImTK.Log;
 using ImTK.UI;
 using ImTK.UI.Persistence;
 using System;
@@ -101,17 +102,18 @@ namespace ImTK.DebugTools
         {
             int framesToAvg = m_context.RollingWindowSeconds * 60; 
             int count = Math.Min(m_context.FrameDataCount, framesToAvg);
+            
+            float pctMaxWidth = ImGui.CalcTextSize("000.0%").X;
 
             ImGui.Separator();
-            ImGui.Text("Subsystem Details");
+            ImGui.BeginChild("##table", layoutRect.size);
 
-            if (ImGui.BeginTable("SubsystemsTreeTable", 4, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY))
+            if (ImGui.BeginTable("SubsystemsTreeTable", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY))
             {
                 ImGui.TableSetupScrollFreeze(0, 1);
                 ImGui.TableSetupColumn("System", ImGuiTableColumnFlags.WidthStretch);
                 ImGui.TableSetupColumn(m_context.Mode == ProfilerMode.Time ? "Current (ms)" : "Current (KB)", ImGuiTableColumnFlags.WidthFixed, 80);
                 ImGui.TableSetupColumn($"Avg ({m_context.RollingWindowSeconds}s)", ImGuiTableColumnFlags.WidthFixed, 80);
-                ImGui.TableSetupColumn("Avg (%)", ImGuiTableColumnFlags.WidthFixed, 60);
                 ImGui.TableHeadersRow();
 
                 float avgTotalBaseline = 0f;
@@ -128,23 +130,28 @@ namespace ImTK.DebugTools
 
                 foreach (var child in ImTKProfiler.Root.Children.Values)
                 {
-                    RenderProfilerNode(child, avgTotalBaseline, framesToAvg);
+                    RenderProfilerNode(child, avgTotalBaseline, framesToAvg, pctMaxWidth);
                 }
 
                 ImGui.EndTable();
             }
+
+            ImGui.EndChild();
         }
 
-        private void RenderProfilerNode(ImTKProfiler.ProfilerNode node, float parentAvg, int framesToAvg)
+        private void RenderProfilerNode(ImTKProfiler.ProfilerNode node, float parentAvg, int framesToAvg, float pctMaxWidth)
         {
             if (node == null) return;
             
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
-            
+
+            float currentVal = m_context.Mode == ProfilerMode.Time ? node.GetLatestMs() : node.GetLatestGcKb();
+            float avgVal = m_context.Mode == ProfilerMode.Time ? node.GetAverageMs(framesToAvg) : node.GetAverageGcKb(framesToAvg);
+
             bool hasChildren = node.Children.Count > 0;
             
-            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.SpanFullWidth | ImGuiTreeNodeFlags.OpenOnArrow;
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.SpanFullWidth | ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.AllowOverlap;
             if (!hasChildren)
             {
                 flags |= ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.NoTreePushOnOpen;
@@ -154,14 +161,30 @@ namespace ImTK.DebugTools
                 flags |= ImGuiTreeNodeFlags.Selected;
             }
             
-            bool isOpen = ImGui.TreeNodeEx(node.Name, flags);
+            bool isOpen = ImGui.TreeNodeEx($"##{node.Name}", flags);
             if (ImGui.IsItemClicked() && !ImGui.IsItemToggledOpen())
             {
                 m_context.SelectedNode = node;
             }
             
-            float currentVal = m_context.Mode == ProfilerMode.Time ? node.GetLatestMs() : node.GetLatestGcKb();
-            float avgVal = m_context.Mode == ProfilerMode.Time ? node.GetAverageMs(framesToAvg) : node.GetAverageGcKb(framesToAvg);
+            ImGui.SameLine();
+            
+            string pctStr = "-";
+            if (parentAvg > 0.001f)
+            {
+                float pct = (avgVal / parentAvg) * 100f;
+                pctStr = $"{pct:F1}%%";
+            }
+            
+            float strWidth = ImGui.CalcTextSize(pctStr).X;
+            float offset = pctMaxWidth - strWidth;
+            
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+            ImGui.TextColored(ImTKTheme.GlobalTheme.normalColor.subText, pctStr);
+            
+            ImGui.SameLine();
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 5f);
+            ImGui.Text(node.Name);
             
             ImGui.TableNextColumn();
             ImGui.Text($"{currentVal:F3}");
@@ -169,24 +192,12 @@ namespace ImTK.DebugTools
             ImGui.TableNextColumn();
             ImGui.Text($"{avgVal:F3}");
             
-            ImGui.TableNextColumn();
-            if (parentAvg > 0.001f)
-            {
-                float pct = (avgVal / parentAvg) * 100f;
-                ImGui.Text($"{pct:F1}%%");
-            }
-            else
-            {
-                ImGui.Text("-");
-            }
-            
             if (isOpen && hasChildren)
             {
-                // Order children by average descending
                 var sortedChildren = node.Children.Values.OrderByDescending(c => m_context.Mode == ProfilerMode.Time ? c.GetAverageMs(framesToAvg) : c.GetAverageGcKb(framesToAvg));
                 foreach (var child in sortedChildren)
                 {
-                    RenderProfilerNode(child, avgVal, framesToAvg);
+                    RenderProfilerNode(child, avgVal, framesToAvg, pctMaxWidth);
                 }
                 ImGui.TreePop();
             }
@@ -206,7 +217,7 @@ namespace ImTK.DebugTools
             if (node == null) return;
             foreach (var caller in node.Callers)
             {
-                resultSet.Add(caller);
+                resultSet.Add(caller.Key);
             }
             foreach (var child in node.Children.Values)
             {

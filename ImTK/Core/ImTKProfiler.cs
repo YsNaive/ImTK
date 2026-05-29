@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -15,10 +16,10 @@ namespace ImTK.Core
         {
             public string Name;
             public ProfilerNode Parent;
-            public Dictionary<string, ProfilerNode> Children = new Dictionary<string, ProfilerNode>();
+            public ConcurrentDictionary<string, ProfilerNode> Children = new ConcurrentDictionary<string, ProfilerNode>();
             
             // Callers that recorded into this scope
-            public HashSet<string> Callers = new HashSet<string>();
+            public ConcurrentDictionary<string, byte> Callers = new ConcurrentDictionary<string, byte>();
 
             // Max 60 seconds at 60fps = 3600 frames
             public float[] History = new float[3600];
@@ -27,8 +28,8 @@ namespace ImTK.Core
             public int Head = 0;
             public int SampleCount = 0; 
             
-            public float CurrentFrameAccumulator = 0f;
-            public float CurrentFrameGcAccumulator = 0f;
+            public long CurrentFrameSelfTicks = 0;
+            public long CurrentFrameSelfGcBytes = 0;
 
             public float GetLatestMs()
             {
@@ -88,19 +89,21 @@ namespace ImTK.Core
         public static ProfilerNode Root => s_root;
 
         /// <summary>
-        /// Begins a profiling scope. The scope will automatically record its duration when disposed.
+        /// Begins a profiling scope. 
+        /// If path is null or empty, it uses the caller's filename and creates a node under the current physical scope.
+        /// If path is provided, it is treated as an ABSOLUTE path from the root.
         /// </summary>
-        public static ProfilerScope Scope(string name, [System.Runtime.CompilerServices.CallerFilePath] string callerFile = "", [System.Runtime.CompilerServices.CallerLineNumber] int callerLine = 0)
+        public static ProfilerScope Scope(string path = null, [System.Runtime.CompilerServices.CallerFilePath] string callerFile = "", [System.Runtime.CompilerServices.CallerLineNumber] int callerLine = 0)
         {
-            return new ProfilerScope(name, callerFile, callerLine);
+            return new ProfilerScope(path, false, callerFile, callerLine);
         }
 
         /// <summary>
-        /// Begins a profiling scope at an absolute path from the root, bypassing the current thread stack.
+        /// Begins a profiling scope at a relative path from the current physical scope.
         /// </summary>
-        public static ProfilerScope ScopeAbsolute(string category, string name, [System.Runtime.CompilerServices.CallerFilePath] string callerFile = "", [System.Runtime.CompilerServices.CallerLineNumber] int callerLine = 0)
+        public static ProfilerScope ScopeRelative(string relatedPath, [System.Runtime.CompilerServices.CallerFilePath] string callerFile = "", [System.Runtime.CompilerServices.CallerLineNumber] int callerLine = 0)
         {
-            return new ProfilerScope(category, name, callerFile, callerLine);
+            return new ProfilerScope(relatedPath, true, callerFile, callerLine);
         }
 
         /// <summary>
@@ -111,39 +114,29 @@ namespace ImTK.Core
             CommitRecursive(s_root);
         }
 
-        private static float CommitRecursive(ProfilerNode node)
+        private static void CommitRecursive(ProfilerNode node)
         {
             float childrenTimeSum = 0f;
             float childrenGcSum = 0f;
             foreach (var child in node.Children.Values)
             {
-                childrenTimeSum += CommitRecursive(child);
-                childrenGcSum += child.GcHistory[child.Head == 0 ? 3599 : child.Head - 1]; // Approximate for virtual nodes, though it's complex. Actually, just add the current frame accumulators.
+                CommitRecursive(child);
+                int lastHead = child.Head == 0 ? 3599 : child.Head - 1;
+                childrenTimeSum += child.History[lastHead];
+                childrenGcSum += child.GcHistory[lastHead];
             }
 
-            if (node.CurrentFrameAccumulator == 0f && childrenTimeSum > 0f)
-            {
-                node.CurrentFrameAccumulator = childrenTimeSum;
-            }
-            if (node.CurrentFrameGcAccumulator == 0f && childrenGcSum > 0f)
-            {
-                node.CurrentFrameGcAccumulator = childrenGcSum; // But wait, GC is in Bytes.
-            }
-            
-            // To be accurate for GC: we should have returned a struct. But let's just do it directly.
-            float timeVal = node.CurrentFrameAccumulator;
-            float gcVal = node.CurrentFrameGcAccumulator;
+            float selfMs = (float)Interlocked.Exchange(ref node.CurrentFrameSelfTicks, 0) / Stopwatch.Frequency * 1000f;
+            float selfGc = (float)Interlocked.Exchange(ref node.CurrentFrameSelfGcBytes, 0) / 1024f;
 
-            node.History[node.Head] = timeVal;
-            node.GcHistory[node.Head] = gcVal;
+            float totalTime = Math.Max(0f, selfMs) + childrenTimeSum;
+            float totalGc = Math.Max(0f, selfGc) + childrenGcSum;
+
+            node.History[node.Head] = totalTime;
+            node.GcHistory[node.Head] = totalGc;
             
             node.Head = (node.Head + 1) % 3600;
             if (node.SampleCount < 3600) node.SampleCount++;
-            
-            node.CurrentFrameAccumulator = 0f;
-            node.CurrentFrameGcAccumulator = 0f;
-
-            return timeVal;
         }
 
         public struct ProfilerScope : IDisposable
@@ -152,48 +145,39 @@ namespace ImTK.Core
             private readonly ProfilerNode m_currentNode;
             private readonly long m_startTicks;
             private readonly long m_startGcBytes;
-            private readonly bool m_isAbsolute;
 
-            public ProfilerScope(string name, string callerFile, int callerLine)
+            public ProfilerScope(string path, bool isRelative, string callerFile, int callerLine)
             {
-                m_isAbsolute = false;
                 var stack = s_scopeStack.Value;
                 m_parentNode = stack.Peek();
 
-                if (!m_parentNode.Children.TryGetValue(name, out m_currentNode))
+                if (string.IsNullOrEmpty(path))
                 {
-                    m_currentNode = new ProfilerNode { Name = name, Parent = m_parentNode };
-                    m_parentNode.Children[name] = m_currentNode;
+                    string name = System.IO.Path.GetFileNameWithoutExtension(callerFile);
+                    if (string.IsNullOrEmpty(name)) name = "Unknown";
+                    var _this = this;
+                    m_currentNode = m_parentNode.Children.GetOrAdd(name, n => new ProfilerNode { Name = n, Parent = _this.m_parentNode });
                 }
+                else
+                {
+                    ProfilerNode startNode = isRelative ? m_parentNode : s_root;
+                    
+                    var parts = path.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+                    ProfilerNode current = startNode;
+                    foreach (var part in parts)
+                    {
+                        var parentForClosure = current;
+                        current = parentForClosure.Children.GetOrAdd(part, p => new ProfilerNode { Name = p, Parent = parentForClosure });
+                    }
+                    m_currentNode = current;
+                }
+
+                if (!string.IsNullOrEmpty(callerFile)) 
+                {
+                    m_currentNode.Callers.TryAdd($"{System.IO.Path.GetFileName(callerFile)}:{callerLine}", 0);
+                }
+
                 stack.Push(m_currentNode);
-
-                if (!string.IsNullOrEmpty(callerFile)) m_currentNode.Callers.Add($"{System.IO.Path.GetFileName(callerFile)}:{callerLine}");
-
-                m_startGcBytes = GC.GetAllocatedBytesForCurrentThread();
-                m_startTicks = s_stopwatch.ElapsedTicks;
-            }
-
-            public ProfilerScope(string category, string name, string callerFile, int callerLine)
-            {
-                m_isAbsolute = true;
-                var stack = s_scopeStack.Value;
-                m_parentNode = stack.Peek(); // Saved for reference to maintain push/pop balance
-
-                if (!s_root.Children.TryGetValue(category, out var catNode))
-                {
-                    catNode = new ProfilerNode { Name = category, Parent = s_root };
-                    s_root.Children[category] = catNode;
-                }
-
-                if (!catNode.Children.TryGetValue(name, out m_currentNode))
-                {
-                    m_currentNode = new ProfilerNode { Name = name, Parent = catNode };
-                    catNode.Children[name] = m_currentNode;
-                }
-                
-                stack.Push(m_currentNode);
-                
-                if (!string.IsNullOrEmpty(callerFile)) m_currentNode.Callers.Add($"{System.IO.Path.GetFileName(callerFile)}:{callerLine}");
 
                 m_startGcBytes = GC.GetAllocatedBytesForCurrentThread();
                 m_startTicks = s_stopwatch.ElapsedTicks;
@@ -204,11 +188,14 @@ namespace ImTK.Core
                 long elapsedTicks = s_stopwatch.ElapsedTicks - m_startTicks;
                 long allocatedBytes = GC.GetAllocatedBytesForCurrentThread() - m_startGcBytes;
                 
-                float ms = (float)elapsedTicks / Stopwatch.Frequency * 1000f;
-                float kb = allocatedBytes / 1024f;
+                Interlocked.Add(ref m_currentNode.CurrentFrameSelfTicks, elapsedTicks);
+                Interlocked.Add(ref m_currentNode.CurrentFrameSelfGcBytes, allocatedBytes);
                 
-                m_currentNode.CurrentFrameAccumulator += ms;
-                m_currentNode.CurrentFrameGcAccumulator += kb;
+                if (m_parentNode != null)
+                {
+                    Interlocked.Add(ref m_parentNode.CurrentFrameSelfTicks, -elapsedTicks);
+                    Interlocked.Add(ref m_parentNode.CurrentFrameSelfGcBytes, -allocatedBytes);
+                }
                 
                 s_scopeStack.Value.Pop();
             }

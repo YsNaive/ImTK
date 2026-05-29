@@ -56,6 +56,7 @@
 - **HashedString 容量防呆機制**：在 `ImTKEnvironment` 新增 `HashedStringCapacityWarningThreshold`（預設 50000）。當 `HashedString` 全域註冊表超過此容量時會觸發 `ImTKLog.Error`，防範開發者誤將動態字串傳入導致 Memory Leak。
 
 ### Changed (變更)
+- **Profiler 核心重構與 API 簡化**：將 `ImTKProfiler` 的效能指標儲存型別改為 `long` (Ticks/Bytes) 並採用 `Interlocked` 達成無鎖多執行緒安全。同時移除 `ScopeAbsolute`，整併為支援自動路徑拆解的 `Scope` 與 `ScopeRelative`。
 - **架構重構**：將獨立的 `RenderingContext` 收斂為 `RenderEngine` 的巢狀類別 `RenderEngine.Context`，提升了 API 的語意清晰度與模組內聚力。
 - **字型圖集 (Font Atlas) 減肥與動態縮放**：移除原先的「多尺寸烘焙」機制，現在每個字型家族只會烘焙單一基準尺寸 (`FontSize.Normal`)，較大或較小的字級需求將交由 ImGui 1.92+ 的 `ImGui.PushFont(fontPtr, targetSize)` 原生動態縮放處理，大幅減少 VRAM 佔用。
 - **全域預設字體烘焙順序修復**：修復了 `ImTKFontManager` 在烘焙字型時因 `Dictionary` 遍歷順序不固定，導致未指定字體的普通 UI 元件可能會繼承到錯誤的預設字體大小的問題。現在確保 `ImGuiDefault` 永遠是第一個被烘焙的字型，確保與全域 `fontSizeNormal` 完美同步。
@@ -85,6 +86,8 @@
 - **日誌字串格式化零分配優化**：在 `LogFormatterBuilder.cs` 中導入了 `[ThreadStatic] StringBuilder` 快取，移除了每次印出日誌時的高頻字串分配，進一步降低 GC 壓力。
 
 ### Fixed (修復)
+- **Profiler 重複計算 (Double Counting) 修復**：導入了基於 **自身時間 (Self Time)** 的計算演算法。實體子節點結束時會從物理父節點扣除耗時，並在每幀結算時循「語意樹 (Virtual Tree)」向上彙整，完美解決實體呼叫與語意路徑脫鉤所造成的重複計算問題。
+- **多執行緒 Profiler 崩潰修復**：將 `ProfilerNode` 的 `Children` 與 `Callers` 替換為 `ConcurrentDictionary`，防止多執行緒併發修改引發的例外崩潰。
 - **動態視窗 ID 命名衝突與不可變性修復 (Window ID Immutability)**：修復了 `LogViewerWindow` 等動態創建視窗因在建構子中指定特定 `windowId`，導致 `Window.Open<T>()` 多次呼叫時引發 ID 註冊衝突並報錯的問題。現已透過 C# 9 的 `init` 屬性將 `windowId` 設為嚴格不可變 (Immutable)，保證僅能在實例化階段分配，徹底防堵運行期任意修改導致全域字典脫節的潛在崩潰。
 - **ImTKLog 早期日誌遺失問題**：修復了 `ImTKLog` 在系統尚未完成 Sink (如 `ConsoleSink`) 註冊前，直接丟棄日誌的缺陷。現已導入 `ConcurrentQueue` 作為早期緩衝區，確保框架在極早期階段（Phase 0 之前）發出的所有偵錯日誌皆能在第一個 Sink 掛載時完整回放 (Replay)。
 - **ImTKApplication 反射載入崩潰修復**：加入了對 `ReflectionTypeLoadException` 的防呆捕捉機制。當專案因載入外部或不完整 DLL 而導致反射掃描失敗時，現在會紀錄錯誤日誌並優雅地忽略問題模組，不再導致啟動初期直接閃退。
