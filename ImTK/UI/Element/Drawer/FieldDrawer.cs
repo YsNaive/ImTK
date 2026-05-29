@@ -36,12 +36,15 @@ namespace ImTK.UI
         protected T m_value;
 
         private string m_label = "";
+        private string m_cachedId = "##";
+        public string cachedId => m_cachedId;
         public virtual string label
         {
             get => m_label;
             set
             {
                 m_label = value;
+                m_cachedId = "##" + (value ?? "");
                 if (m_labelElement != null)
                 {
                     m_labelElement.text = value;

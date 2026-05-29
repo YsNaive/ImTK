@@ -197,15 +197,19 @@ namespace ImTK.UI
                 ImTKTheme.isGlobalThemeDirty = false;
             }
 
-            foreach (var window in s_windows.Values)
+            foreach (var kvp in s_windows)
             {
-                try
+                var window = kvp.Value;
+                using (ImTKProfiler.ScopeRelative(window.GetType().Name))
                 {
-                    window.Update();
-                }
-                catch (Exception ex)
-                {
-                    ImTKLog.Error(ex, $"Exception in Update of window: {window.imguiId}");
+                    try
+                    {
+                        window.Update();
+                    }
+                    catch (Exception ex)
+                    {
+                        ImTKLog.Error(ex, $"Exception in Update of window: {window.imguiId}");
+                    }
                 }
             }
         }
@@ -286,8 +290,9 @@ namespace ImTK.UI
 
             ImGui.End();
 
-            foreach (var window in s_windows.Values)
+            foreach (var kvp in s_windows)
             {
+                var window = kvp.Value;
                 try
                 {
                     RenderEngine.Context.CurrentDpiScale = window.CurrentDpiScale;

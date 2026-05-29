@@ -76,27 +76,29 @@ namespace ImTK.DebugTools
             if (m_context.Mode != this.Mode)
                 this.Mode = m_context.Mode;
 
-            // Update UI state
-            m_btnTime.style.colorFamily = m_context.Mode == ProfilerMode.Time ? ThemeColorFamily.Info : ThemeColorFamily.Normal;
-            m_btnGc.style.colorFamily   = m_context.Mode == ProfilerMode.GC   ? ThemeColorFamily.Info : ThemeColorFamily.Normal;
+            using (ImTKProfiler.ScopeRelative("B"))
+            {
+                // Update UI state
+                m_btnTime.style.colorFamily = m_context.Mode == ProfilerMode.Time ? ThemeColorFamily.Info : ThemeColorFamily.Normal;
+                m_btnGc.style.colorFamily = m_context.Mode == ProfilerMode.GC ? ThemeColorFamily.Info : ThemeColorFamily.Normal;
 
-            // Record total frame metrics
-            float currentFrameTime = (float)Time.UnscaledDeltaTime * 1000f;
-            float currentGc = GC.GetAllocatedBytesForCurrentThread() / 1024f;
-            
-            float rootTime = ImTKProfiler.Root.GetLatestMs();
-            float rootGc = ImTKProfiler.Root.GetLatestGcKb();
+                // Record total frame metrics
+                float currentFrameTime = (float)Time.UnscaledDeltaTime * 1000f;
+                float currentGc = GC.GetAllocatedBytesForCurrentThread() / 1024f;
 
-            m_context.TotalFrameTimes[m_context.FrameDataIndex] = rootTime > currentFrameTime ? rootTime : currentFrameTime;
-            m_context.TotalFrameGcs[m_context.FrameDataIndex] = rootGc;
-            
+                float rootTime = ImTKProfiler.Root.GetLatestMs();
+                float rootGc   = ImTKProfiler.Root.GetLatestGcKb();
+                m_context.TotalFrameTimes[m_context.FrameDataIndex] = rootTime > currentFrameTime ? rootTime : currentFrameTime;
+                m_context.TotalFrameGcs[m_context.FrameDataIndex] = rootGc;
+            }
+
             float fps = ImGui.GetIO().Framerate;
             float gcMemoryMb = GC.GetTotalMemory(false) / 1048576f;
-            
+
             float frameTimeDisplay = m_context.FrameDataCount > 0 ? m_context.TotalFrameTimes[m_context.FrameDataIndex == 0 ? 3599 : m_context.FrameDataIndex - 1] : 0f;
             float frameGcDisplay = m_context.FrameDataCount > 0 ? m_context.TotalFrameGcs[m_context.FrameDataIndex == 0 ? 3599 : m_context.FrameDataIndex - 1] : 0f;
 
-            m_statsText.text = $"FPS: {fps:F1}   |   C# GC Memory: {gcMemoryMb:F2} MB   |   Frame Time: {frameTimeDisplay:F2} ms   |   Frame GC: {frameGcDisplay:F2} KB";
+            m_statsText.SetTextBuffered($"FPS: {fps:F1}   |   C# GC Memory: {gcMemoryMb:F2} MB   |   Frame Time: {frameTimeDisplay:F2} ms   |   Frame GC: {frameGcDisplay:F2} KB");
 
             m_context.FrameDataIndex = (m_context.FrameDataIndex + 1) % 3600;
             if (m_context.FrameDataCount < 3600) m_context.FrameDataCount++;

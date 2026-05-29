@@ -30,7 +30,7 @@ namespace ImTK.UI
             {
                 ImGui.SetNextItemWidth(this.layoutRect.width);
                 bool v = m_drawer.value;
-                if (ImGui.Checkbox("##" + m_drawer.label, ref v))
+                if (ImGui.Checkbox(m_drawer.cachedId, ref v))
                 {
                     m_drawer.SetValueWithChanged(v);
                 }

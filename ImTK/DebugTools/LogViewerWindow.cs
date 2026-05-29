@@ -1,10 +1,11 @@
+using Hexa.NET.ImGui;
+using ImTK.Log;
+using ImTK.UI;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Numerics;
-using Hexa.NET.ImGui;
-using ImTK.Log;
-using ImTK.UI;
+using System.Text;
 
 namespace ImTK.DebugTools
 {
@@ -227,7 +228,8 @@ namespace ImTK.DebugTools
             // Text Filter
             ImGui.SetNextItemWidth(-float.Epsilon); // fill remaining width
             string tempFilterText = m_filterText;
-            if (ImGui.InputTextWithHint("##Filter", "過濾訊息內容...", ref tempFilterText, 256))
+            byte[] filterHint = Encoding.UTF8.GetBytes("過濾訊息內容...");
+            if (ImGui.InputTextWithHint("##Filter", filterHint, ref tempFilterText, 256))
             {
                 m_filterText = tempFilterText;
                 needsRebuild = true;

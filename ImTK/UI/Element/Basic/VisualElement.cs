@@ -146,10 +146,12 @@ namespace ImTK.UI
                 var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Color };
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.colorValue = value.Value.u32;
-                SetProperty(prop);
-                m_owner?.MarkStyleDirty();
-                m_owner?.MarkMeasureDirty();
-                m_owner?.MarkArrangeDirty();
+                if (SetProperty(prop))
+                {
+                    m_owner?.MarkStyleDirty();
+                    m_owner?.MarkMeasureDirty();
+                    m_owner?.MarkArrangeDirty();
+                }
             }
 
             public void SetInt(HashedString key, StyleValue<int> value)
@@ -158,10 +160,12 @@ namespace ImTK.UI
                 var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Int };
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.intValue = value.Value;
-                SetProperty(prop);
-                m_owner?.MarkStyleDirty();
-                m_owner?.MarkMeasureDirty();
-                m_owner?.MarkArrangeDirty();
+                if (SetProperty(prop))
+                {
+                    m_owner?.MarkStyleDirty();
+                    m_owner?.MarkMeasureDirty();
+                    m_owner?.MarkArrangeDirty();
+                }
             }
 
             public void SetEnum<TEnum>(HashedString key, StyleValue<TEnum> value) where TEnum : struct, System.Enum
@@ -170,10 +174,12 @@ namespace ImTK.UI
                 var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Enum };
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.enumValue = System.Convert.ToInt32(value.Value);
-                SetProperty(prop);
-                m_owner?.MarkStyleDirty();
-                m_owner?.MarkMeasureDirty();
-                m_owner?.MarkArrangeDirty();
+                if (SetProperty(prop))
+                {
+                    m_owner?.MarkStyleDirty();
+                    m_owner?.MarkMeasureDirty();
+                    m_owner?.MarkArrangeDirty();
+                }
             }
 
             public void SetStringToken(HashedString key, StyleValue<HashedString> value)
@@ -181,10 +187,12 @@ namespace ImTK.UI
                 if (value.IsNull) { Clear(key); return; }
                 int hash = value.IsToken ? value.Token.Hash : value.Value.Hash;
                 var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = StyleDataType.HashedString, tokenHash = hash };
-                SetProperty(prop);
-                m_owner?.MarkStyleDirty();
-                m_owner?.MarkMeasureDirty();
-                m_owner?.MarkArrangeDirty();
+                if (SetProperty(prop))
+                {
+                    m_owner?.MarkStyleDirty();
+                    m_owner?.MarkMeasureDirty();
+                    m_owner?.MarkArrangeDirty();
+                }
             }
 
             public void SetFloat(HashedString key, StyleValue<float> value)
@@ -193,10 +201,12 @@ namespace ImTK.UI
                 var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Float };
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.floatValue = value.Value;
-                SetProperty(prop);
-                m_owner?.MarkStyleDirty();
-                m_owner?.MarkMeasureDirty();
-                m_owner?.MarkArrangeDirty();
+                if (SetProperty(prop))
+                {
+                    m_owner?.MarkStyleDirty();
+                    m_owner?.MarkMeasureDirty();
+                    m_owner?.MarkArrangeDirty();
+                }
             }
 
             public void SetVector2(HashedString key, StyleValue<Vector2> value)
@@ -205,20 +215,24 @@ namespace ImTK.UI
                 var prop = new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = value.IsToken ? StyleDataType.HashedString : StyleDataType.Vector2 };
                 if (value.IsToken) prop.tokenHash = value.Token.Hash;
                 else prop.vector2Value = value.Value;
-                SetProperty(prop);
-                m_owner?.MarkStyleDirty();
-                m_owner?.MarkMeasureDirty();
-                m_owner?.MarkArrangeDirty();
+                if (SetProperty(prop))
+                {
+                    m_owner?.MarkStyleDirty();
+                    m_owner?.MarkMeasureDirty();
+                    m_owner?.MarkArrangeDirty();
+                }
             }
 
 
 
             public void Clear(HashedString key)
             {
-                SetProperty(new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = StyleDataType.Null });
-                m_owner?.MarkStyleDirty();
-                m_owner?.MarkMeasureDirty();
-                m_owner?.MarkArrangeDirty();
+                if (SetProperty(new StyleProperty { category = StyleCategory.HighLevelToken, key = key.Hash, dataType = StyleDataType.Null }))
+                {
+                    m_owner?.MarkStyleDirty();
+                    m_owner?.MarkMeasureDirty();
+                    m_owner?.MarkArrangeDirty();
+                }
             }
 
             // --- High-level Property Syntax Sugar ---
@@ -232,7 +246,9 @@ namespace ImTK.UI
                 }
                 set
                 {
-                    if (value.HasValue) SetEnum(StyleKey.ColorFamily, value.Value);
+                    // TODO: GC Problem Here
+                    if (value.HasValue) 
+                        SetEnum(StyleKey.ColorFamily, value.Value);
                     else Clear(StyleKey.ColorFamily);
                 }
             }
@@ -755,7 +771,12 @@ namespace ImTK.UI
             public float mainSize = 0;
             public float crossSize = 0;
             public float totalFlexGrow = 0;
+            public void Reset() { items.Clear(); mainSize = 0; crossSize = 0; totalFlexGrow = 0; }
         }
+
+        private List<VisualElement> m_absoluteChildrenCache;
+        private List<FlexLine> m_flexLinesCache;
+        private List<VisualElement> m_flexItemsCache;
 
         /// <summary>
         /// 供子類別覆寫的實際佈局邏輯。
@@ -796,9 +817,21 @@ namespace ImTK.UI
             float availableMain = isRow ? contentRect.width : contentRect.height;
             float availableCross = isRow ? contentRect.height : contentRect.width;
 
-            var absoluteChildren = new List<VisualElement>();
-            var flexLines = new List<FlexLine>();
-            FlexLine currentLine = new FlexLine();
+            var absoluteChildren = m_absoluteChildrenCache ??= new List<VisualElement>();
+            absoluteChildren.Clear();
+            var flexLines = m_flexLinesCache ??= new List<FlexLine>();
+            foreach (var line in flexLines) line.Reset();
+            int currentLineIdx = 0;
+
+            FlexLine GetNextLine()
+            {
+                if (currentLineIdx >= flexLines.Count) flexLines.Add(new FlexLine());
+                var line = flexLines[currentLineIdx++];
+                line.Reset();
+                return line;
+            }
+
+            FlexLine currentLine = GetNextLine();
             
             int childCount = hierarchy.childCount;
             for (int i = 0; i < childCount; i++)
@@ -820,8 +853,7 @@ namespace ImTK.UI
 
                 if (isWrap && currentLine.items.Count > 0 && currentLine.mainSize + gapMain + childOuterMain > availableMain)
                 {
-                    flexLines.Add(currentLine);
-                    currentLine = new FlexLine();
+                    currentLine = GetNextLine();
                 }
 
                 if (currentLine.items.Count > 0) currentLine.mainSize += gapMain;
@@ -830,17 +862,20 @@ namespace ImTK.UI
                 currentLine.totalFlexGrow += childState.flexGrow;
                 currentLine.items.Add(child);
             }
-            if (currentLine.items.Count > 0) flexLines.Add(currentLine);
+            // No need to Add(currentLine) as it's already in the cached list, 
+            // but we need to limit the lines we process to currentLineIdx
+            int activeLineCount = currentLine.items.Count > 0 ? currentLineIdx : currentLineIdx - 1;
 
-            if (!isWrap && flexLines.Count == 1)
+            if (!isWrap && activeLineCount == 1)
             {
                 flexLines[0].crossSize = availableCross;
             }
 
             // Layout each line
             float currentCrossPos = 0;
-            foreach (var line in flexLines)
+            for (int lineIdx = 0; lineIdx < activeLineCount; lineIdx++)
             {
+                var line = flexLines[lineIdx];
                 float freeMainSpace = availableMain - line.mainSize;
                 float spacing = gapMain;
                 float currentMainPos = 0;
@@ -863,7 +898,8 @@ namespace ImTK.UI
                 }
 
                 // First pass for FlexGrow resolution
-                var flexItems = new List<VisualElement>();
+                var flexItems = m_flexItemsCache ??= new List<VisualElement>();
+                flexItems.Clear();
                 if (freeMainSpace > 0 && line.totalFlexGrow > 0)
                 {
                     float totalGrow = line.totalFlexGrow;
@@ -1267,7 +1303,11 @@ namespace ImTK.UI
             int childCount = hierarchy.childCount;
             for (int i = 0; i < childCount; i++)
             {
-                hierarchy.ChildAt(i).Update();
+                var child = hierarchy.ChildAt(i);
+                using (ImTKProfiler.ScopeRelative(child.GetType().Name))
+                {
+                    child.Update();
+                }
             }
         }
 

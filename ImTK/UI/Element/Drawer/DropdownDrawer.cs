@@ -31,6 +31,8 @@ namespace ImTK.UI
         public bool searchable { get; set; } = false;
 
         private ComboContainer m_comboContainer;
+        protected string m_cachedPreviewText = "-";
+        protected bool m_previewDirty = true;
 
         protected DropdownDrawer()
         {
@@ -57,6 +59,28 @@ namespace ImTK.UI
         /// 子類別覆寫 CreateComboContainer() 後可在自訂容器內使用。
         /// </summary>
         protected virtual VisualElement CreatePreviewElement() => null;
+
+        public override TValue value
+        {
+            get => base.value;
+            set
+            {
+                base.value = value;
+                m_previewDirty = true;
+            }
+        }
+
+        public override void SetValueWithoutNotify(TValue newValue)
+        {
+            base.SetValueWithoutNotify(newValue);
+            m_previewDirty = true;
+        }
+
+        public override void SetValueWithChanged(TValue newValue)
+        {
+            base.SetValueWithChanged(newValue);
+            m_previewDirty = true;
+        }
 
         private void RebuildOptions()
         {
@@ -336,9 +360,14 @@ namespace ImTK.UI
             /// </summary>
             protected virtual string GetPreviewText()
             {
-                return m_drawer.formatOption != null
-                    ? m_drawer.formatOption(m_drawer.value)
-                    : (m_drawer.value != null ? m_drawer.value.ToString() : "-");
+                if (m_drawer.m_previewDirty)
+                {
+                    m_drawer.m_cachedPreviewText = m_drawer.formatOption != null
+                        ? m_drawer.formatOption(m_drawer.value)
+                        : (m_drawer.value != null ? m_drawer.value.ToString() : "-");
+                    m_drawer.m_previewDirty = false;
+                }
+                return m_drawer.m_cachedPreviewText;
             }
         }
 

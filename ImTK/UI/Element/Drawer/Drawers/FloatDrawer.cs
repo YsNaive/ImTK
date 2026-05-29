@@ -53,7 +53,7 @@ namespace ImTK.UI
                 ImGui.SetNextItemWidth(this.layoutRect.width);
                 float v = m_drawer.value;
 
-                bool changed = ImGui.InputFloat("##" + m_drawer.label, ref v, m_drawer.step, m_drawer.step * 100f, "%.3f", ImGuiInputTextFlags.None);
+                bool changed = ImGui.InputFloat(m_drawer.cachedId, ref v, m_drawer.step, m_drawer.step * 100f, "%.3f", ImGuiInputTextFlags.None);
 
                 if (changed || ImGui.IsItemDeactivatedAfterEdit())
                 {

@@ -62,6 +62,8 @@
 
 ### Changed (變更)
 - **Profiler 核心重構與 API 簡化**：將 `ImTKProfiler` 的效能指標儲存型別改為 `long` (Ticks/Bytes) 並採用 `Interlocked` 達成無鎖多執行緒安全。同時移除 `ScopeAbsolute`，整併為支援自動路徑拆解的 `Scope` 與 `ScopeRelative`。
+- **Profiler 效能極限優化 (Zero-GC)**：在 `ImTKProfiler` 中導入全自動字串快取機制 (`s_pathCache`)，並新增 `Scope(groupPath, name)` 多載與 `(string, int)` Tuple Callers 紀錄。徹底消除每一幀 Profiler 分析時 `path.Split`、`Type.Name` 字串相加、以及 `CallerFilePath` 字串插值所產生的 Allocation。
+- **效能面板 Zero-GC 重構**：`PerformanceMonitorWindow` 與 `ProfilerUIElements` 全面優化。移除 TreeTable 每幀的 LINQ 排序改用 `ArrayPool` + In-Place Struct Comparer，並且字串繪製皆改為利用 `ImTKUtf8StringHandler` 搭配 `SetTextBuffered` 寫入，達成面板常駐開啟時的零 GC 分配。
 - **架構重構**：將獨立的 `RenderingContext` 收斂為 `RenderEngine` 的巢狀類別 `RenderEngine.Context`，提升了 API 的語意清晰度與模組內聚力。
 - **字型圖集 (Font Atlas) 減肥與動態縮放**：移除原先的「多尺寸烘焙」機制，現在每個字型家族只會烘焙單一基準尺寸 (`FontSize.Normal`)，較大或較小的字級需求將交由 ImGui 1.92+ 的 `ImGui.PushFont(fontPtr, targetSize)` 原生動態縮放處理，大幅減少 VRAM 佔用。
 - **全域預設字體烘焙順序修復**：修復了 `ImTKFontManager` 在烘焙字型時因 `Dictionary` 遍歷順序不固定，導致未指定字體的普通 UI 元件可能會繼承到錯誤的預設字體大小的問題。現在確保 `ImGuiDefault` 永遠是第一個被烘焙的字型，確保與全域 `fontSizeNormal` 完美同步。

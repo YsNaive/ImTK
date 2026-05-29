@@ -51,7 +51,7 @@ namespace ImTK.UI
 
                 Vector4 v = m_drawer.value.rgba;
 
-                bool changed = ImGui.ColorEdit4("##" + m_drawer.label, ref v, flags);
+                bool changed = ImGui.ColorEdit4(m_drawer.cachedId, ref v, flags);
 
                 if (changed || ImGui.IsItemDeactivatedAfterEdit())
                 {

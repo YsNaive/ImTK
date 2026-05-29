@@ -14,12 +14,52 @@ namespace ImTK.Core
     {
         public class ProfilerNode
         {
-            public string Name;
+            private string m_name;
+            public string Name
+            {
+                get => m_name;
+                set
+                {
+                    m_name = value;
+                    CachedTreeNodeId = $"##{value}";
+                }
+            }
+            public string CachedTreeNodeId;
             public ProfilerNode Parent;
             public ConcurrentDictionary<string, ProfilerNode> Children = new ConcurrentDictionary<string, ProfilerNode>();
+            public ConcurrentDictionary<string, ProfilerNode> RelativePathCache = new ConcurrentDictionary<string, ProfilerNode>();
+            public volatile ProfilerNode[] ChildrenArray = Array.Empty<ProfilerNode>();
+
+            public ProfilerNode GetOrAddRelativePath(string path)
+            {
+                if (RelativePathCache.TryGetValue(path, out var node)) return node;
+                var resolved = ImTKProfiler.GetOrCreateNodeByPath(path, this);
+                RelativePathCache.TryAdd(path, resolved);
+                return resolved;
+            }
+
+            public ProfilerNode GetOrAddChild(string name, ProfilerNode parent)
+            {
+                if (Children.TryGetValue(name, out var existing)) return existing;
+                var newNode = new ProfilerNode { Name = name, Parent = parent };
+                if (Children.TryAdd(name, newNode))
+                {
+                    lock (this)
+                    {
+                        var list = new System.Collections.Generic.List<ProfilerNode>(Children.Count);
+                        foreach (var kvp in Children)
+                        {
+                            list.Add(kvp.Value);
+                        }
+                        ChildrenArray = list.ToArray();
+                    }
+                    return newNode;
+                }
+                return Children[name];
+            }
             
             // Callers that recorded into this scope
-            public ConcurrentDictionary<string, byte> Callers = new ConcurrentDictionary<string, byte>();
+            public ConcurrentDictionary<(string, int), byte> Callers = new ConcurrentDictionary<(string, int), byte>();
 
             // Max 60 seconds at 60fps = 3600 frames
             public float[] History = new float[3600];
@@ -86,24 +126,44 @@ namespace ImTK.Core
             return stack;
         });
 
-        public static ProfilerNode Root => s_root;
+        private static readonly ConcurrentDictionary<string, ProfilerNode> s_pathCache = new ConcurrentDictionary<string, ProfilerNode>();
 
-        /// <summary>
-        /// Begins a profiling scope. 
-        /// If path is null or empty, it uses the caller's filename and creates a node under the current physical scope.
-        /// If path is provided, it is treated as an ABSOLUTE path from the root.
-        /// </summary>
-        public static ProfilerScope Scope(string path = null, [System.Runtime.CompilerServices.CallerFilePath] string callerFile = "", [System.Runtime.CompilerServices.CallerLineNumber] int callerLine = 0)
+        internal static ProfilerNode GetOrCreateNodeByPath(string path, ProfilerNode startNode)
         {
-            return new ProfilerScope(path, false, callerFile, callerLine);
+            if (path.IndexOf('/') == -1 && path.IndexOf('\\') == -1)
+            {
+                return startNode.GetOrAddChild(path, startNode);
+            }
+
+            var parts = path.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            ProfilerNode current = startNode;
+            foreach (var part in parts)
+            {
+                current = current.GetOrAddChild(part, current);
+            }
+            return current;
         }
 
-        /// <summary>
-        /// Begins a profiling scope at a relative path from the current physical scope.
-        /// </summary>
-        public static ProfilerScope ScopeRelative(string relatedPath, [System.Runtime.CompilerServices.CallerFilePath] string callerFile = "", [System.Runtime.CompilerServices.CallerLineNumber] int callerLine = 0)
+        public static ProfilerNode Root => s_root;
+
+        public static ProfilerScope Scope(string path = null, [System.Runtime.CompilerServices.CallerLineNumber] int callerLine = 0, [System.Runtime.CompilerServices.CallerFilePath] string callerFile = "")
         {
-            return new ProfilerScope(relatedPath, true, callerFile, callerLine);
+            return new ProfilerScope(path, false, callerFile, callerLine, null);
+        }
+
+        public static ProfilerScope ScopeRelative(string relatedPath, [System.Runtime.CompilerServices.CallerLineNumber] int callerLine = 0, [System.Runtime.CompilerServices.CallerFilePath] string callerFile = "")
+        {
+            return new ProfilerScope(relatedPath, true, callerFile, callerLine, null);
+        }
+
+        public static ProfilerScope Scope(string groupPath, string name, [System.Runtime.CompilerServices.CallerLineNumber] int callerLine = 0, [System.Runtime.CompilerServices.CallerFilePath] string callerFile = "")
+        {
+            return new ProfilerScope(groupPath, false, callerFile, callerLine, name);
+        }
+
+        public static ProfilerScope ScopeRelative(string groupPath, string name, [System.Runtime.CompilerServices.CallerLineNumber] int callerLine = 0, [System.Runtime.CompilerServices.CallerFilePath] string callerFile = "")
+        {
+            return new ProfilerScope(groupPath, true, callerFile, callerLine, name);
         }
 
         /// <summary>
@@ -118,7 +178,7 @@ namespace ImTK.Core
         {
             float childrenTimeSum = 0f;
             float childrenGcSum = 0f;
-            foreach (var child in node.Children.Values)
+            foreach (var child in node.ChildrenArray)
             {
                 CommitRecursive(child);
                 int lastHead = child.Head == 0 ? 3599 : child.Head - 1;
@@ -146,7 +206,7 @@ namespace ImTK.Core
             private readonly long m_startTicks;
             private readonly long m_startGcBytes;
 
-            public ProfilerScope(string path, bool isRelative, string callerFile, int callerLine)
+            public ProfilerScope(string path, bool isRelative, string callerFile, int callerLine, string dynamicName)
             {
                 var stack = s_scopeStack.Value;
                 m_parentNode = stack.Peek();
@@ -155,26 +215,33 @@ namespace ImTK.Core
                 {
                     string name = System.IO.Path.GetFileNameWithoutExtension(callerFile);
                     if (string.IsNullOrEmpty(name)) name = "Unknown";
-                    var _this = this;
-                    m_currentNode = m_parentNode.Children.GetOrAdd(name, n => new ProfilerNode { Name = n, Parent = _this.m_parentNode });
+                    m_currentNode = m_parentNode.GetOrAddChild(name, m_parentNode);
                 }
                 else
                 {
-                    ProfilerNode startNode = isRelative ? m_parentNode : s_root;
-                    
-                    var parts = path.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
-                    ProfilerNode current = startNode;
-                    foreach (var part in parts)
+                    ProfilerNode groupNode;
+                    if (!isRelative)
                     {
-                        var parentForClosure = current;
-                        current = parentForClosure.Children.GetOrAdd(part, p => new ProfilerNode { Name = p, Parent = parentForClosure });
+                        groupNode = s_pathCache.GetOrAdd(path, static p => GetOrCreateNodeByPath(p, s_root));
                     }
-                    m_currentNode = current;
+                    else
+                    {
+                        groupNode = m_parentNode.GetOrAddRelativePath(path);
+                    }
+
+                    if (dynamicName != null)
+                    {
+                        m_currentNode = groupNode.GetOrAddChild(dynamicName, groupNode);
+                    }
+                    else
+                    {
+                        m_currentNode = groupNode;
+                    }
                 }
 
                 if (!string.IsNullOrEmpty(callerFile)) 
                 {
-                    m_currentNode.Callers.TryAdd($"{System.IO.Path.GetFileName(callerFile)}:{callerLine}", 0);
+                    m_currentNode.Callers.TryAdd((callerFile, callerLine), 0);
                 }
 
                 stack.Push(m_currentNode);

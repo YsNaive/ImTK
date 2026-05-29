@@ -109,12 +109,12 @@ namespace ImTK.UI
                             }
                         }
                         float height = Math.Max(ImGui.GetFrameHeight(), textSize.Y + ImGui.GetStyle().FramePadding.Y * 2);
-                        changed = ImGui.InputTextMultiline("##" + m_drawer.label, ref v, 32768, new Vector2(this.layoutRect.width, height), flags);
+                        changed = ImGui.InputTextMultiline(m_drawer.cachedId, ref v, 32768, new Vector2(this.layoutRect.width, height), flags);
                     }
                     else
                     {
                         ImGui.SetNextItemWidth(this.layoutRect.width);
-                        changed = ImGui.InputText("##" + m_drawer.label, ref v, 32768, flags);
+                        changed = ImGui.InputText(m_drawer.cachedId, ref v, 32768, flags);
                     }
 
                     if (changed || ImGui.IsItemDeactivatedAfterEdit())

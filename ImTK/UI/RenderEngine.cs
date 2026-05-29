@@ -33,7 +33,7 @@ namespace ImTK.UI
 
             if (cache.isDirty)
             {
-                using (ImTKProfiler.Scope("Persistent/"+ root.GetType().Name))
+                using (ImTKProfiler.Scope("Persistent", root.GetType().Name))
                 {
                     cache.Update(root);
                     string persistId = root.persistenceKey;
@@ -44,12 +44,12 @@ namespace ImTK.UI
                 }
             }
             
-            using (ImTKProfiler.Scope("Render/ComputeStyle/"+root.GetType().Name))
+            using (ImTKProfiler.Scope("Render/ComputeStyle", root.GetType().Name))
             {
                 ComputeStyleFlat(cache.renderList);
             }
             
-            using (ImTKProfiler.Scope("Render/Render/" + root.GetType().Name))
+            using (ImTKProfiler.Scope("Render/Render", root.GetType().Name))
             {
                 RenderFlat(cache.renderList);
             }

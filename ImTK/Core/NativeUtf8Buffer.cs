@@ -147,6 +147,36 @@ namespace ImTK.Core
             WrittenCount += bytesWritten;
         }
 
+        public void AppendFormatted(float value)
+        {
+            AppendFormatted(value, null);
+        }
+
+        public void AppendFormatted(float value, string format)
+        {
+            int bytesWritten;
+            while (!value.TryFormat(m_span.Slice(WrittenCount), out bytesWritten, format, null))
+            {
+                EnsureCapacity(m_span.Length);
+            }
+            WrittenCount += bytesWritten;
+        }
+
+        public void AppendFormatted(int value)
+        {
+            AppendFormatted(value, null);
+        }
+
+        public void AppendFormatted(int value, string format)
+        {
+            int bytesWritten;
+            while (!value.TryFormat(m_span.Slice(WrittenCount), out bytesWritten, format, null))
+            {
+                EnsureCapacity(m_span.Length);
+            }
+            WrittenCount += bytesWritten;
+        }
+
         public void AppendFormatted<T>(T value)
         {
             if (value is IUtf8SpanFormattable utf8Formattable)

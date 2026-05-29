@@ -55,13 +55,10 @@ namespace ImTK.UI
             }
         }
 
-        public IEnumerable<HashedString> GetClasses()
+        private static readonly HashSet<HashedString> s_empty = new HashSet<HashedString>();
+        public HashSet<HashedString>.Enumerator GetEnumerator()
         {
-            if (m_classes == null) yield break;
-            foreach (var c in m_classes)
-            {
-                yield return c;
-            }
+            return m_classes != null ? m_classes.GetEnumerator() : s_empty.GetEnumerator();
         }
     }
 }

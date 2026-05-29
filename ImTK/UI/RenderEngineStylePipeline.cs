@@ -24,8 +24,10 @@ namespace ImTK.UI
                     // 0. Inherited Macro Tokens
                     if (element.parent != null)
                     {
-                        foreach (var prop in element.parent.resolvedStyle.GetActiveProperties())
+                        var activeProps = element.parent.resolvedStyle.GetActiveProperties();
+                        for (int j = 0; j < activeProps.Count; j++)
                         {
+                            var prop = activeProps[j];
                             if (prop.category == StyleCategory.HighLevelToken && prop.isInheritable)
                             {
                                 SetComposedProperty(prop);
@@ -34,11 +36,11 @@ namespace ImTK.UI
                     }
 
                     // 1. Global Sheet
-                    foreach (var block in StyleSheet.Global.Blocks)
+                    foreach (var className in element.classList)
                     {
-                        if (element.classList.Has(block.ClassName))
+                        if (StyleSheet.Global.TryGetBlock(className, out var block))
                         {
-                            foreach (var prop in block.Properties) SetComposedProperty(prop);
+                            for (int j = 0; j < block.Properties.Count; j++) SetComposedProperty(block.Properties[j]);
                         }
                     }
 
@@ -57,11 +59,11 @@ namespace ImTK.UI
 
                     if (activeLocalSheet != null)
                     {
-                        foreach (var block in activeLocalSheet.Blocks)
+                        foreach (var className in element.classList)
                         {
-                            if (element.classList.Has(block.ClassName))
+                            if (activeLocalSheet.TryGetBlock(className, out var block))
                             {
-                                foreach (var prop in block.Properties) SetComposedProperty(prop);
+                                for (int j = 0; j < block.Properties.Count; j++) SetComposedProperty(block.Properties[j]);
                             }
                         }
                     }
@@ -69,9 +71,10 @@ namespace ImTK.UI
                     // 3. Inline Style
                     if (element.internalStyle is VisualElementStyle inlineStyle)
                     {
-                        foreach (var prop in inlineStyle.UnresolvedProperties)
+                        var unres = inlineStyle.UnresolvedProperties;
+                        for (int j = 0; j < unres.Count; j++)
                         {
-                            SetComposedProperty(prop);
+                            SetComposedProperty(unres[j]);
                         }
                     }
 

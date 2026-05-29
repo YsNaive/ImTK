@@ -91,7 +91,10 @@ namespace ImTK.Silk
             {
                 using (ImTKProfiler.Scope("Unknown"))
                 {
-                    Hexa.NET.GLFW.GLFW.PollEvents();
+                    using (ImTKProfiler.Scope("System/GLFW Event"))
+                    {
+                        Hexa.NET.GLFW.GLFW.PollEvents();
+                    }
 
                     double currentTime = Hexa.NET.GLFW.GLFW.GetTime();
                     double deltaTime = currentTime - lastTime;
@@ -100,35 +103,44 @@ namespace ImTK.Silk
                     // Update
                     ImTKApplication.Lifecycle.LogicUpdate(deltaTime);
 
-                    // Resize handling
-                    int width, height;
-                    Hexa.NET.GLFW.GLFW.GetFramebufferSize(s_window, &width, &height);
-                    s_gl.Viewport(0, 0, (uint)width, (uint)height);
+                    using (ImTKProfiler.Scope("System/Frame Process"))
+                    {
+                        // Resize handling
+                        int width, height;
+                        Hexa.NET.GLFW.GLFW.GetFramebufferSize(s_window, &width, &height);
+                        s_gl.Viewport(0, 0, (uint)width, (uint)height);
 
-                    // Render
-                    s_gl.Clear((uint)ClearBufferMask.ColorBufferBit);
+                        // Render
+                        s_gl.Clear((uint)ClearBufferMask.ColorBufferBit);
 
-                    ImGuiImplOpenGL3.NewFrame();
-                    ImGuiImplGLFW.NewFrame();
-                    ImGui.NewFrame();
+                        ImGuiImplOpenGL3.NewFrame();
+                        ImGuiImplGLFW.NewFrame();
+                        ImGui.NewFrame();
+                    }
 
                     ImTKApplication.Lifecycle.GuiRender();
                     ImTKApplication.Lifecycle.GizmoRender();
 
-                    ImGui.Render();
-                    ImGuiImplOpenGL3.RenderDrawData(ImGui.GetDrawData());
-
-                    if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
+                    using (ImTKProfiler.Scope("System/Frame Process"))
                     {
-                        var backup_current_context = Hexa.NET.GLFW.GLFW.GetCurrentContext();
-                        ImGui.UpdatePlatformWindows();
-                        ImGui.RenderPlatformWindowsDefault();
-                        Hexa.NET.GLFW.GLFW.MakeContextCurrent(backup_current_context);
+                        ImGui.Render();
+                        ImGuiImplOpenGL3.RenderDrawData(ImGui.GetDrawData());
+
+                        if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
+                        {
+                            var backup_current_context = Hexa.NET.GLFW.GLFW.GetCurrentContext();
+                            ImGui.UpdatePlatformWindows();
+                            ImGui.RenderPlatformWindowsDefault();
+                            Hexa.NET.GLFW.GLFW.MakeContextCurrent(backup_current_context);
+                        }
                     }
 
                     ImTKApplication.Lifecycle.LateUpdate();
 
-                    Hexa.NET.GLFW.GLFW.SwapBuffers(s_window);
+                    using (ImTKProfiler.Scope("System/Frame Process"))
+                    {
+                        Hexa.NET.GLFW.GLFW.SwapBuffers(s_window);
+                    }
                 }
             }
 

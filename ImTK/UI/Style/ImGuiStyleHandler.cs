@@ -100,7 +100,7 @@ namespace ImTK.UI
             return false;
         }
 
-        public IEnumerable<StyleProperty> GetActiveProperties()
+        public IReadOnlyList<StyleProperty> GetActiveProperties()
         {
             return m_properties;
         }

@@ -48,6 +48,18 @@ namespace ImTK.UI
 
         public void SetTextBuffered(ref ImTKUtf8StringHandler handler)
         {
+            if (m_textBuffer.Length == handler.WrittenCount)
+            {
+                unsafe
+                {
+                    if (new ReadOnlySpan<byte>((byte*)m_textBuffer.Data, m_textBuffer.Length).SequenceEqual(handler.WrittenSpan))
+                    {
+                        handler.Dispose();
+                        return; // Unchanged
+                    }
+                }
+            }
+            
             m_textBuffer.SetText(handler.WrittenSpan);
             m_cachedText = null;
             handler.Dispose();
@@ -58,6 +70,17 @@ namespace ImTK.UI
 
         public void SetTextBuffered(ReadOnlySpan<byte> utf8Text)
         {
+            if (m_textBuffer.Length == utf8Text.Length)
+            {
+                unsafe
+                {
+                    if (new ReadOnlySpan<byte>((byte*)m_textBuffer.Data, m_textBuffer.Length).SequenceEqual(utf8Text))
+                    {
+                        return; // Unchanged
+                    }
+                }
+            }
+
             m_textBuffer.SetText(utf8Text);
             m_cachedText = null;
             

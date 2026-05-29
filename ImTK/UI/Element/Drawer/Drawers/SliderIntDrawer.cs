@@ -71,7 +71,7 @@ namespace ImTK.UI
                 ImGui.SetNextItemWidth(this.layoutRect.width);
                 int v = m_drawer.value;
 
-                bool changed = ImGui.SliderInt("##" + m_drawer.label, ref v, m_drawer.min, m_drawer.max, "%d", ImGuiSliderFlags.None);
+                bool changed = ImGui.SliderInt(m_drawer.cachedId, ref v, m_drawer.min, m_drawer.max, "%d", ImGuiSliderFlags.None);
 
                 if (changed || ImGui.IsItemDeactivatedAfterEdit())
                 {

@@ -8,19 +8,33 @@ namespace ImTK.UI
     {
         private readonly List<StyleProperty> m_unresolvedProperties = new List<StyleProperty>();
 
-        public IEnumerable<StyleProperty> UnresolvedProperties => m_unresolvedProperties;
+        public IReadOnlyList<StyleProperty> UnresolvedProperties => m_unresolvedProperties;
 
-        public void SetProperty(StyleProperty prop)
+        public bool SetProperty(StyleProperty prop)
         {
             for (int i = 0; i < m_unresolvedProperties.Count; i++)
             {
                 if (m_unresolvedProperties[i].key == prop.key)
                 {
+                    ref var existing = ref System.Runtime.InteropServices.CollectionsMarshal.AsSpan(m_unresolvedProperties)[i];
+                    if (existing.category == prop.category && 
+                        existing.dataType == prop.dataType &&
+                        existing.flags == prop.flags &&
+                        existing.floatValue == prop.floatValue &&
+                        existing.vector2Value == prop.vector2Value &&
+                        existing.colorValue == prop.colorValue &&
+                        existing.tokenHash == prop.tokenHash &&
+                        existing.intValue == prop.intValue &&
+                        existing.enumValue == prop.enumValue)
+                    {
+                        return false;
+                    }
                     m_unresolvedProperties[i] = prop;
-                    return;
+                    return true;
                 }
             }
             m_unresolvedProperties.Add(prop);
+            return true;
         }
 
         public StyleProperty GetProperty(int key)
