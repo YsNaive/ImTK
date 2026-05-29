@@ -33,15 +33,26 @@ namespace ImTK.UI
 
             if (cache.isDirty)
             {
-                cache.Update(root);
-                string persistId = root.persistenceKey;
-                if (!string.IsNullOrEmpty(persistId))
+                using (ImTKProfiler.ScopeAbsolute("Persistent", root.GetType().Name))
                 {
-                    Persistence.ViewStatePersister.LoadNewStates(persistId, cache.renderList);
+                    cache.Update(root);
+                    string persistId = root.persistenceKey;
+                    if (!string.IsNullOrEmpty(persistId))
+                    {
+                        Persistence.ViewStatePersister.LoadNewStates(persistId, cache.renderList);
+                    }
                 }
             }
-            ComputeStyleFlat(cache.renderList);
-            RenderFlat(cache.renderList);
+            
+            using (ImTKProfiler.ScopeAbsolute("Render/ComputeStyle", root.GetType().Name))
+            {
+                ComputeStyleFlat(cache.renderList);
+            }
+            
+            using (ImTKProfiler.ScopeAbsolute("Render/Render", root.GetType().Name))
+            {
+                RenderFlat(cache.renderList);
+            }
         }
 
         internal static void MarkRenderDirty(VisualElement element)

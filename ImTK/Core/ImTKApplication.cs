@@ -229,18 +229,21 @@ namespace ImTK.Core
 
                 SetState(ApplicationState.LogicUpdate);
 
-                foreach (var module in s_modules.Values)
+                using (ImTKProfiler.ScopeAbsolute("Lifecycle", "LogicUpdate"))
                 {
-                    if (!module.m_activeInHierarchy) continue;
-                    try { module.OnLogicUpdate(); }
-                    catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during LogicUpdate by {module.GetType().Name}"); }
-                }
+                    foreach (var module in s_modules.Values)
+                    {
+                        if (!module.m_activeInHierarchy) continue;
+                        try { module.OnLogicUpdate(); }
+                        catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during LogicUpdate by {module.GetType().Name}"); }
+                    }
 
-                foreach (var obj in s_objects)
-                {
-                    if (!obj.m_activeInHierarchy) continue;
-                    try { obj.OnLogicUpdate(); }
-                    catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during LogicUpdate by {obj.GetType().Name}"); }
+                    foreach (var obj in s_objects)
+                    {
+                        if (!obj.m_activeInHierarchy) continue;
+                        try { obj.OnLogicUpdate(); }
+                        catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during LogicUpdate by {obj.GetType().Name}"); }
+                    }
                 }
 
                 SetState(ApplicationState.Idle);
@@ -252,18 +255,21 @@ namespace ImTK.Core
                 EnforceFrameOrder(ApplicationState.GuiRender);
                 SetState(ApplicationState.GuiRender);
 
-                foreach (var module in s_modules.Values)
+                using (ImTKProfiler.ScopeAbsolute("Lifecycle", "Gui"))
                 {
-                    if (!module.m_activeInHierarchy) continue;
-                    try { module.OnGuiRender(); }
-                    catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during GuiRender by {module.GetType().Name}"); }
-                }
+                    foreach (var module in s_modules.Values)
+                    {
+                        if (!module.m_activeInHierarchy) continue;
+                        try { module.OnGuiRender(); }
+                        catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during GuiRender by {module.GetType().Name}"); }
+                    }
 
-                foreach (var obj in s_objects)
-                {
-                    if (!obj.m_activeInHierarchy) continue;
-                    try { obj.OnGuiRender(); }
-                    catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during GuiRender by {obj.GetType().Name}"); }
+                    foreach (var obj in s_objects)
+                    {
+                        if (!obj.m_activeInHierarchy) continue;
+                        try { obj.OnGuiRender(); }
+                        catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during GuiRender by {obj.GetType().Name}"); }
+                    }
                 }
 
                 SetState(ApplicationState.Idle);
@@ -275,18 +281,21 @@ namespace ImTK.Core
                 EnforceFrameOrder(ApplicationState.GizmoRender);
                 SetState(ApplicationState.GizmoRender);
 
-                foreach (var module in s_modules.Values)
+                using (ImTKProfiler.ScopeAbsolute("Lifecycle", "Gizmo"))
                 {
-                    if (!module.m_activeInHierarchy) continue;
-                    try { module.OnGizmoRender(); }
-                    catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during GizmoRender by {module.GetType().Name}"); }
-                }
+                    foreach (var module in s_modules.Values)
+                    {
+                        if (!module.m_activeInHierarchy) continue;
+                        try { module.OnGizmoRender(); }
+                        catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during GizmoRender by {module.GetType().Name}"); }
+                    }
 
-                foreach (var obj in s_objects)
-                {
-                    if (!obj.m_activeInHierarchy) continue;
-                    try { obj.OnGizmoRender(); }
-                    catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during GizmoRender by {obj.GetType().Name}"); }
+                    foreach (var obj in s_objects)
+                    {
+                        if (!obj.m_activeInHierarchy) continue;
+                        try { obj.OnGizmoRender(); }
+                        catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during GizmoRender by {obj.GetType().Name}"); }
+                    }
                 }
 
                 SetState(ApplicationState.Idle);
@@ -298,33 +307,38 @@ namespace ImTK.Core
                 EnforceFrameOrder(ApplicationState.LateUpdate);
                 SetState(ApplicationState.LateUpdate);
 
-                // Run normal LateUpdate
-                foreach (var module in s_modules.Values)
+                using (ImTKProfiler.ScopeAbsolute("Lifecycle", "LateUpdate"))
                 {
-                    if (!module.m_activeInHierarchy) continue;
-                    try { module.OnLateUpdate(); }
-                    catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during LateUpdate by {module.GetType().Name}"); }
+                    // Run normal LateUpdate
+                    foreach (var module in s_modules.Values)
+                    {
+                        if (!module.m_activeInHierarchy) continue;
+                        try { module.OnLateUpdate(); }
+                        catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during LateUpdate by {module.GetType().Name}"); }
+                    }
+
+                    foreach (var obj in s_objects)
+                    {
+                        if (!obj.m_activeInHierarchy) continue;
+                        try { obj.OnLateUpdate(); }
+                        catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during LateUpdate by {obj.GetType().Name}"); }
+                    }
+
+                    // Process main thread dispatcher queue
+                    ImTK.Event.ImTKDispatcher.ProcessQueue();
+
+                    // Process deferred actions scheduled during the frame
+                    ProcessDeferredActions();
+
+                    // Process pending collections and Enable/Disable state changes
+                    ProcessPendingQueuesAndStateChanges();
                 }
-
-                foreach (var obj in s_objects)
-                {
-                    if (!obj.m_activeInHierarchy) continue;
-                    try { obj.OnLateUpdate(); }
-                    catch (Exception ex) { ImTKLog.Error(ex, $"Exception thrown during LateUpdate by {obj.GetType().Name}"); }
-                }
-
-                // Process main thread dispatcher queue
-                ImTK.Event.ImTKDispatcher.ProcessQueue();
-
-                // Process deferred actions scheduled during the frame
-                ProcessDeferredActions();
-
-                // Process pending collections and Enable/Disable state changes
-                ProcessPendingQueuesAndStateChanges();
 
                 // --- Font System Resolution ---
                 // Resolve fonts at the very end of the frame when ImGui is completely unlocked
                 ImTK.UI.ImTKFontManager.ResolveFont();
+
+                ImTKProfiler.EndFrame();
 
                 SetState(ApplicationState.Idle);
                 s_minAllowedFrameState = ApplicationState.LogicUpdate; // Reset frame lock

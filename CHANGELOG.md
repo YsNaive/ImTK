@@ -8,6 +8,13 @@
 ## [Unreleased]
 
 ### Added (新增)
+- **效能監測工具 (Performance Monitor)**：新增 `ImTKProfiler` 與 `PerformanceMonitorWindow`。
+- `ImTKProfiler` 升級為**樹狀結構 (Tree-based)**，提供 `Scope(name)` 語法糖，內部使用執行緒安全的 `Stack` 自動追蹤模組呼叫階層 (如 `GuiRender -> Render -> Window`)，內部採用最高 60 秒的歷史陣列，確保零記憶體分配 (Zero GC Allocation)。
+- 擴充 `ImTKProfiler`，整合 `GC.GetAllocatedBytesForCurrentThread()` 即時追蹤並視覺化每幀的 C# GC 記憶體分配量，並利用 `[CallerFilePath]` 與 `[CallerLineNumber]` 零字串分配 (Zero GC) 紀錄呼叫來源。
+- `PerformanceMonitorWindow` 可於開發模式下透過主選單開啟，即時視覺化顯示 FPS、總 Frame Time 折線圖、C# GC 記憶體使用量。
+- 實作 **ImGui TreeTable**，自動計算並遞減排序所有被攔截子系統的平均耗時，以及其佔據父節點耗時的百分比 (%)。
+- 實作可動態調整的 `RollingWindowSeconds` (預設 15 秒)，並掛載 `[Persistent]` 實現設定自動存檔。
+- 將 `PerformanceMonitorWindow` 徹底重構為純 `VisualElement` 節點樹架構，利用底層 Yoga Flexbox 引擎實現自適應排版，將高頻渲染圖表完美封裝於獨立的空元件中 (`ProfilerTreeElement`, `ProfilerPlotElement` 等)。
 - **Sandbox 測試模組**：新增 `ScreenInfoWindow` 與 `SandboxTestModule`，用於顯示當前螢幕、視窗與 DPI 的比例資訊，方便測試自適應縮放。
 - **日誌除錯工具 (Log Viewer)**：新增 `LogViewerWindow` 與 `DebugToolsModule`。在開發模式 (`IsDevelopment`) 下，會自動於主選單加入「偵錯/日誌 (Log)」選項。
 - 支援基於 `ConcurrentQueue` 的跨執行緒日誌擷取，確保框架背景執行緒的日誌不漏接。
