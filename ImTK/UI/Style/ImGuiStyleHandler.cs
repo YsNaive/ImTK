@@ -273,11 +273,11 @@ namespace ImTK.UI
 
             if (hasFamily || hasSize)
             {
-                int familyHash = hasFamily ? fontFamily.tokenHash : RenderingContext.CurrentFontFamilyHash;
+                int familyHash = hasFamily ? fontFamily.tokenHash : RenderEngine.Context.CurrentFontFamilyHash;
                 
                 if (hasFamily)
                 {
-                    RenderingContext.PushFontState(familyHash);
+                    RenderEngine.Context.PushFontState(familyHash);
                 }
 
                 ImFontPtr fontPtr = ImTKFontManager.GetFont(familyHash);
@@ -343,7 +343,7 @@ namespace ImTK.UI
             if (hasFamily || hasSize)
             {
                 if (m_fontWasPushed) ImGui.PopFont();
-                if (hasFamily) RenderingContext.PopFontState();
+                if (hasFamily) RenderEngine.Context.PopFontState();
             }
         }
 

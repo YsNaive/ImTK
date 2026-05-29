@@ -183,7 +183,7 @@ namespace ImTK.UI
                         });
                     }
 
-                    var dpiScale = RenderingContext.CurrentDpiScale;
+                    var dpiScale = RenderEngine.Context.CurrentDpiScale;
                     if (dpiScale != 1.0f)
                     {
                         element.resolvedLayoutState.Scale(dpiScale);

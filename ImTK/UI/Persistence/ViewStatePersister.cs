@@ -7,7 +7,7 @@ namespace ImTK.UI.Persistence
 {
     /// <summary>
     /// 全域 UI 狀態排程與持久化管理器。
-    /// 負責與 ImTKDatabase 溝通，掃描 Window.m_renderList 來進行狀態的讀寫。
+    /// 負責與 ImTKDatabase 溝通，掃描渲染清單來進行狀態的讀寫。
     /// </summary>
     public static class ViewStatePersister
     {
@@ -15,13 +15,11 @@ namespace ImTK.UI.Persistence
         
         private const string CacheAssetPath = "imgui/imtk_cache.json";
 
-        /// <summary>
-        /// 掃描 Window 的 RenderList，為所有未讀取狀態的元件載入狀態。
-        /// 呼叫時機：Window.m_isRenderListDirty 導致重建後。
+        /// 掃描 RenderList，為所有未讀取狀態的元件載入狀態。
         /// </summary>
-        public static void LoadWindowNewStates(Window window)
+        public static void LoadNewStates(string rootId, List<RenderOp> renderList)
         {
-            if (window.RenderCache.renderList == null || window.RenderCache.renderList.Count == 0)
+            if (renderList == null || renderList.Count == 0)
                 return;
 
             ImTKCacheAsset cacheAsset;
@@ -35,9 +33,9 @@ namespace ImTK.UI.Persistence
                 return;
             }
 
-            StateReader reader = new StateReader(cacheAsset, window.windowId);
+            StateReader reader = new StateReader(cacheAsset, rootId);
 
-            foreach (var op in window.RenderCache.renderList)
+            foreach (var op in renderList)
             {
                 if (op.Type == RenderOpType.Begin)
                 {
@@ -59,9 +57,9 @@ namespace ImTK.UI.Persistence
         }
 
         /// <summary>
-        /// 掃描所有傳入的 Window，收集狀態並標記 CacheAsset 為 Dirty。
+        /// 掃描所有傳入的渲染清單，收集狀態並標記 CacheAsset 為 Dirty。
         /// </summary>
-        public static void SaveAllWindowStates(IEnumerable<Window> activeWindows)
+        public static void SaveAllStates(Dictionary<string, List<RenderOp>> rootsToSave)
         {
             ImTKCacheAsset cacheAsset;
             try
@@ -77,15 +75,15 @@ namespace ImTK.UI.Persistence
             bool anyDirty = false;
             HashSet<string> keyCollisionCheck = new HashSet<string>();
 
-            foreach (var window in activeWindows)
+            foreach (var kvp in rootsToSave)
             {
-                if (window.RenderCache.renderList == null)
-                    continue;
+                string rootId = kvp.Key;
+                List<RenderOp> renderList = kvp.Value;
 
                 keyCollisionCheck.Clear();
-                StateWriter writer = new StateWriter(cacheAsset, window.windowId);
+                StateWriter writer = new StateWriter(cacheAsset, rootId);
 
-                foreach (var op in window.RenderCache.renderList)
+                foreach (var op in renderList)
                 {
                     if (op.Type == RenderOpType.Begin)
                     {
@@ -94,7 +92,7 @@ namespace ImTK.UI.Persistence
                         {
                             if (!keyCollisionCheck.Add(element.persistenceKey))
                             {
-                                ImTKLog.Error($"PersistenceKey Collision Detected! The key '{element.persistenceKey}' is duplicated within Window '{window.windowId}'. UI state may be overwritten.");
+                                ImTKLog.Error($"PersistenceKey Collision Detected! The key '{element.persistenceKey}' is duplicated within root '{rootId}'. UI state may be overwritten.");
                             }
 
                             try

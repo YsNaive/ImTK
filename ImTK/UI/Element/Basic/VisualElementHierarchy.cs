@@ -52,7 +52,7 @@ namespace ImTK.UI
             child.hierarchy.parent = m_owner;
 
             EventDispatcher.MarkHierarchyDirty(m_owner);
-            m_owner.GetRenderRoot()?.RenderCache.MarkDirty();
+            RenderEngine.MarkRenderDirty(m_owner);
             m_owner.MarkMeasureDirty();
             m_owner.MarkArrangeDirty();
         }
@@ -71,7 +71,7 @@ namespace ImTK.UI
             if (!CheckSafeState()) return;
             m_children.Sort(comparison);
             if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
-            m_owner.GetRenderRoot()?.RenderCache.MarkDirty();
+            RenderEngine.MarkRenderDirty(m_owner);
             m_owner.MarkMeasureDirty();
             m_owner.MarkArrangeDirty();
         }
@@ -95,7 +95,7 @@ namespace ImTK.UI
             child.hierarchy.parent = m_owner;
 
             if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
-            m_owner.GetRenderRoot()?.RenderCache.MarkDirty();
+            RenderEngine.MarkRenderDirty(m_owner);
             m_owner.MarkMeasureDirty();
             m_owner.MarkArrangeDirty();
         }
@@ -111,7 +111,7 @@ namespace ImTK.UI
             }
 
             if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
-            m_owner.GetRenderRoot()?.RenderCache.MarkDirty();
+            RenderEngine.MarkRenderDirty(m_owner);
             m_owner.MarkMeasureDirty();
             m_owner.MarkArrangeDirty();
         }
@@ -127,7 +127,7 @@ namespace ImTK.UI
             m_children.Clear();
 
             if (notify) EventDispatcher.MarkHierarchyDirty(m_owner);
-            m_owner.GetRenderRoot()?.RenderCache.MarkDirty();
+            RenderEngine.MarkRenderDirty(m_owner);
             m_owner.MarkMeasureDirty();
             m_owner.MarkArrangeDirty();
         }

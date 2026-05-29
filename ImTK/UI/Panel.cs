@@ -58,7 +58,7 @@ namespace ImTK.UI
                 WindowKey key = new WindowKey(window.GetType(), window.windowId);
                 
                 // Save window state before unregistering
-                Persistence.ViewStatePersister.SaveAllWindowStates(new[] { window });
+                RenderEngine.SaveAllPersistentStates();
 
                 s_windows.Remove(key);
                 if (s_hostElement != null)
@@ -272,7 +272,7 @@ namespace ImTK.UI
                 {
                     float dpiScale = ImGui.GetMainViewport().DpiScale;
                     ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal * dpiScale);
-                    RenderingContext.PushFontState(globalFontFamilyHash);
+                    RenderEngine.Context.PushFontState(globalFontFamilyHash);
                     pushedFont = true;
                 }
             }
@@ -290,10 +290,8 @@ namespace ImTK.UI
             {
                 try
                 {
-                    RenderingContext.CurrentDpiScale = window.CurrentDpiScale;
-                    window.UpdateRenderCache();
-                    RenderEngine.ComputeStyleFlat(window.RenderCache.renderList);
-                    RenderEngine.RenderFlat(window.RenderCache.renderList);
+                    RenderEngine.Context.CurrentDpiScale = window.CurrentDpiScale;
+                    RenderEngine.Render(window);
                 }
                 catch (Exception ex)
                 {
@@ -304,13 +302,13 @@ namespace ImTK.UI
             if (pushedFont)
             {
                 ImGui.PopFont();
-                RenderingContext.PopFontState();
+                RenderEngine.Context.PopFontState();
             }
         }
 
         protected internal override void OnClose()
         {
-            Persistence.ViewStatePersister.SaveAllWindowStates(s_windows.Values);
+            RenderEngine.SaveAllPersistentStates();
             ImTKTheme.onGlobalThemeChanged -= OnGlobalThemeChanged;
             s_hostElement = null;
             s_windows.Clear();

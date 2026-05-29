@@ -280,7 +280,7 @@ namespace ImTK.UI
                     return cmp;
                 }, notify: false);
                 
-                this.GetRenderRoot()?.RenderCache.MarkDirty();
+                RenderEngine.MarkRenderDirty(this);
             }
 
             /// <summary>

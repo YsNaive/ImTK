@@ -23,23 +23,23 @@ The system caches resolved styles and differences in `ImGuiStyleHandler`.
 
 ## 4. Pipeline Execution (`RenderEngine`)
 
-### 4.1 Style Computation (`ComputeStyleRecursive`)
+### 4.1 Style Computation (`ComputeStyleFlat`)
 
-Before rendering, if `element.m_isStyleDirty` is true, the `ComputeStyleRecursiveInternal` algorithm executes the following steps in order:
+Before rendering, the system builds a flattened render list (`List<RenderOp>`). `ComputeStyleFlat` then iterates linearly over this list. For elements where `element.m_isStyleDirty` is true, the algorithm executes the following steps in order:
 
 1. **Inherit**: Copy `Inheritable` properties from the parent's `resolvedStyle` via `CopyFrom()`.
-2. **Theme Inject** *(新增)*: If `element.m_theme != null`，呼叫 `element.m_theme.InjectToStyleHandler(element.resolvedStyle)`，將該 Theme 的完整 ImGui 樣式（顏色、StyleVar、字型）以 `isInheritable = true` 的 `StyleProperty` 注入 `resolvedStyle`。此步驟**覆蓋** Inherit 所得的樣式，實現局部樣式隔離。子元素透過 `CopyFrom()` 自動繼承，無需重複注入。
+2. **Theme Inject**: If `element.m_theme != null`，呼叫 `element.m_theme.InjectToStyleHandler(element.resolvedStyle)`，將該 Theme 的完整 ImGui 樣式（顏色、StyleVar、字型）以 `isInheritable = true` 的 `StyleProperty` 注入 `resolvedStyle`。此步驟**覆蓋** Inherit 所得的樣式，實現局部樣式隔離。子元素透過 `CopyFrom()` 自動繼承，無需重複注入。
 3. **Compose**: Merge `StyleSheet.Global`, ancestor's `localStyleSheet`, and inline styles into a composed list. Higher-priority styles (inline > local sheet > global sheet) override lower-priority ones by key.
 4. **Translate**: Evaluate High-level tokens via Component overriders; resolve Theme tokens via `element.theme` dictionary lookups; yield pure `ImGuiStyle` elements into `resolvedStyle`. StyleSheet properties applied in this step can **further override** the theme baseline from step 2.
 5. **Diff**: Compare the `resolvedStyle` against the parent's `resolvedStyle` and output the exact push commands needed into `requiredStyle`.
 
 ### 4.2 Render Pass
 
-During the render pass, `RenderEngine.RenderNode()` calls `node.requiredStyle.Push()` before drawing and `Pop()` afterward. This mechanism transparently handles theme isolation: when an element with a local theme is entered, all differing ImGui styles are pushed; when it exits, they are popped.
+During the render pass (`RenderEngine.RenderFlat`), when processing a `RenderOpType.Begin`, the system calls `node.requiredStyle.Push()` before drawing. On `RenderOpType.End`, it calls `Pop()`. This mechanism transparently handles theme isolation: when an element with a local theme is entered, all differing ImGui styles are pushed; when it exits, they are popped.
 
 ### 4.3 Static Buffer Safety
 
-`ComputeStyleRecursiveInternal` uses two static buffers (`s_composedProps`, `s_translatedProps`) to avoid per-element List allocations. The method is **not re-entrant**: calling `MarkStyleDirty()` or triggering style recomputation from within `ComputeHighlevelToken` or theme token resolution is forbidden. In Debug builds, a `s_isComputing` guard enforces this contract and throws `InvalidOperationException` on violation.
+`ComputeStyleFlat` uses two static buffers (`s_composedProps`, `s_translatedProps`) to avoid per-element List allocations. The method is **not re-entrant**: calling `MarkStyleDirty()` or triggering style recomputation from within `ComputeHighlevelToken` or theme token resolution is forbidden. In Debug builds, a `s_isComputing` guard enforces this contract and throws `InvalidOperationException` on violation.
 
 ### 4.4 Global Theme Baseline
 

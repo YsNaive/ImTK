@@ -501,7 +501,7 @@ namespace ImTK.UI
         internal bool m_wasHovered = false;
         internal bool m_useAutoId = true;
         
-        public string persistenceKey { get; set; } = null;
+        public virtual string persistenceKey { get; set; } = null;
         internal bool m_hasLoadedState = false;
 
         protected internal virtual void OnWriteState(Persistence.StateWriter writer) 
@@ -1280,18 +1280,6 @@ namespace ImTK.UI
                 current = current.hierarchy.parent;
             }
             return null;
-        }
-
-        public IRenderRoot GetRenderRoot()
-        {
-            IRenderRoot topmostRoot = null;
-            VisualElement current = this;
-            while (current != null)
-            {
-                if (current is IRenderRoot r) topmostRoot = r;
-                current = current.hierarchy.parent;
-            }
-            return topmostRoot;
         }
 
         public virtual void OnRender()

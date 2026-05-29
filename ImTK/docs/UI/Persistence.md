@@ -63,5 +63,5 @@ public class MyElement : VisualElement
 
 ## 觸發時機 (`ViewStatePersister`)
 
-- **讀取 (Load)**：當 `Window` 觸發渲染樹重建 (`RenderCache` Dirty) 後，會掃描所有的 `RenderOpType.Begin` 節點。如果該元件有設定 `persistenceKey` 且尚未讀取過，則觸發 `OnReadState`。
-- **寫入 (Save)**：會在每一幀 `ImTKApplication.Run` 結束前，批次掃描所有活動中的視窗，收集元件狀態標記 Dirty，並最終寫入 `imtk_cache.json`。
+- **讀取 (Load)**：當 `RenderEngine` 觸發任意根節點 (如 `Window` 或 `MenuView`) 的渲染樹重建 (`RenderCache` Dirty) 後，會掃描所有的 `RenderOpType.Begin` 節點。如果該元件有設定 `persistenceKey` 且尚未讀取過，則觸發 `OnReadState`。
+- **寫入 (Save)**：會在每一幀 `ImTKApplication.Run` 結束前（或視窗被註銷時），透過 `RenderEngine.SaveAllPersistentStates()` 批次掃描所有活動中的根節點快取，收集元件狀態並標記 Dirty，最終寫入 `imtk_cache.json`。

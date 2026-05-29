@@ -150,7 +150,7 @@ namespace ImTK.UI
                     float dpiScale = ImGui.GetMainViewport().DpiScale;
                     // 仿照 Panel.cs，確保傳入正確的字體大小參數 (如果您的 Hexa.NET.ImGui 版本或擴充方法支援此參數)
                     ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal * dpiScale); 
-                    RenderingContext.PushFontState(globalFontFamilyHash);
+                    RenderEngine.Context.PushFontState(globalFontFamilyHash);
                     pushedFont = true;
                 }
             }
@@ -177,7 +177,7 @@ namespace ImTK.UI
                 if (m_rootMenu != null)
                 {
                     float dpiScale = ImGui.GetMainViewport().DpiScale;
-                    RenderingContext.CurrentDpiScale = dpiScale;
+                    RenderEngine.Context.CurrentDpiScale = dpiScale;
 
                     if (m_currentDpiScale != dpiScale)
                     {
@@ -185,9 +185,7 @@ namespace ImTK.UI
                         m_rootMenu.MarkStyleDirty();
                     }
 
-                    m_rootMenu.RenderCache.Update(m_rootMenu);
-                    RenderEngine.ComputeStyleFlat(m_rootMenu.RenderCache.renderList);
-                    RenderEngine.RenderFlat(m_rootMenu.RenderCache.renderList);
+                    RenderEngine.Render(m_rootMenu);
                 }
             }
             var frameHeight = ImGui.GetFrameHeight();
@@ -202,7 +200,7 @@ namespace ImTK.UI
             if (pushedFont)
             {
                 ImGui.PopFont();
-                RenderingContext.PopFontState();
+                RenderEngine.Context.PopFontState();
             }
         }
 

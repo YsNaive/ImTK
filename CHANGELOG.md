@@ -49,6 +49,7 @@
 - **HashedString 容量防呆機制**：在 `ImTKEnvironment` 新增 `HashedStringCapacityWarningThreshold`（預設 50000）。當 `HashedString` 全域註冊表超過此容量時會觸發 `ImTKLog.Error`，防範開發者誤將動態字串傳入導致 Memory Leak。
 
 ### Changed (變更)
+- **架構重構**：將獨立的 `RenderingContext` 收斂為 `RenderEngine` 的巢狀類別 `RenderEngine.Context`，提升了 API 的語意清晰度與模組內聚力。
 - **字型圖集 (Font Atlas) 減肥與動態縮放**：移除原先的「多尺寸烘焙」機制，現在每個字型家族只會烘焙單一基準尺寸 (`FontSize.Normal`)，較大或較小的字級需求將交由 ImGui 1.92+ 的 `ImGui.PushFont(fontPtr, targetSize)` 原生動態縮放處理，大幅減少 VRAM 佔用。
 - **全域預設字體烘焙順序修復**：修復了 `ImTKFontManager` 在烘焙字型時因 `Dictionary` 遍歷順序不固定，導致未指定字體的普通 UI 元件可能會繼承到錯誤的預設字體大小的問題。現在確保 `ImGuiDefault` 永遠是第一個被烘焙的字型，確保與全域 `fontSizeNormal` 完美同步。
 - **DPI 適應性重構**：全面廢除 `globalFontScale` 手動放大機制，改為映射至 `ImGui.GetStyle().FontScaleMain`，這使得 Hexa.NET.ImGui 的 Multi-Viewport 能正確接管跨螢幕的 `RasterizerDensity` DPI 縮放。
@@ -58,6 +59,10 @@
 - **ImTKApplication 生命週期升級**：在 `ImTKApplication.Initialize()` 流程中正式補上 `Phase 3: Enable` 階段。現在所有註冊的 `ImTKModule` 皆會正確觸發 `OnEnable()`，完善了原本缺失的模組啟動事件鏈。
 - **RenderEngine 扁平化渲染統一**：移除了 `Window` 獨立的 `FlattenRecursive`，全面統一改由 `RenderEngine.BuildRenderListRecursive` 負責渲染清單建立。
 - **ILayoutRoot 語意更名**：將原有的 `IWindow` 介面更名為 `ILayoutRoot`，使其更精確地反映其作為「排版引擎計算起始點」的職責。
+- **渲染管線 API 統一化**：將原本散落在各處 (如 `Window.cs`, `MenuView.cs`) 的手動快取維護與渲染呼叫 (`UpdateRenderCache`, `ComputeStyleFlat`, `RenderFlat`) 全面收斂為單一標準語法 `RenderEngine.Render(root)`。
+- **快取記憶體自動化管理**：`RenderEngine` 內部導入了 `ConditionalWeakTable`，為每個根節點自動且動態地維護渲染快取 (`RenderListCache`)，不僅大幅精簡了 `VisualElement` 的內部狀態，更消除了跨元件快取洩漏的風險，實現了真正去中心化的元件層級渲染隔離。
+- **持久化層級 (Persistence) 泛用化重構**：將 `ViewStatePersister` 的存讀取機制從綁定 `Window` 物件，重構為支援任意 `rootId` 與通用渲染清單 (`List<RenderOp>`) 的泛型介面。配合 `RenderEngine.SaveAllPersistentStates()`，現在所有帶有 `windowId` 或 `persistenceKey` 的根節點都能自動享有狀態持久化的能力。
+- **Window 持久化防呆機制**：修正了 `Window` 未指定 `windowId` 時持久化功能失效的問題。將 `VisualElement.persistenceKey` 設為 `virtual`，並在 `Window` 覆寫其 Getter：當 `windowId` 為空時自動回退 (Fallback) 使用 `this.GetType().Name` 作為持久化鍵值，確保無名視窗也能正常存讀檔。
 - **O(1) 渲染過濾最佳化**：修正 `RenderEngine.BuildRenderListRecursive`，使其不再剃除 `display: none` 的節點。現在所有節點都會被加入快取中，並於繪製時依賴 `SkipCount` 進行 O(1) 的渲染跳躍。此舉確保動態修改 `style.display` 時不需要昂貴地重建 `RenderListCache`。
 - **EnumDropdownDrawer 泛型重構**：將原有的 `EnumDropdownDrawer` 重構為強型別泛型 `EnumDropdownDrawer<T> where T : struct, Enum`。現在會在建構時自動提取所有列舉值並初始化選項，移除舊有基於 `value` setter 延遲推導型別的設計，大幅提升效能與型別安全。同時 `FieldDrawerFactory` 與註冊表已升級，全面支援開放式泛型 (`IsGenericTypeDefinition`) 的自動推導與動態實例化。
 - **Asset System 架構翻新**：徹底移除了 `ImTKSaveableAsset` 類別，現在系統中萬物皆為唯一的 `ImTKAsset` 基底，是否支援存檔完全由「註冊表中有沒有該型別的 Exporter」來決定。

@@ -108,9 +108,9 @@ namespace ImTK.DebugTools
 
         public override void OnRender()
         {
-            if (m_lastDpiScale != RenderingContext.CurrentDpiScale)
+            if (m_lastDpiScale != RenderEngine.Context.CurrentDpiScale)
             {
-                m_lastDpiScale = RenderingContext.CurrentDpiScale;
+                m_lastDpiScale = RenderEngine.Context.CurrentDpiScale;
                 m_logEntryElement.MarkStyleDirty();
             }
 
@@ -256,11 +256,7 @@ namespace ImTK.DebugTools
                         // 餵入資料給游離元件
                         m_logEntryElement.SetData(log);
                         
-                        // 利用 ImTK Style System 更新
-                        RenderEngine.ComputeStyleRecursive(m_logEntryElement);
-                        
-                        // 進行渲染
-                        RenderEngine.RenderFlat(m_logEntryElement);
+                        RenderEngine.Render(m_logEntryElement);
                     }
                 }
                 clipper.End();

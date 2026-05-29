@@ -34,7 +34,7 @@ namespace ImTK.UI
             }
 }
 
-        public RenderListCache RenderCache { get; } = new RenderListCache();
+
         public string name { get; set; }
         public int priority { get; set; }
         public bool isMenuBar { get; set; } = false;
@@ -133,7 +133,7 @@ namespace ImTK.UI
 
                 // 最後統一標記 dirty，這樣 RenderList 才會被重建
                 EventDispatcher.MarkHierarchyDirty(this);
-                this.GetRenderRoot()?.RenderCache.MarkDirty();
+                RenderEngine.MarkRenderDirty(this);
             }
             finally
             {

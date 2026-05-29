@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace ImTK.UI
 {
-    public class RenderListCache
+    internal class RenderListCache
     {
         public bool isDirty = true;
         public readonly List<RenderOp> renderList = new List<RenderOp>();

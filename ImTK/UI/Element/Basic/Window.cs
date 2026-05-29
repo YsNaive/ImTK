@@ -102,6 +102,18 @@ namespace ImTK.UI
         
         public string windowId { get; init; }
 
+        public override string persistenceKey 
+        {
+            get
+            {
+                string key = base.persistenceKey;
+                if (!string.IsNullOrEmpty(key)) return key;
+                if (!string.IsNullOrEmpty(windowId)) return windowId;
+                return this.GetType().Name;
+            }
+            set => base.persistenceKey = value;
+        }
+
         public bool isFocused { get; private set; }
 
         public float CurrentDpiScale { get; private set; } = 1.0f;
@@ -231,9 +243,9 @@ namespace ImTK.UI
                 this.MarkStyleDirty();
             }
 
-            RenderingContext.CurrentDpiScale = newDpiScale;
-            RenderingContext.IsInsideWindow = true;
-            RenderingContext.FlushPendingCommands();
+            RenderEngine.Context.CurrentDpiScale = newDpiScale;
+            RenderEngine.Context.IsInsideWindow = true;
+            RenderEngine.Context.FlushPendingCommands();
             return isExpanded;
         }
 
@@ -248,19 +260,9 @@ namespace ImTK.UI
                 m_didApplyLocalTheme = false;
             }
 
-            RenderingContext.IsInsideWindow = false;
+            RenderEngine.Context.IsInsideWindow = false;
         }
 
-        public RenderListCache RenderCache { get; } = new RenderListCache();
-
-        internal void UpdateRenderCache()
-        {
-            if (RenderCache.isDirty)
-            {
-                RenderCache.Update(this);
-                Persistence.ViewStatePersister.LoadWindowNewStates(this);
-            }
-        }
 
         private bool m_isOpenForImGuiCache;
 
