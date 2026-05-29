@@ -89,44 +89,47 @@ namespace ImTK.Silk
 
             while (Hexa.NET.GLFW.GLFW.WindowShouldClose(s_window) == 0)
             {
-                Hexa.NET.GLFW.GLFW.PollEvents();
-
-                double currentTime = Hexa.NET.GLFW.GLFW.GetTime();
-                double deltaTime = currentTime - lastTime;
-                lastTime = currentTime;
-
-                // Update
-                ImTKApplication.Lifecycle.LogicUpdate(deltaTime);
-
-                // Resize handling
-                int width, height;
-                Hexa.NET.GLFW.GLFW.GetFramebufferSize(s_window, &width, &height);
-                s_gl.Viewport(0, 0, (uint)width, (uint)height);
-
-                // Render
-                s_gl.Clear((uint)ClearBufferMask.ColorBufferBit);
-
-                ImGuiImplOpenGL3.NewFrame();
-                ImGuiImplGLFW.NewFrame();
-                ImGui.NewFrame();
-
-                ImTKApplication.Lifecycle.GuiRender();
-                ImTKApplication.Lifecycle.GizmoRender();
-
-                ImGui.Render();
-                ImGuiImplOpenGL3.RenderDrawData(ImGui.GetDrawData());
-
-                if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
+                using (ImTKProfiler.Scope("Unknown"))
                 {
-                    var backup_current_context = Hexa.NET.GLFW.GLFW.GetCurrentContext();
-                    ImGui.UpdatePlatformWindows();
-                    ImGui.RenderPlatformWindowsDefault();
-                    Hexa.NET.GLFW.GLFW.MakeContextCurrent(backup_current_context);
+                    Hexa.NET.GLFW.GLFW.PollEvents();
+
+                    double currentTime = Hexa.NET.GLFW.GLFW.GetTime();
+                    double deltaTime = currentTime - lastTime;
+                    lastTime = currentTime;
+
+                    // Update
+                    ImTKApplication.Lifecycle.LogicUpdate(deltaTime);
+
+                    // Resize handling
+                    int width, height;
+                    Hexa.NET.GLFW.GLFW.GetFramebufferSize(s_window, &width, &height);
+                    s_gl.Viewport(0, 0, (uint)width, (uint)height);
+
+                    // Render
+                    s_gl.Clear((uint)ClearBufferMask.ColorBufferBit);
+
+                    ImGuiImplOpenGL3.NewFrame();
+                    ImGuiImplGLFW.NewFrame();
+                    ImGui.NewFrame();
+
+                    ImTKApplication.Lifecycle.GuiRender();
+                    ImTKApplication.Lifecycle.GizmoRender();
+
+                    ImGui.Render();
+                    ImGuiImplOpenGL3.RenderDrawData(ImGui.GetDrawData());
+
+                    if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
+                    {
+                        var backup_current_context = Hexa.NET.GLFW.GLFW.GetCurrentContext();
+                        ImGui.UpdatePlatformWindows();
+                        ImGui.RenderPlatformWindowsDefault();
+                        Hexa.NET.GLFW.GLFW.MakeContextCurrent(backup_current_context);
+                    }
+
+                    ImTKApplication.Lifecycle.LateUpdate();
+
+                    Hexa.NET.GLFW.GLFW.SwapBuffers(s_window);
                 }
-
-                ImTKApplication.Lifecycle.LateUpdate();
-
-                Hexa.NET.GLFW.GLFW.SwapBuffers(s_window);
             }
 
             ImTKApplication.Lifecycle.Close();

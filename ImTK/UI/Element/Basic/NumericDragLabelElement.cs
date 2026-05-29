@@ -31,13 +31,11 @@ namespace ImTK.UI
 
         public override void OnRender()
         {
-            if (string.IsNullOrEmpty(text)) return;
+            if (m_textBuffer.IsEmpty) return;
 
             System.Numerics.Vector2 textSize;
             unsafe {
-                fixed (byte* pText = System.Text.Encoding.UTF8.GetBytes(text + "\0")) {
-                    textSize = ImGui.CalcTextSize(pText);
-                }
+                textSize = ImGui.CalcTextSize((byte*)m_textBuffer.Data);
             }
             float frameHeight = ImGui.GetFrameHeight();
             
@@ -46,7 +44,7 @@ namespace ImTK.UI
 
             var buttonPos = ImGui.GetCursorScreenPos();
             float dragWidth = Math.Max(textSize.X, this.layoutRect.width);
-            ImGui.InvisibleButton("##drag_" + text, new Vector2(dragWidth, frameHeight));
+            ImGui.InvisibleButton("##drag_num", new Vector2(dragWidth, frameHeight)); // Note: Using static string instead of "##drag_" + text to avoid GC
             
             bool isDragActive = ImGui.IsItemActive();
             if (ImGui.IsItemHovered())
@@ -57,7 +55,7 @@ namespace ImTK.UI
             var endPos = ImGui.GetCursorScreenPos();
             float textYOffset = (frameHeight - textSize.Y) * 0.5f;
             ImGui.SetCursorScreenPos(new Vector2(buttonPos.X, buttonPos.Y + textYOffset));
-            ImGui.TextUnformatted(text);
+            unsafe { ImGui.TextUnformatted((byte*)m_textBuffer.Data); }
             ImGui.SetCursorScreenPos(endPos);
 
             if (isDragActive && ImGui.IsMouseDragging(ImGuiMouseButton.Left))

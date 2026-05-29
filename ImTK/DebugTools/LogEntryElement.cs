@@ -26,22 +26,28 @@ namespace ImTK.DebugTools
 
             var theme = ImTKTheme.GlobalTheme;
 
-            // 1. Time [HH:mm:ss]
-            ImGui.TextColored(theme.normalColor.subText.rgba, $"[{m_entry.Timestamp:HH:mm:ss}]");
-            if (ImGui.IsItemHovered())
-            {
-                var mousePos = ImGui.GetMousePos();
-                ImGui.SetNextWindowPos(new System.Numerics.Vector2(mousePos.X, mousePos.Y - 4.0f), ImGuiCond.Always, new System.Numerics.Vector2(0.0f, 1.0f));
-                if (ImGui.BeginTooltip())
-                {
-                    ImGui.TextColored(theme.infoColor.text.rgba, m_entry.ContextName);
-                    ImGui.EndTooltip();
-                }
-            }
+            ImGui.BeginGroup();
+            
+            RenderEngine.TextColoredBuffered(theme.normalColor.subText.rgba, $"[{m_entry.Timestamp:HH:mm:ss}]");
+            
             ImGui.SameLine();
-
-            // 2. Message
-            Color msgColor;
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 5f);
+            
+            if (!string.IsNullOrEmpty(m_entry.ContextName))
+            {
+                if (m_entry.ContextName == "Global")
+                {
+                    RenderEngine.TextColoredBuffered(theme.infoColor.text.rgba, $"{m_entry.ContextName}");
+                }
+                else
+                {
+                    RenderEngine.TextColoredBuffered(theme.infoColor.text.rgba, $"{m_entry.ContextName}");
+                }
+                ImGui.SameLine();
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 5f);
+            }
+            
+            Color msgColor = theme.normalColor.text;
             switch (m_entry.Level)
             {
                 case LogLevel.Warning:
@@ -62,8 +68,10 @@ namespace ImTK.DebugTools
             
             // 使用 TextWrapped，讓過長的 Log 可以自動換行
             ImGui.PushTextWrapPos(ImGui.GetContentRegionAvail().X);
-            ImGui.TextColored(msgColor.rgba, m_entry.Message);
+            RenderEngine.TextColoredBuffered(msgColor.rgba, $"{m_entry.Message}");
             ImGui.PopTextWrapPos();
+            
+            ImGui.EndGroup();
         }
     }
 }

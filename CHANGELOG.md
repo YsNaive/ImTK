@@ -9,6 +9,11 @@
 
 ### Added (新增)
 - **效能監測工具 (Performance Monitor)**：新增 `ImTKProfiler` 與 `PerformanceMonitorWindow`。
+- **字串內插效能極限優化 (Zero-GC String Interpolation)**：實作了 `NativeUtf8Buffer` 與基於 .NET 10 的 `ImTKUtf8StringHandler` (搭載 `[InterpolatedStringHandler]`)，達成在 UI Render Loop 中傳遞動態格式化字串 (`$"FPS: {fps}"`) 時的**零記憶體分配 (Zero GC Allocation)**，徹底消除高頻繪製時的 GC 壓力，並修復了原先 `TextElement` 違規使用 `fixed` 綁定 C# 字串導致的指標安全漏洞 (Rule 1.4)。
+- 擴充 `RenderEngine` 基礎 API，新增了無 GC 版本的 `RenderEngine.TextBuffered(ref handler)`, `RenderEngine.TextColoredBuffered`, `RenderEngine.TextDisabledBuffered` 與 `RenderEngine.CalcTextSizeBuffered`。並且為各方法提供了 `string` 與 `ReadOnlySpan<byte>` 的重載 (Overloads)。
+- 全面重構 `TextElement`，將底層 `string` 儲存替換為 `NativeUtf8Buffer`，並實作 `SetTextBuffered` 與 Lazy String 快取機制，達到「單一真相來源」且無痛銜接既有 API。
+- 引入 `TextElement<TStyle>` 泛型基底類別，並將 `Button` 的繼承樹改為 `Button : TextElement<Button.Style>`，徹底移除了原本 `Button` 在 `MeasureContent` 中每次呼叫 `UTF8.GetBytes(text)` 所產生的高頻 GC Allocation，統一並共用底層無 GC 文字處理機制。
+- 全面盤點並重構框架內部的高頻 UI 元件 (如 `ProfilerUIElements`, `LogEntryElement`, `NumericDragLabelElement`, `LogViewerWindow`)，徹底替換原有的 `ImGui.Text($"...")` 為零 GC 的 `RenderEngine.TextBuffered` 呼叫。
 - `ImTKProfiler` 升級為**樹狀結構 (Tree-based)**，提供 `Scope(name)` 語法糖，內部使用執行緒安全的 `Stack` 自動追蹤模組呼叫階層 (如 `GuiRender -> Render -> Window`)，內部採用最高 60 秒的歷史陣列，確保零記憶體分配 (Zero GC Allocation)。
 - 擴充 `ImTKProfiler`，整合 `GC.GetAllocatedBytesForCurrentThread()` 即時追蹤並視覺化每幀的 C# GC 記憶體分配量，並利用 `[CallerFilePath]` 與 `[CallerLineNumber]` 零字串分配 (Zero GC) 紀錄呼叫來源。
 - `PerformanceMonitorWindow` 可於開發模式下透過主選單開啟，即時視覺化顯示 FPS、總 Frame Time 折線圖、C# GC 記憶體使用量。

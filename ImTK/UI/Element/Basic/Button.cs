@@ -4,7 +4,7 @@ using ImTK.Core;
 
 namespace ImTK.UI
 {
-    public class Button : VisualElement<Button.Style>
+    public class Button : TextElement<Button.Style>
     {
         public new class StyleKey : VisualElement.StyleKey
         {
@@ -70,21 +70,6 @@ namespace ImTK.UI
                 }
                 base.ComputeHighlevelToken(prop, output);
             }
-}
-
-        private string m_text = string.Empty;
-        public string text 
-        { 
-            get => m_text; 
-            set 
-            {
-                if (m_text != value)
-                {
-                    m_text = value ?? string.Empty;
-                    MarkMeasureDirty();
-                    MarkArrangeDirty();
-                }
-            } 
         }
 
         public event Action<ClickEvent> onClicked
@@ -103,19 +88,15 @@ namespace ImTK.UI
             classList.Add("Button");
         }
 
-                protected internal override bool CheckHoverState()
+        protected internal override bool CheckHoverState()
         {
             return ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
         }
 
         protected override System.Numerics.Vector2 MeasureContent(LayoutConstraint constraint)
         {
-            System.Numerics.Vector2 textSize;
-            unsafe {
-                fixed (byte* pText = System.Text.Encoding.UTF8.GetBytes(text + "\0")) {
-                    textSize = ImGui.CalcTextSize(pText);
-                }
-            }
+            System.Numerics.Vector2 textSize = base.MeasureContent(constraint);
+            
             var padding = ImGui.GetStyle().FramePadding;
             if (resolvedStyle.TryGetVector2((int)ImGuiStyleVar.FramePadding, out var overridePadding))
                 padding = overridePadding;
@@ -126,7 +107,19 @@ namespace ImTK.UI
 
         public override void OnRender()
         {
-            if (ImGui.Button(text, new System.Numerics.Vector2(layoutRect.width, layoutRect.height)))
+            bool clicked = false;
+            unsafe {
+                if (!m_textBuffer.IsEmpty)
+                {
+                    clicked = ImGui.Button((byte*)m_textBuffer.Data, new System.Numerics.Vector2(layoutRect.width, layoutRect.height));
+                }
+                else
+                {
+                    clicked = ImGui.Button("", new System.Numerics.Vector2(layoutRect.width, layoutRect.height));
+                }
+            }
+
+            if (clicked)
             {
                 var evt = EventPool<ClickEvent>.Get();
                 SendEvent(evt);

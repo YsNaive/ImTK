@@ -70,12 +70,13 @@ namespace ImTK.DebugTools
                 ImGui.BeginGroup();
                 if (m_context.Mode == ProfilerMode.Time)
                 {
-                    ImGui.Text($"Total Frame Time History ({m_context.RollingWindowSeconds}s)");
+                    RenderEngine.TextBuffered($"Total Frame Time History ({m_context.RollingWindowSeconds}s)");
                     ImGui.PlotLines("##TimeChart", ref m_context.TotalFrameTimes[0], 3600, startIdx, (string)null, 0f, 33.3f, new Vector2(this.layoutRect.width, this.layoutRect.height - 25f));
                 }
                 else
                 {
-                    ImGui.Text($"Total GC Allocation History ({m_context.RollingWindowSeconds}s)");
+                    RenderEngine.TextBuffered($"Total GC Allocation History ({m_context.RollingWindowSeconds}s)");
+
                     float maxGc = 0.001f;
                     for (int i = 0; i < count; i++)
                     {
@@ -169,28 +170,31 @@ namespace ImTK.DebugTools
             
             ImGui.SameLine();
             
-            string pctStr = "-";
             if (parentAvg > 0.001f)
             {
                 float pct = (avgVal / parentAvg) * 100f;
-                pctStr = $"{pct:F1}%%";
+                float strWidth = RenderEngine.CalcTextSizeBuffered($"{pct:F1}%").X;
+                float offset = pctMaxWidth - strWidth;
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+                RenderEngine.TextColoredBuffered(ImTKTheme.GlobalTheme.normalColor.subText, $"{pct:F1}%");
             }
-            
-            float strWidth = ImGui.CalcTextSize(pctStr).X;
-            float offset = pctMaxWidth - strWidth;
-            
-            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
-            ImGui.TextColored(ImTKTheme.GlobalTheme.normalColor.subText, pctStr);
+            else
+            {
+                float strWidth = ImGui.CalcTextSize("-").X;
+                float offset = pctMaxWidth - strWidth;
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+                ImGui.TextColored(ImTKTheme.GlobalTheme.normalColor.subText, "-");
+            }
             
             ImGui.SameLine();
             ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 5f);
-            ImGui.Text(node.Name);
+            RenderEngine.TextBuffered($"{node.Name}");
             
             ImGui.TableNextColumn();
-            ImGui.Text($"{currentVal:F3}");
+            RenderEngine.TextBuffered($"{currentVal:F3}");
             
             ImGui.TableNextColumn();
-            ImGui.Text($"{avgVal:F3}");
+            RenderEngine.TextBuffered($"{avgVal:F3}");
             
             if (isOpen && hasChildren)
             {
@@ -228,15 +232,15 @@ namespace ImTK.DebugTools
         public override void OnRender()
         {
             ImGui.Separator();
-            ImGui.Text("Scope Information");
+            RenderEngine.TextBuffered($"Scope Information");
 
             if (m_context.SelectedNode == null)
             {
-                ImGui.TextDisabled("Select a node from the table to view details.");
+                RenderEngine.TextDisabledBuffered($"Select a node from the table to view details.");
                 return;
             }
 
-            ImGui.Text($"Selected Scope: {m_context.SelectedNode.Name}");
+            RenderEngine.TextBuffered($"Selected Scope: {m_context.SelectedNode.Name}");
             
             ImGui.BeginChild("CallersList", new Vector2(0, 0), ImGuiChildFlags.Borders, ImGuiWindowFlags.None);
             
@@ -245,13 +249,14 @@ namespace ImTK.DebugTools
             
             if (allCallers.Count == 0)
             {
-                ImGui.TextDisabled("No callers recorded.");
+                RenderEngine.TextDisabledBuffered($"No callers recorded.");
             }
             else
             {
                 foreach (var caller in allCallers)
                 {
-                    ImGui.BulletText(caller);
+                    ImGui.Bullet();
+                    RenderEngine.TextBuffered($"{caller}");
                 }
             }
             ImGui.EndChild();

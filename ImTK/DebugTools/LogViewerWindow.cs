@@ -157,7 +157,7 @@ namespace ImTK.DebugTools
             ImGui.Checkbox("Auto-scroll", ref m_autoScroll);
             
             ImGui.SameLine();
-            ImGui.Text("|");
+            RenderEngine.TextBuffered($"|");
             ImGui.SameLine();
 
             // Level Filters (Combo)
@@ -187,7 +187,7 @@ namespace ImTK.DebugTools
             }
 
             ImGui.SameLine();
-            ImGui.Text("|");
+            RenderEngine.TextBuffered($"|");
             ImGui.SameLine();
 
             // Context Filters (Combo)

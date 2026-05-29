@@ -335,5 +335,147 @@ namespace ImTK.UI
                 }
             }
         }
+
+        // --- Zero-GC ImGui Text Wrappers ---
+
+        public static void TextBuffered(ref ImTK.Core.ImTKUtf8StringHandler handler)
+        {
+            unsafe
+            {
+                fixed (byte* p = handler.WrittenSpan)
+                {
+                    ImGui.TextUnformatted(p, p + handler.WrittenCount);
+                }
+            }
+            handler.Dispose();
+        }
+
+        public static void TextColoredBuffered(System.Numerics.Vector4 color, ref ImTK.Core.ImTKUtf8StringHandler handler)
+        {
+            ImGui.PushStyleColor(ImGuiCol.Text, color);
+            unsafe
+            {
+                fixed (byte* p = handler.WrittenSpan)
+                {
+                    ImGui.TextUnformatted(p, p + handler.WrittenCount);
+                }
+            }
+            ImGui.PopStyleColor();
+            handler.Dispose();
+        }
+
+        public static void TextDisabledBuffered(ref ImTK.Core.ImTKUtf8StringHandler handler)
+        {
+            ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle().Colors[(int)ImGuiCol.TextDisabled]);
+            unsafe
+            {
+                fixed (byte* p = handler.WrittenSpan)
+                {
+                    ImGui.TextUnformatted(p, p + handler.WrittenCount);
+                }
+            }
+            ImGui.PopStyleColor();
+            handler.Dispose();
+        }
+
+        public static System.Numerics.Vector2 CalcTextSizeBuffered(ref ImTK.Core.ImTKUtf8StringHandler handler)
+        {
+            System.Numerics.Vector2 size;
+            unsafe
+            {
+                fixed (byte* p = handler.WrittenSpan)
+                {
+                    size = ImGui.CalcTextSize(p, p + handler.WrittenCount);
+                }
+            }
+            handler.Dispose();
+            return size;
+        }
+
+        // --- ReadOnlySpan<byte> Overloads ---
+
+        public static void TextBuffered(System.ReadOnlySpan<byte> utf8Text)
+        {
+            if (utf8Text.IsEmpty) return;
+            unsafe
+            {
+                fixed (byte* p = utf8Text)
+                {
+                    ImGui.TextUnformatted(p, p + utf8Text.Length);
+                }
+            }
+        }
+
+        public static void TextColoredBuffered(System.Numerics.Vector4 color, System.ReadOnlySpan<byte> utf8Text)
+        {
+            if (utf8Text.IsEmpty) return;
+            ImGui.PushStyleColor(ImGuiCol.Text, color);
+            unsafe
+            {
+                fixed (byte* p = utf8Text)
+                {
+                    ImGui.TextUnformatted(p, p + utf8Text.Length);
+                }
+            }
+            ImGui.PopStyleColor();
+        }
+
+        public static void TextDisabledBuffered(System.ReadOnlySpan<byte> utf8Text)
+        {
+            if (utf8Text.IsEmpty) return;
+            ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle().Colors[(int)ImGuiCol.TextDisabled]);
+            unsafe
+            {
+                fixed (byte* p = utf8Text)
+                {
+                    ImGui.TextUnformatted(p, p + utf8Text.Length);
+                }
+            }
+            ImGui.PopStyleColor();
+        }
+
+        public static System.Numerics.Vector2 CalcTextSizeBuffered(System.ReadOnlySpan<byte> utf8Text)
+        {
+            if (utf8Text.IsEmpty) return System.Numerics.Vector2.Zero;
+            System.Numerics.Vector2 size;
+            unsafe
+            {
+                fixed (byte* p = utf8Text)
+                {
+                    size = ImGui.CalcTextSize(p, p + utf8Text.Length);
+                }
+            }
+            return size;
+        }
+
+        // --- String Overloads (Delegates to ImGui directly) ---
+        
+        public static void TextBuffered(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            ImGui.TextUnformatted(text);
+        }
+
+        public static void TextColoredBuffered(System.Numerics.Vector4 color, string text)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            ImGui.PushStyleColor(ImGuiCol.Text, color);
+            ImGui.TextUnformatted(text);
+            ImGui.PopStyleColor();
+        }
+
+        public static void TextDisabledBuffered(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle().Colors[(int)ImGuiCol.TextDisabled]);
+            ImGui.TextUnformatted(text);
+            ImGui.PopStyleColor();
+        }
+
+        public static System.Numerics.Vector2 CalcTextSizeBuffered(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return System.Numerics.Vector2.Zero;
+            return ImGui.CalcTextSize(text);
+        }
     }
 }
