@@ -85,12 +85,19 @@ namespace ImTK.UI
                     }
 
                     // 若此元素有局部 theme，將 theme 的完整 ImGui 樣式注入 resolvedStyle。
+                    // 若沒有局部 theme 且為根節點 (Window)，則注入 GlobalTheme 確保其擁有完整覆寫。
                     // 時機：CopyFrom 繼承父層基底之後、composed properties 之前，
                     // 使 StyleSheet / inline style 仍可覆蓋 theme 值（優先序：inline > stylesheet > theme）。
                     // 實際的 Push/Pop 隔離由既有的 Diff → requiredStyle → RenderNode 機制自動處理。
-                    if (element.m_theme != null)
+                    var themeToInject = element.m_theme;
+                    if (themeToInject == null && element.parent == null)
                     {
-                        element.m_theme.InjectToStyleHandler(element.resolvedStyle);
+                        themeToInject = ImTKTheme.GlobalTheme;
+                    }
+
+                    if (themeToInject != null)
+                    {
+                        themeToInject.InjectToStyleHandler(element.resolvedStyle);
                     }
 
                     s_translatedProps.Clear();
@@ -174,6 +181,13 @@ namespace ImTK.UI
                             key = (int)ImGuiStyleVar.FramePadding,
                             vector2Value = paddingVec
                         });
+                    }
+
+                    var dpiScale = RenderingContext.CurrentDpiScale;
+                    if (dpiScale != 1.0f)
+                    {
+                        element.resolvedLayoutState.Scale(dpiScale);
+                        element.resolvedStyle.Scale(dpiScale);
                     }
 
                     ImGuiStyleHandler.Diff(element.parent?.resolvedStyle, element.resolvedStyle, element.requiredStyle);

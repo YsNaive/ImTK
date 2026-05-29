@@ -8,11 +8,14 @@
 ## [Unreleased]
 
 ### Added (新增)
+- **Sandbox 測試模組**：新增 `ScreenInfoWindow` 與 `SandboxTestModule`，用於顯示當前螢幕、視窗與 DPI 的比例資訊，方便測試自適應縮放。
 - **日誌除錯工具 (Log Viewer)**：新增 `LogViewerWindow` 與 `DebugToolsModule`。在開發模式 (`IsDevelopment`) 下，會自動於主選單加入「偵錯/日誌 (Log)」選項。
 - 支援基於 `ConcurrentQueue` 的跨執行緒日誌擷取，確保框架背景執行緒的日誌不漏接。
 - 實作了專屬的 `LogEntryElement` 游離元件 (Detached Element)，結合 `ImGuiListClipper` 進行虛擬化渲染，支援超過上萬筆日誌的流暢捲動 (60 FPS)，並且完美整合了 `ImTKTheme` 的顏色映射 (依據 Log Level 套用主題色)。
 - 內建進階過濾器，包含多選的 Context Name (動態蒐集所有模組)、Log Level 開關以及關鍵字搜尋。
 - **多視窗支援 (Multi-Viewports)**：透過替換底層函式庫為 `Hexa.NET.ImGui`，正式啟用 `ImGuiConfigFlags.ViewportsEnable`，完美支援將 UI 視窗拖出主視窗形成獨立的作業系統級視窗，大幅提升多螢幕開發者的使用體驗。
+- **自適應縮放 (Adaptive Scaling)**：實作了隱式的邏輯像素與物理像素分離機制。框架現在會自動捕捉各個獨立視窗所在螢幕的 `DpiScale`，並在樣式管線末端並行對 `ResolvedLayoutState` 與 `ImGuiStyleHandler` 進行等比例縮放，讓排版引擎與原生繪圖引擎完美適配高解析度 (如 4K) 螢幕。
+- 所有樣式參數 (如 `style.width`, `padding`, `fontSize`) 皆被視為純粹的**邏輯像素**，開發者無需手動乘算 DPI 比例即可達成自動縮放。
 - **[UI 系統] 元件持久化 Attribute 語法糖與深層遞迴**：新增了 `[Persistent]` 標籤與 `PersistentTypeCache`。開發者現在可以直接在 `VisualElement` 的 Field 與 Property 上標記 `[Persistent]`，系統便會透過反射自動將其納入 `ViewStatePersister` 的自動存檔與讀取機制中。
 - 支援複雜物件 (Class / Struct) 的無限深度遞迴拆解 (Recursive Flattening)。
 - 實作了「父層回推 (Recursive Push-back)」邏輯，完美突破 C# Reflection 修改 Struct 的裝箱副本限制，確保任意深度的 `struct` 設值皆能生效。
@@ -77,10 +80,13 @@
 - **ImGui SetWindowFocus 崩潰問題**：修復了在視窗尚未進行第一幀繪製 (`OnBeginRender`) 前，呼叫 `ImGui.SetWindowFocus` 會導致崩潰的底層 Bug。在 `Window` 加入 `m_hasRenderedAtLeastOnce` 追蹤機制，完美解決延遲與自動復原的焦點衝突。
 - **RenderEngine 渲染重入 (Re-entrancy) 漏洞**：修復 `RenderEngine.RenderFlat` 共用單一 `t_tempRenderList` 靜態列表，導致嵌套呼叫 (Nested RenderFlat) 時外層迴圈被強制覆寫並截斷的問題。已將其替換為基於 `Stack<List<RenderOp>>` 的執行緒安全物件池，解決 `Missing PopID` 與 `Debug##Default` 幽靈視窗崩潰。
 - **單行容器交叉軸溢出拉伸 Bug**：修復了單行彈性容器 (Single-line Flex Container) 在 `ArrangeContent` 佈局時，錯誤地因內部子元件溢出而將容器交叉軸 (Cross Axis) 撐開，導致其他設定為 `Stretch` 的子元件跟著異常變大的 Bug。現已嚴格遵守容器自身的尺寸約束。
+- **排版引擎幽靈間距問題修復 (Border Width Layout Fix)**：修復了 `DrawerWindow` 內子元件 (如 `Vector2Drawer`) 產生嚴重間距擴張的異常。原本因 `GlobalTheme.borderWidth` 全域映射至所有元素的 `WindowBorderSize`，加上 `VisualElement` 自動繼承邊框顏色，導致每一層嵌套都被強加 `2px` 的邊界佈局。現將 `borderWidth` 重構為 `fieldBorderWidth`，並且僅全域映射至 `FrameBorderSize` (輸入框與按鈕)，同時移除了 `VisualElement.cs` 中基於顏色來強制加諸邊框排版的錯誤假設。
 - 修復了 `ImGuiStyleHandler.PushFontOnly` 與 `GetLayoutHash` 未正確對齊 `StyleFontSize` 新記憶體結構 (Enum / Int) 的問題，確保字型絕對縮放大小測量精準且雜湊比對安全。
 - 修復了 `SampleOverviewModule` 在點擊選單時，因同步觸發視窗開啟 (`Add()`) 而違反 `ApplicationState.GuiRender` 期間禁止修改節點樹限制的崩潰問題 (透過 `m_pendingScenarioToOpen` 延遲至安全階段處理)。
 - 修復了 `SampleOverviewModule` 中預留 `Panel` 區域時，錯誤地將絕對座標 `rect.max` 傳遞給 `Rect(position, size)` 第二個參數，導致視窗範圍超出螢幕邊界且被嚴重裁切的排版問題。
 - **B-02 `Panel` 靜態集合未清除**：`Panel.OnClose()` 新增對 `s_windows`、`s_windowsToAdd`、`s_windowsToRemove` 三個靜態集合的 `Clear()`，防止應用程式重啟時殘留舊 Window 實例導致 `InvalidOperationException`。
+- **排版引擎 DPI 縮放與繼承修復 (ItemSpacing)**：修復了 `VisualElement` 排版時，若直接套用 Theme 的 `itemSpacing` 會遺漏 DPI 縮放的錯誤 (導致在高 DPI 螢幕下間距顯得過度擁擠無效)。同時修復了 `ItemSpacing` 被錯誤標記為可繼承 (`isInheritable = true`) 所導致的潛在指數級 DPI 縮放錯誤。
+- **ImGui 原生 UI 與游離元件 DPI 縮放修復**：修復了 `MainMenuModule` (主選單) 與 `Panel` (Docking Tab 標籤列) 繪製時未套用 DPI 縮放導致字體偏小的問題，確保推入字型時正確乘上 `ImGui.GetMainViewport().DpiScale`。同時修復了 `MainMenuModule` 內的游離選單元件因缺乏 DPI 狀態追蹤導致字體排版快取未更新的問題 (現已能在主視窗跨螢幕拖曳時正確觸發 `MarkStyleDirty`)。
 - 實作了 Drawer 的絕對定位排版機制 (`overrideRenderRect`)，支援在 `Vector2Drawer`, `RectDrawer` 等複合 Drawer 中複用多個 `FloatDrawer` 並且完美維持單行顯示，同時改善了標籤字型的垂直對位置中。
 - 實作了 `FoldoutDrawer<T>` 作為可折疊的內容抽屜基底類別，利用 ImDrawList 自定義繪製三角形圖示，並支援整行可點擊的 hover 視覺反饋。
 - 將 `ObjectDrawer` 的繼承基底改為 `FoldoutDrawer<object>`，使得物件屬性面板能天然支援展開與折疊。

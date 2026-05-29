@@ -101,6 +101,10 @@ namespace ImTK.UI
         public string displayName { get; protected set; }
         public string windowId { get; protected set; }
 
+        public bool isFocused { get; private set; }
+
+        public float CurrentDpiScale { get; private set; } = 1.0f;
+
         internal string imguiId => string.IsNullOrEmpty(windowId) ? displayName : $"{displayName}###{windowId}";
 
         protected bool m_isOpen = false;
@@ -217,6 +221,16 @@ namespace ImTK.UI
             {
                 isExpanded = ImGui.Begin(imguiId, windowFlags);
             }
+
+            float newDpiScale = ImGui.GetWindowViewport().DpiScale;
+
+            if (this.CurrentDpiScale != newDpiScale)
+            {
+                this.CurrentDpiScale = newDpiScale;
+                this.MarkStyleDirty();
+            }
+
+            RenderingContext.CurrentDpiScale = newDpiScale;
             RenderingContext.IsInsideWindow = true;
             RenderingContext.FlushPendingCommands();
             return isExpanded;

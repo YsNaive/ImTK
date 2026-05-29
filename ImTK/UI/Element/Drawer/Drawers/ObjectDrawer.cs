@@ -22,7 +22,6 @@ namespace ImTK.UI
             {
                 m_needsRebuild = false;
                 RebuildChildren();
-                m_needsDebugLog = true;
             }
         }
 
@@ -218,19 +217,7 @@ namespace ImTK.UI
         public override void OnEndRender()
         {
             base.OnEndRender();
-            if (m_needsDebugLog)
-            {
-                m_needsDebugLog = false;
-                ImTK.Log.LogContext log = new ImTK.Log.LogContext("ObjectDrawer");
-                log.Debug($"ObjectDrawer rect: {this.layoutRect}, m_contentContainer rect: {m_contentContainer.layoutRect}");
-                if (m_contentContainer.hierarchy.childCount > 0)
-                {
-                    log.Debug($"First child rect: {m_contentContainer.hierarchy.ChildAt(0).layoutRect}");
-                }
-            }
         }
-        
-        private bool m_needsDebugLog = false;
         
         // Removed Update polling as per user request
     }

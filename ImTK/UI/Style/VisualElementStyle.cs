@@ -140,7 +140,6 @@ namespace ImTK.UI
             {
                 prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
                 prop.key = (int)ImGuiStyleVar.ItemSpacing;
-                prop.isInheritable = true;
             }
             else if (prop.key == VisualElement.StyleKey.ItemInnerSpacing.Hash)
             {

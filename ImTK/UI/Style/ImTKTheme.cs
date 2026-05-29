@@ -83,7 +83,7 @@ namespace ImTK.UI
             public static readonly HashedString Padding = new HashedString("--padding");
             public static readonly HashedString ItemSpacing = new HashedString("--item-spacing");
             public static readonly HashedString ItemInnerSpacing = new HashedString("--item-inner-spacing");
-            public static readonly HashedString BorderWidth = new HashedString("--border-width");
+            public static readonly HashedString FieldBorderWidth = new HashedString("--field-border-width");
             public static readonly HashedString BorderRadius = new HashedString("--border-radius");
             public static readonly HashedString DisabledAlpha = new HashedString("--disabled-alpha");
             public static readonly HashedString FontFamily = new HashedString("--font-family");
@@ -161,7 +161,7 @@ namespace ImTK.UI
         public Vector2 padding { get => GetVector2(Tokens.Padding, new Vector2(4, 3)); set => SetVector2(Tokens.Padding, value); }
         public Vector2 itemSpacing { get => GetVector2(Tokens.ItemSpacing, new Vector2(8, 4)); set => SetVector2(Tokens.ItemSpacing, value); }
         public Vector2 itemInnerSpacing { get => GetVector2(Tokens.ItemInnerSpacing, new Vector2(4, 4)); set => SetVector2(Tokens.ItemInnerSpacing, value); }
-        public float borderWidth { get => GetFloat(Tokens.BorderWidth, 1f); set => SetFloat(Tokens.BorderWidth, value); }
+        public float fieldBorderWidth { get => GetFloat(Tokens.FieldBorderWidth, 1f); set => SetFloat(Tokens.FieldBorderWidth, value); }
         public float borderRadius { get => GetFloat(Tokens.BorderRadius, 3f); set => SetFloat(Tokens.BorderRadius, value); }
                 public float disabledAlpha { get => GetFloat(Tokens.DisabledAlpha, 0.6f); set => SetFloat(Tokens.DisabledAlpha, value); }
 
@@ -309,11 +309,7 @@ namespace ImTK.UI
                 style.GrabRounding = borderRadius;
                 style.TabRounding = borderRadius;
 
-                style.WindowBorderSize = borderWidth;
-                style.ChildBorderSize = borderWidth;
-                style.PopupBorderSize = borderWidth;
-                style.FrameBorderSize = borderWidth;
-                style.TabBorderSize = borderWidth;
+                style.FrameBorderSize = fieldBorderWidth;
 
                 style.DisabledAlpha = disabledAlpha;
                 style.FontScaleMain = m_globalFontScale;
@@ -362,10 +358,7 @@ namespace ImTK.UI
             InjectVar1(handler, ImGuiStyleVar.ScrollbarRounding, borderRadius);
             InjectVar1(handler, ImGuiStyleVar.GrabRounding,     borderRadius);
             InjectVar1(handler, ImGuiStyleVar.TabRounding,      borderRadius);
-            InjectVar1(handler, ImGuiStyleVar.WindowBorderSize, borderWidth);
-            InjectVar1(handler, ImGuiStyleVar.ChildBorderSize,  borderWidth);
-            InjectVar1(handler, ImGuiStyleVar.PopupBorderSize,  borderWidth);
-            InjectVar1(handler, ImGuiStyleVar.FrameBorderSize,  borderWidth);
+            InjectVar1(handler, ImGuiStyleVar.FrameBorderSize,  fieldBorderWidth);
             InjectVar1(handler, ImGuiStyleVar.DisabledAlpha,    disabledAlpha);
 
             // --- Font ---
@@ -378,6 +371,16 @@ namespace ImTK.UI
             };
             fontProp.isInheritable = true;
             handler.TrySetProperty(fontProp);
+
+            var fontSizeProp = new StyleProperty
+            {
+                category = StyleCategory.ImGuiStyle,
+                key = ImGuiStyleHandler.s_fontSizeImGuiKey.Hash,
+                dataType = StyleDataType.Enum,
+                enumValue = (int)FontSize.Normal
+            };
+            fontSizeProp.isInheritable = true;
+            handler.TrySetProperty(fontSizeProp);
         }
 
         private static void InjectColor(ImGuiStyleHandler handler, ImGuiCol col, Color color)
@@ -548,10 +551,10 @@ namespace ImTK.UI
                     s_defaultDark.labelWidth = 180.0f;
                     s_defaultDark.edgePadding = 10.0f;
                     s_defaultDark.indentWidth = 16.0f;
-                    s_defaultDark.padding = new Vector2(4, 3);
-                    s_defaultDark.itemSpacing = new Vector2(8, 4);
-                    s_defaultDark.itemInnerSpacing = new Vector2(4, 4);
-                    s_defaultDark.borderWidth = 1.0f;
+                    s_defaultDark.padding = new Vector2(4, 2);
+                    s_defaultDark.itemSpacing = new Vector2(4, 4);
+                    s_defaultDark.itemInnerSpacing = new Vector2(0, 0);
+                    s_defaultDark.fieldBorderWidth = 1.0f;
                     s_defaultDark.borderRadius = 3.0f;
                     s_defaultDark.disabledAlpha = 0.6f;
                 }
@@ -669,7 +672,7 @@ namespace ImTK.UI
                     s_defaultLight.padding = new Vector2(4, 3);
                     s_defaultLight.itemSpacing = new Vector2(8, 4);
                     s_defaultLight.itemInnerSpacing = new Vector2(4, 4);
-                    s_defaultLight.borderWidth = 1.0f;
+                    s_defaultLight.fieldBorderWidth = 1.0f;
                     s_defaultLight.borderRadius = 3.0f;
                     s_defaultLight.disabledAlpha = 0.6f;
                 }

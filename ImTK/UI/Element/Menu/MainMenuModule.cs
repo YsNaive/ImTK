@@ -12,6 +12,7 @@ namespace ImTK.UI
     {
         private MenuView m_rootMenu;
         private Rect m_reservedRect;
+        private float m_currentDpiScale = 1.0f;
 
 
         protected MainMenuModule()
@@ -116,27 +117,24 @@ namespace ImTK.UI
             {
                 if (font.Handle != null)
                 {
-                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal); 
+                    float dpiScale = ImGui.GetMainViewport().DpiScale;
+                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal * dpiScale); 
                     pushedFont = true;
                 }
             }
 
-            frameHeight = ImGui.GetFrameHeight();
+            frameHeight = ImGui.GetFrameHeight() * 1.15f;
 
             if (pushedFont)
             {
                 ImGui.PopFont();
             }
 
-            float padding = frameHeight * 0.125f;
-            float borderHeight = 2.0f;
-            float menuHeight = frameHeight + (padding * 2) + borderHeight;
-
             // 記錄自己取得的空間，供 OnGuiRender 繪製使用
-            m_reservedRect = new Rect(available.x, available.y, available.width, menuHeight);
+            m_reservedRect = new Rect(available.x, available.y, available.width, frameHeight);
 
             // 回傳剩餘空間給 Panel
-            return new Rect(available.x, available.y + menuHeight, available.width, available.height - menuHeight);
+            return new Rect(available.x, available.y + frameHeight, available.width, available.height - frameHeight);
         }
 
         protected internal override void OnGuiRender()
@@ -149,30 +147,25 @@ namespace ImTK.UI
             {
                 if (font.Handle != null)
                 {
+                    float dpiScale = ImGui.GetMainViewport().DpiScale;
                     // 仿照 Panel.cs，確保傳入正確的字體大小參數 (如果您的 Hexa.NET.ImGui 版本或擴充方法支援此參數)
-                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal); 
+                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal * dpiScale); 
                     RenderingContext.PushFontState(globalFontFamilyHash);
                     pushedFont = true;
                 }
             }
-            // 由於 m_reservedRect 的高度為 FrameHeight * 1.25f (包含 padding)
-            // 若視窗高度也設為 1.25f，多出的 0.25f 透明區域會阻擋滑鼠點擊下方的 Docking 標題列。
-            // 因此，視窗本身的高度只設為 MenuBar 需要的標準 FrameHeight，並根據 padding 調整位置。
-            float frameHeight = ImGui.GetFrameHeight();
-            float padding = frameHeight * 0.125f;
 
-            // 在保留的區域內開啟無邊框視窗，位置往下推 padding，高度只取 frameHeight
-            ImGui.SetNextWindowPos(new Vector2(m_reservedRect.x, m_reservedRect.y + padding));
-            ImGui.SetNextWindowSize(new Vector2(m_reservedRect.width, frameHeight));
+            // 在保留的區域內開啟無邊框視窗，高度取 frameHeight + padding
+            ImGui.SetNextWindowPos(new Vector2(m_reservedRect.x, m_reservedRect.y));
+            ImGui.SetNextWindowSize(new Vector2(m_reservedRect.width, m_reservedRect.height));
 
-            ImGuiWindowFlags windowFlags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoBackground;
+            ImGuiWindowFlags windowFlags = ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoBackground;
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0.0f);
             // 覆寫 ImGui 預設的 WindowMinSize，避免因預設值大於 frameHeight 而強行擴張高度，導致 Hit-box 擋住下方物件。
             ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, new Vector2(0.0f, 0.0f));
-
             bool isOpen = ImGui.Begin("##MainMenuBarContainer", windowFlags);
 
             ImGui.PopStyleVar(4);
@@ -183,20 +176,28 @@ namespace ImTK.UI
                 // 我們在上面已經加上了 ImGuiWindowFlags.MenuBar。
                 if (m_rootMenu != null)
                 {
+                    float dpiScale = ImGui.GetMainViewport().DpiScale;
+                    RenderingContext.CurrentDpiScale = dpiScale;
+
+                    if (m_currentDpiScale != dpiScale)
+                    {
+                        m_currentDpiScale = dpiScale;
+                        m_rootMenu.MarkStyleDirty();
+                    }
+
                     m_rootMenu.RenderCache.Update(m_rootMenu);
                     RenderEngine.ComputeStyleFlat(m_rootMenu.RenderCache.renderList);
                     RenderEngine.RenderFlat(m_rootMenu.RenderCache.renderList);
                 }
             }
+            var frameHeight = ImGui.GetFrameHeight();
+            var drawList = ImGui.GetWindowDrawList();
+            var lineP1 = new Vector2(m_reservedRect.min.X, m_reservedRect.max.Y - (frameHeight * 0.075f));
+            var lineP2 = new Vector2(lineP1.X + m_reservedRect.width, lineP1.Y);
+            drawList.AddLine(lineP1, lineP2,ImTKTheme.GlobalTheme.normalColor.divider, frameHeight * 0.15f);
 
             // ImGui.Begin() 無論回傳 true 或 false，都必須配對呼叫 ImGui.End()
             ImGui.End();
-
-            // 繪製下方分隔線 (Border)
-            var drawList = ImGui.GetForegroundDrawList();
-            uint borderColor = ImTKTheme.GlobalTheme.normalColor.border.u32;
-            float borderY = m_reservedRect.y + m_reservedRect.height - 2.0f; // y 座標取底端 - 半個粗度
-            drawList.AddLine(new Vector2(m_reservedRect.x, borderY), new Vector2(m_reservedRect.x + m_reservedRect.width, borderY), borderColor, 4.0f);
 
             if (pushedFont)
             {

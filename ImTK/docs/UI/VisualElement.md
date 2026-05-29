@@ -122,21 +122,37 @@ ImGui 的元件常需要傳入不同的 Flags (如 `ImGuiWindowFlags`, `ImGuiChi
 * 將該 Flags 掛載為特定元件 (如 `Window.flags`) 的唯讀屬性。
 * 元件在 `Render` 底層直接調用 `ImGui.Begin("ID", ref open, flags.Value)`。這保證了極快的位元運算速度與完美的 C# IntelliSense 開發體驗，絕無冗餘的 Boolean 狀態同步問題。
 
-## 8. 未提及的概念補充 (Concept Supplements)
+## 8. 邏輯像素與自適應縮放 (Logical Pixels & Adaptive Scaling)
 
-### 8.1 FontSource (字型來源與 Glyph 範圍)
+在多螢幕、高 DPI (如 4K) 的現代環境中，ImTK 採用了**「邏輯像素 (Logical Pixels)」**與**「物理像素 (Physical Pixels)」**分離的優雅設計。
+
+### 8.1 隱式轉換架構
+開發者在設定 `element.style.width`、`padding` 或字型大小時，所有的數值皆被視為純粹的**邏輯像素**。
+無論在哪種解析度的螢幕上，開發者與 Debugger 看到的都是這個原始的邏輯數值。
+
+### 8.2 管線末端的並行縮放
+在 `RenderEngineStylePipeline` 解析樣式的最後階段，框架會透過 `RenderingContext.CurrentDpiScale` 動態捕捉當前視窗所屬螢幕的 DPI 比例。
+當比例不為 1.0 時，框架會對分流後的兩個核心資料結構並行執行物理像素換算：
+1. **`resolvedLayoutState.Scale()`**：將換算後的物理尺寸餵給 Flexbox 排版引擎，確保畫面留下精準的空間。
+2. **`resolvedStyle.Scale()`**：將換算後的樣式餵給 ImGui 原生繪製引擎，包含 `PushFontOnly` 的字型放大，確保高解析度下的光柵化銳利度。
+
+這種設計不僅徹底解耦了繪圖引擎與排版引擎，更讓視覺元件自身不需要處理任何乘法與比例計算，達到完美的跨螢幕 DPI 自動適應體驗。
+
+## 9. 未提及的概念補充 (Concept Supplements)
+
+### 9.1 FontSource (字型來源與 Glyph 範圍)
 `FontSource` 封裝了字型檔案的路徑、大小與支援的字元範圍 (GlyphRanges)。它能自動偵測作業系統預設字型目錄並容錯處理副檔名，為多國語言與中文字型提供可靠的載入基礎。
 
-### 8.2 ResolvedStyle (樣式計算與快取)
+### 9.2 ResolvedStyle (樣式計算與快取)
 `ResolvedStyle` 負責管理一個元件最終的合併樣式。透過層疊計算（Inline > Theme Fallback > Global StyleSheet），將結果快取於此，並提供極低的 GC 記憶體分配與 O(1) 效能。
 
-### 8.3 NodeType (節點類型)
+### 9.3 NodeType (節點類型)
 `NodeType` 列舉用於區分目前的元件在視覺樹中所扮演的角色（如 `LogicNode` 或 `PhysicsNode`），輔助系統正確地執行雙軌樹結構的同步與解綁。
 
-### 8.4 WindowKey (視窗識別)
+### 9.4 WindowKey (視窗識別)
 `WindowKey` 是一個內部結構，結合了視窗型別 (`Type`) 與特定的識別字串 (`WindowId`)，用來在全域生命週期中精確地追蹤並防止多個相同配置的視窗重複開啟或錯亂。
 
-### 8.5 StyleClass, StyleKeyword 與 StyleValue
+### 9.5 StyleClass, StyleKeyword 與 StyleValue
 *   **StyleClass**：實作了類似 CSS `classList` 的機制，允許開發者動態為元件 `Add`, `Remove`, `Toggle` 類別，觸發樣式的重新計算。
 *   **StyleKeyword**：定義了樣式狀態的關鍵字，例如 `Null` (未設定) 與 `Inherit` (繼承自父層)。
 *   **StyleValue**：泛型結構體，封裝了具體數值與 `StyleKeyword`，允許流暢地以隱式轉換的方式設定元件的樣式。

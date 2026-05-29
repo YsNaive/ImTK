@@ -616,6 +616,8 @@ namespace ImTK.UI
             System.Numerics.Vector2 itemSpacing = this.theme.itemSpacing;
             if (resolvedStyle.TryGetVector2((int)ImGuiStyleVar.ItemSpacing, out var overrideSpacing))
                 itemSpacing = overrideSpacing;
+            else
+                itemSpacing *= Hexa.NET.ImGui.ImGui.GetWindowViewport().DpiScale;
             float gapMain = isRow ? itemSpacing.X : itemSpacing.Y;
             float gapCross = isRow ? itemSpacing.Y : itemSpacing.X;
 
@@ -626,7 +628,6 @@ namespace ImTK.UI
 
             float borderX = 0;
             if (resolvedStyle.TryGetFloat((int)ImGuiStyleVar.WindowBorderSize, out float bw)) borderX = bw;
-            else if (resolvedStyle.HasColor((int)ImGuiCol.Border)) borderX = this.theme.borderWidth;
             float borderY = borderX;
             
             float paddingX = state.padding.horizontal + borderX * 2;
@@ -770,7 +771,6 @@ namespace ImTK.UI
             
             float borderX = 0;
             if (resolvedStyle.TryGetFloat((int)ImGuiStyleVar.WindowBorderSize, out float bw)) borderX = bw;
-            else if (resolvedStyle.HasColor((int)ImGuiCol.Border)) borderX = this.theme.borderWidth;
             float borderY = borderX;
             
             float padLeft = state.padding.left + borderX;
@@ -788,6 +788,8 @@ namespace ImTK.UI
             System.Numerics.Vector2 itemSpacing = this.theme.itemSpacing;
             if (resolvedStyle.TryGetVector2((int)ImGuiStyleVar.ItemSpacing, out var overrideSpacing))
                 itemSpacing = overrideSpacing;
+            else
+                itemSpacing *= Hexa.NET.ImGui.ImGui.GetWindowViewport().DpiScale;
             float gapMain = isRow ? itemSpacing.X : itemSpacing.Y;
             float gapCross = isRow ? itemSpacing.Y : itemSpacing.X;
 

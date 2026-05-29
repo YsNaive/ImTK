@@ -20,6 +20,7 @@ namespace ImTK.UI
             m_yDrawer.RegisterValueChangedCallback((evt) => SetValueWithChanged(new System.Numerics.Vector2(m_xDrawer.value, evt.newValue)));
 
             m_contentContainer.style.flexDirection = FlexDirection.Row;
+            m_contentContainer.style.flexWrap = FlexWrap.NoWrap;
             m_xDrawer.style.flexGrow = 1;
             m_yDrawer.style.flexGrow = 1;
 

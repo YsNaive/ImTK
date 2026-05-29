@@ -13,11 +13,39 @@ namespace ImTK.UI
 
         private readonly List<StyleProperty> m_properties = new List<StyleProperty>();
         private bool m_fontWasPushed = false;
+        private float m_currentDpiScale = 1.0f;
 
         public void Clear()
         {
             m_properties.Clear();
             m_fontWasPushed = false;
+            m_currentDpiScale = 1.0f;
+        }
+
+        public void Scale(float scaleFactor)
+        {
+            m_currentDpiScale = scaleFactor;
+            for (int i = 0; i < m_properties.Count; i++)
+            {
+                var prop = m_properties[i];
+                if (prop.category == StyleCategory.ImGuiStyle)
+                {
+                    if (prop.dataType == StyleDataType.Float && prop.key < (int)ImGuiStyleVar.Count)
+                    {
+                        ImGuiStyleVar varIdx = (ImGuiStyleVar)prop.key;
+                        if (varIdx != ImGuiStyleVar.Alpha && varIdx != ImGuiStyleVar.DisabledAlpha)
+                        {
+                            prop.floatValue *= scaleFactor;
+                            m_properties[i] = prop;
+                        }
+                    }
+                    else if (prop.dataType == StyleDataType.Vector2 && prop.key < (int)ImGuiStyleVar.Count)
+                    {
+                        prop.vector2Value *= scaleFactor;
+                        m_properties[i] = prop;
+                    }
+                }
+            }
         }
 
         public bool TrySetProperty(StyleProperty prop)
@@ -103,6 +131,7 @@ namespace ImTK.UI
         public static void Diff(ImGuiStyleHandler parent, ImGuiStyleHandler current, ImGuiStyleHandler output)
         {
             output.Clear();
+            output.m_currentDpiScale = current.m_currentDpiScale;
 
             // 1. For properties in current, if not in parent (or different), push.
             // We ignore HighLevelToken for Diff since they are not pushed to ImGui.
@@ -266,6 +295,8 @@ namespace ImTK.UI
                         targetSize = ImTKTheme.GlobalTheme.GetFontSizes()[fontSizeEnum];
                     }
                 }
+
+                targetSize *= m_currentDpiScale;
 
                 m_fontWasPushed = fontPtr.Handle != null;
                 if (m_fontWasPushed)

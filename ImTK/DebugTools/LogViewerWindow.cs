@@ -35,6 +35,7 @@ namespace ImTK.DebugTools
 
         // 游離的元件
         private readonly LogEntryElement m_logEntryElement;
+        private float m_lastDpiScale = 1.0f;
 
         // ILogSink 介面
         public bool enabled { get; set; } = true;
@@ -105,6 +106,12 @@ namespace ImTK.DebugTools
 
         public override void OnRender()
         {
+            if (m_lastDpiScale != RenderingContext.CurrentDpiScale)
+            {
+                m_lastDpiScale = RenderingContext.CurrentDpiScale;
+                m_logEntryElement.MarkStyleDirty();
+            }
+
             // 1. 同步新進來的 Log
             bool hasNewLogs = false;
             while (m_incomingQueue.TryDequeue(out var entry))

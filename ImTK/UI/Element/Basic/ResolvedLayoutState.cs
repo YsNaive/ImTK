@@ -56,6 +56,24 @@ namespace ImTK.UI
             display = DisplayStyle.Flex
         };
 
+        public void Scale(float scale)
+        {
+            if (width.HasValue) width *= scale;
+            if (height.HasValue) height *= scale;
+            if (minWidth.HasValue) minWidth *= scale;
+            if (maxWidth.HasValue) maxWidth *= scale;
+            if (minHeight.HasValue) minHeight *= scale;
+            if (maxHeight.HasValue) maxHeight *= scale;
+            
+            margin = new Thickness(margin.left * scale, margin.top * scale, margin.right * scale, margin.bottom * scale);
+            padding = new Thickness(padding.left * scale, padding.top * scale, padding.right * scale, padding.bottom * scale);
+            
+            if (top.HasValue) top *= scale;
+            if (bottom.HasValue) bottom *= scale;
+            if (left.HasValue) left *= scale;
+            if (right.HasValue) right *= scale;
+        }
+
         public bool Equals(ResolvedLayoutState other)
         {
             return width == other.width &&

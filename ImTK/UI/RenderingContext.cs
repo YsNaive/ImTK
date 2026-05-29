@@ -41,6 +41,8 @@ namespace ImTK.UI
         private static bool s_isInsideWindow = false;
         private static readonly Queue<Action> s_pendingWindowCommands = new Queue<Action>();
 
+        public static float CurrentDpiScale { get; set; } = 1.0f;
+
         public static bool IsInsideWindow
         {
             get => s_isInsideWindow;
@@ -83,6 +85,7 @@ namespace ImTK.UI
             s_fontFamilyHashStack.Clear();
             s_pendingWindowCommands.Clear();
             s_isInsideWindow = false;
+            CurrentDpiScale = 1.0f;
         }
     }
 }
