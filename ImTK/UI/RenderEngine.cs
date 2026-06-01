@@ -137,6 +137,7 @@ namespace ImTK.UI
             private static readonly System.Collections.Generic.Queue<Action> s_pendingWindowCommands = new System.Collections.Generic.Queue<Action>();
 
             public static float CurrentDpiScale { get; set; } = 1.0f;
+            public static float MainViewportDpiScale { get; set; } = 1.0f;
 
             public static bool IsInsideWindow
             {

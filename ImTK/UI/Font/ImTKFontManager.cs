@@ -51,12 +51,12 @@ namespace ImTK.UI
             s_isFontDirty = true;
         }
 
-        public static void RegisterFamily(string name, string[] paths, IntPtr glyphRanges = default)
+        public static void RegisterFamily(string name, string[] paths)
         {
             FontSource[] sources = new FontSource[paths.Length];
             for (int i = 0; i < paths.Length; i++)
             {
-                sources[i] = new FontSource(paths[i], glyphRanges);
+                sources[i] = new FontSource(paths[i]);
             }
             RegisterFamily(name, sources);
         }
@@ -65,11 +65,6 @@ namespace ImTK.UI
         {
             RegisterFamily(DefaultFontFamilyName, sources);
         }
-
-        public static IntPtr GetGlyphRangesChineseFull() => IntPtr.Zero;
-        public static IntPtr GetGlyphRangesChineseSimplifiedCommon() => IntPtr.Zero;
-        public static IntPtr GetGlyphRangesJapanese() => IntPtr.Zero;
-        public static IntPtr GetGlyphRangesKorean() => IntPtr.Zero;
 
         public static bool IsFontDirty() => s_isFontDirty;
 
@@ -84,9 +79,17 @@ namespace ImTK.UI
             var io = ImGui.GetIO();
             io.Fonts.Clear();
 
-            // Build fonts based on Normal size as base size
+            // Build fonts based on Normal size as base size, multiplied by Main Viewport DPI and global scale
+            float mainDpi = ImTKTheme.GlobalTheme.globalFontScale;
+            if (ImGui.GetCurrentContext().Handle != null)
+            {
+                mainDpi = ImGui.GetMainViewport().DpiScale * ImTKTheme.GlobalTheme.globalFontScale;
+            }
+            if (mainDpi <= 0.0f) mainDpi = 1.0f;
+
             var sizes = ImTKTheme.GlobalTheme.GetFontSizes();
-            float baseSizePixels = sizes[FontSize.Normal]; // Do not multiply by globalFontScale anymore!
+            float baseSizePixels = sizes[FontSize.Normal] * mainDpi; // Bake main viewport DPI exactly
+            ImTKLog.Info($"[FontBake] DpiScale={ImGui.GetMainViewport().DpiScale:F3}  globalFontScale={ImTKTheme.GlobalTheme.globalFontScale:F3}  mainDpi={mainDpi:F3}  baseSizePixels={baseSizePixels:F1}  (fontSizeNormal={sizes[FontSize.Normal]})");
 
             // Ensure DefaultFontFamily is processed FIRST so it becomes io.Fonts.Fonts[0] (the global default font)
             if (s_fontFamilies.TryGetValue(DefaultFontFamilyHash, out var defaultFamily))
@@ -125,23 +128,24 @@ namespace ImTK.UI
                         }
 
                         var config = CreateDefaultFontConfig();
+                        config.SizePixels = baseSizePixels;
                         if (!isFirst)
                         {
                             config.MergeMode = 1;
                         }
 
-                        // Reduce oversampling for large fonts or extended glyph ranges to prevent massive texture sizes
-                        if (baseSizePixels >= 24f || source.GlyphRanges != IntPtr.Zero)
+                        // Reduce oversampling for large fonts to prevent massive texture sizes
+                        if (baseSizePixels >= 24f)
                         {
                             config.OversampleH = 1;
                             config.OversampleV = 1;
                         }
 
-                        IntPtr ranges = source.GlyphRanges;
                         ImFontPtr font;
-                        
-                        // Get pointer to config
-                        font = io.Fonts.AddFontFromFileTTF(source.ResolvedPath, baseSizePixels, ref config, (uint*)ranges);
+                        unsafe
+                        {
+                            font = io.Fonts.AddFontFromFileTTF(source.ResolvedPath, baseSizePixels, &config, (uint*)0);
+                        }
 
                         if (isFirst && font.Handle != null)
                         {
@@ -150,13 +154,19 @@ namespace ImTK.UI
                         }
                     }
 
-                    if (isDefaultFamily && baseFont.Handle != null)
-                    {
-                        var fallbackConfig = CreateDefaultFontConfig();
-                        fallbackConfig.MergeMode = 1;
-                        fallbackConfig.SizePixels = baseSizePixels;
-                        io.Fonts.AddFontDefault(ref fallbackConfig);
-                    }
+                    // if (isDefaultFamily && baseFont.Handle != null)
+                    // {
+                    //     var fallbackConfig = CreateDefaultFontConfig();
+                    //     fallbackConfig.MergeMode = 1;
+                    //     fallbackConfig.SizePixels = baseSizePixels;
+                    //     io.Fonts.AddFontDefault(ref fallbackConfig);
+                    // }
+                }
+
+                if (baseFont.Handle != null)
+                {
+                    float nativeFontSize = ((Hexa.NET.ImGui.ImFont*)baseFont.Handle)->LegacySize;
+                    ImTKLog.Info($"[FontBake] Family={family.Name} Baked Native Size={nativeFontSize}");
                 }
 
                 s_loadedFonts[keyHash] = baseFont;
@@ -165,6 +175,35 @@ namespace ImTK.UI
             // Hexa.NET.ImGui handles building internally or via Backend. No need to call Build().
             s_isFontDirty = false;
             sw.Stop();
+
+            unsafe
+            {
+                if (io.Fonts.Fonts.Size > 0)
+                {
+                    io.FontDefault = io.Fonts.Fonts[0];
+                }
+            }
+
+            for (int i = 0; i < io.Fonts.Fonts.Size; i++)
+            {
+                var font = io.Fonts.Fonts[i];
+                var fontPtr = (Hexa.NET.ImGui.ImFont*)font.Handle;
+                ImTKLog.Info($"[FontAtlas] Index={i} LegacySize={fontPtr->LegacySize}");
+                
+                if (i == 0)
+                {
+                    float* ioPtr = (float*)io.Handle;
+                    for (int j = 0; j < 64; j++)
+                    {
+                        float val = ioPtr[j];
+                        if (val > 0.01f && val < 1000.0f) // filter out garbage/pointers
+                        {
+                            ImTKLog.Info($"[IOMem] Offset {j * 4} = {val:F3}");
+                        }
+                    }
+                }
+            }
+
             ImTKLog.Info($"Font Atlas Rebuild Complete in {sw.Elapsed.TotalSeconds:F2} seconds.");
 
             ImTKEventBus.Publish(new OnFontChangedEvent());
@@ -194,9 +233,9 @@ namespace ImTK.UI
         {
             var config = new ImFontConfig();
             config.FontDataOwnedByAtlas = 1; // true
-            config.OversampleH = 3;
+            config.OversampleH = 2;
             config.OversampleV = 1;
-            config.PixelSnapH = 0; // false
+            config.PixelSnapH = 1; // true
             config.GlyphMaxAdvanceX = float.MaxValue;
             config.RasterizerMultiply = 1.0f;
             config.RasterizerDensity = 1.0f;

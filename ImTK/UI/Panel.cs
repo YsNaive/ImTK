@@ -274,10 +274,12 @@ namespace ImTK.UI
             {
                 if (font.Handle != null)
                 {
-                    float dpiScale = ImGui.GetMainViewport().DpiScale;
-                    ImGui.PushFont(font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal * dpiScale);
-                    RenderEngine.Context.PushFontState(globalFontFamilyHash);
-                    pushedFont = true;
+                    if (globalFontFamilyHash != ImTKFontManager.DefaultFontFamilyHash)
+                    {
+                        ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ((Hexa.NET.ImGui.ImFont*)font.Handle)->LegacySize);
+                        RenderEngine.Context.PushFontState(globalFontFamilyHash);
+                        pushedFont = true;
+                    }
                 }
             }
 

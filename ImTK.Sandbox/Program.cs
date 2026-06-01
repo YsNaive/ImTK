@@ -20,11 +20,11 @@ namespace ImTK.Sandbox
                 windowHeight = 900
             };
 
-            // Developer can add their own module or scenario here, e.g.:
-            // ImTKApplication.AddModule<MyTestModule>();
+            // Starts the native test scheme
+            //ImGuiViewportFontTest.Run();
 
             // Starts the ImTK loop
-            ImTKSilk.Run(config);
+             ImTKSilk.Run(config);
 
             log.Info("ImTK Sandbox Closed gracefully.");
         }

@@ -175,6 +175,7 @@ namespace ImTK.UI
                 {
                     m_globalFontScale = value;
                     isGlobalThemeDirty = true;
+                    ImTKFontManager.MarkFontDirty();
                     onGlobalThemeChanged?.Invoke();
                 }
             }

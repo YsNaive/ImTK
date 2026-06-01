@@ -9,12 +9,10 @@ namespace ImTK.UI
     {
         public string Path { get; private set; }
         public string ResolvedPath { get; private set; }
-        public IntPtr GlyphRanges { get; private set; }
 
-        public FontSource(string path, IntPtr glyphRanges = default)
+        public FontSource(string path)
         {
             Path = path;
-            GlyphRanges = glyphRanges;
             ResolvedPath = ResolveFontPath(path);
         }
 

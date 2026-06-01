@@ -301,7 +301,14 @@ namespace ImTK.UI
                 m_fontWasPushed = fontPtr.Handle != null;
                 if (m_fontWasPushed)
                 {
-                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)fontPtr.Handle, targetSize);
+                    var currentFont = (Hexa.NET.ImGui.ImFont*)ImGui.GetFont().Handle;
+                    float fontLegacySize = currentFont != null ? currentFont->LegacySize : 0;
+                    ImTK.Log.ImTKLog.Info($"[FontDebug] GetFontSize={ImGui.GetFontSize()} currentFont->LegacySize={fontLegacySize}");
+                    
+                    float sizeBefore = ImGui.GetFontSize();
+                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)fontPtr.Handle, ((Hexa.NET.ImGui.ImFont*)fontPtr.Handle)->LegacySize);
+                    float sizeAfter = ImGui.GetFontSize();
+                    ImTK.Log.ImTKLog.Info($"[FontPushNative] before={sizeBefore:F1}  after={sizeAfter:F1}");
                 }
             }
         }
@@ -342,7 +349,10 @@ namespace ImTK.UI
 
             if (hasFamily || hasSize)
             {
-                if (m_fontWasPushed) ImGui.PopFont();
+                if (m_fontWasPushed)
+                {
+                    ImGui.PopFont();
+                }
                 if (hasFamily) RenderEngine.Context.PopFontState();
             }
         }

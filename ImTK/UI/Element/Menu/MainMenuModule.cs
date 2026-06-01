@@ -117,9 +117,12 @@ namespace ImTK.UI
             {
                 if (font.Handle != null)
                 {
-                    float dpiScale = ImGui.GetMainViewport().DpiScale;
-                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal * dpiScale); 
-                    pushedFont = true;
+                    if (globalFontFamilyHash != ImTKFontManager.DefaultFontFamilyHash)
+                    {
+                        float dpiScale = ImGui.GetMainViewport().DpiScale * ImTKTheme.GlobalTheme.globalFontScale;
+                        ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ((Hexa.NET.ImGui.ImFont*)font.Handle)->LegacySize); 
+                        pushedFont = true;
+                    }
                 }
             }
 
@@ -147,11 +150,14 @@ namespace ImTK.UI
             {
                 if (font.Handle != null)
                 {
-                    float dpiScale = ImGui.GetMainViewport().DpiScale;
-                    // 仿照 Panel.cs，確保傳入正確的字體大小參數 (如果您的 Hexa.NET.ImGui 版本或擴充方法支援此參數)
-                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal * dpiScale); 
-                    RenderEngine.Context.PushFontState(globalFontFamilyHash);
-                    pushedFont = true;
+                    if (globalFontFamilyHash != ImTKFontManager.DefaultFontFamilyHash)
+                    {
+                        float dpiScale = ImGui.GetMainViewport().DpiScale * ImTKTheme.GlobalTheme.globalFontScale;
+                        // 仿照 Panel.cs，確保傳入正確的字體大小參數 (如果您的 Hexa.NET.ImGui 版本或擴充方法支援此參數le    
+                        ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ((Hexa.NET.ImGui.ImFont*)font.Handle)->LegacySize); 
+                        RenderEngine.Context.PushFontState(globalFontFamilyHash);
+                        pushedFont = true;
+                    }
                 }
             }
 
@@ -176,7 +182,7 @@ namespace ImTK.UI
                 // 我們在上面已經加上了 ImGuiWindowFlags.MenuBar。
                 if (m_rootMenu != null)
                 {
-                    float dpiScale = ImGui.GetMainViewport().DpiScale;
+                    float dpiScale = ImGui.GetMainViewport().DpiScale * ImTKTheme.GlobalTheme.globalFontScale;
                     RenderEngine.Context.CurrentDpiScale = dpiScale;
 
                     if (m_currentDpiScale != dpiScale)

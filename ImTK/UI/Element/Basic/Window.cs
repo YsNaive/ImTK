@@ -214,6 +214,8 @@ namespace ImTK.UI
         private bool m_didApplyLocalTheme = false;
         private bool m_hasRenderedAtLeastOnce = false;
 
+        private bool m_pushedFontForBegin = false;
+
         protected virtual bool Begin(ref bool isOpenForImGui, ImGuiWindowFlags windowFlags)
         {
             // 若此視窗有局部 theme，在 ImGui.Begin() 前臨時將其套用為全域 style。
@@ -223,6 +225,22 @@ namespace ImTK.UI
             {
                 m_theme.ApplyToImGui();
                 m_didApplyLocalTheme = true;
+            }
+
+            int globalFontFamilyHash = ImTKTheme.GlobalTheme.fontFamilyHash;
+            var font = ImTKFontManager.GetFont(globalFontFamilyHash);
+            
+            unsafe
+            {
+                if (font.Handle != null)
+                {
+                    if (globalFontFamilyHash != ImTKFontManager.DefaultFontFamilyHash)
+                    {
+                        ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ((Hexa.NET.ImGui.ImFont*)font.Handle)->LegacySize);
+                        RenderEngine.Context.PushFontState(globalFontFamilyHash);
+                        m_pushedFontForBegin = true;
+                    }
+                }
             }
 
             bool isExpanded;
@@ -252,6 +270,13 @@ namespace ImTK.UI
         protected virtual void End()
         {
             ImGui.End();
+
+            if (m_pushedFontForBegin)
+            {
+                ImGui.PopFont();
+                RenderEngine.Context.PopFontState();
+                m_pushedFontForBegin = false;
+            }
 
             // 若曾臨時切換全域 style，在 End 後立即還原，確保後續視窗使用正確的全域 style。
             if (m_didApplyLocalTheme)

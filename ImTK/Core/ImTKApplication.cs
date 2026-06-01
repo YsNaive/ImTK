@@ -1,8 +1,9 @@
+using ImTK.Log;
+using ImTK.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using ImTK.Log;
 
 namespace ImTK.Core
 {
@@ -216,6 +217,9 @@ namespace ImTK.Core
                     module.OnGraphicsSetup();
                 }
 
+                // Immediately resolve fonts so that the first ImGui.NewFrame() uses the correct font sizes
+                ImTK.UI.ImTKFontManager.ResolveFont();
+
                 SetState(ApplicationState.Idle);
                 s_minAllowedFrameState = ApplicationState.LogicUpdate;
                 ImTKLog.Info("Graphics setup completed. Entering runtime loop.");
@@ -262,6 +266,22 @@ namespace ImTK.Core
                 {
                     EnforceFrameOrder(ApplicationState.GuiRender);
                     SetState(ApplicationState.GuiRender);
+
+                    // --- Global Main Viewport DPI Tracking ---
+                    float currentMainDpi = ImTKTheme.GlobalTheme.globalFontScale;
+                    unsafe
+                    {
+                        if (Hexa.NET.ImGui.ImGui.GetCurrentContext().Handle != null)
+                        {
+                            currentMainDpi = Hexa.NET.ImGui.ImGui.GetMainViewport().DpiScale * ImTKTheme.GlobalTheme.globalFontScale;
+                            if (currentMainDpi <= 0.0f) currentMainDpi = 1.0f;
+                        }
+                    }
+                    if (Math.Abs(ImTK.UI.RenderEngine.Context.MainViewportDpiScale - currentMainDpi) > 0.01f)
+                    {
+                        ImTK.UI.RenderEngine.Context.MainViewportDpiScale = currentMainDpi;
+                        ImTK.UI.ImTKFontManager.MarkFontDirty();
+                    }
 
                     foreach (var module in s_modules.Values)
                     {
