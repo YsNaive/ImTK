@@ -275,7 +275,7 @@ namespace ImTK.UI
                 if (font.Handle != null)
                 {
                     float dpiScale = ImGui.GetMainViewport().DpiScale;
-                    ImGui.PushFont((Hexa.NET.ImGui.ImFont*)font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal * dpiScale);
+                    ImGui.PushFont(font.Handle, ImTKTheme.GlobalTheme.fontSizeNormal * dpiScale);
                     RenderEngine.Context.PushFontState(globalFontFamilyHash);
                     pushedFont = true;
                 }
@@ -286,7 +286,11 @@ namespace ImTK.UI
             ImGui.PopStyleVar();
 
             uint dockspaceId = ImGui.GetID("MainDockSpace");
-            ImGui.DockSpace(dockspaceId, new Vector2(0.0f, 0.0f), ImGuiDockNodeFlags.None);
+            var dockSize = ImGui.GetContentRegionAvail();
+            if (dockSize.X > 0f && dockSize.Y > 0f)
+            {
+                ImGui.DockSpace(dockspaceId, dockSize, ImGuiDockNodeFlags.None);
+            }
 
             ImGui.End();
 

@@ -44,6 +44,7 @@ namespace ImTK.UI
 
             var buttonPos = ImGui.GetCursorScreenPos();
             float dragWidth = Math.Max(textSize.X, this.layoutRect.width);
+            if (dragWidth <= 0f) dragWidth = 1f; // Prevent zero-size assertion
             ImGui.InvisibleButton("##drag_num", new Vector2(dragWidth, frameHeight)); // Note: Using static string instead of "##drag_" + text to avoid GC
             
             bool isDragActive = ImGui.IsItemActive();

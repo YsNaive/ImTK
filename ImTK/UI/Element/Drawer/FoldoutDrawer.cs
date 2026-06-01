@@ -49,6 +49,7 @@ namespace ImTK.UI
             public override void OnRender()
             {
                 ImGui.SetNextItemAllowOverlap();
+                if (this.layoutRect.size.X <= 0f || this.layoutRect.size.Y <= 0f) return;
                 
                 if (ImGui.InvisibleButton($"###foldout_btn_{m_drawer.GetHashCode()}", this.layoutRect.size))
                 {

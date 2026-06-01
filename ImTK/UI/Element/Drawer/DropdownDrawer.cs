@@ -141,6 +141,8 @@ namespace ImTK.UI
                     ? this.layoutRect.height
                     : ImGui.GetFrameHeight();
 
+                if (width <= 0f || height <= 0f) return false;
+
                 // --- 1. InvisibleButton：精確佔用空間，透過 ImGui 輸入系統偵測點擊 ---
                 // clicked 由 ImGui 正規 item 邏輯決定，Popup 開啟時父視窗輸入被遮蔽，
                 // 不會因 Popup 內的選項點擊而誤觸。

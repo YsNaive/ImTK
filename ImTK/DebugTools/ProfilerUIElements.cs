@@ -75,12 +75,16 @@ namespace ImTK.DebugTools
                 int startIdx = m_context.FrameDataIndex - count;
                 if (startIdx < 0) startIdx += 3600;
 
+                float plotWidth = this.layoutRect.width;
+                float plotHeight = this.layoutRect.height - 25f;
+                if (plotWidth <= 0f || plotHeight <= 0f) return;
+
                 ImGui.SetCursorScreenPos(this.layoutRect.position);
                 ImGui.BeginGroup();
                 if (m_context.Mode == ProfilerMode.Time)
                 {
                     RenderEngine.TextBuffered(m_cachedTimeTitle);
-                    ImGui.PlotLines("##TimeChart", ref m_context.TotalFrameTimes[0], 3600, startIdx, (string)null, 0f, 33.3f, new Vector2(this.layoutRect.width, this.layoutRect.height - 25f));
+                    ImGui.PlotLines("##TimeChart", ref m_context.TotalFrameTimes[0], 3600, startIdx, (string)null, 0f, 33.3f, new Vector2(plotWidth, plotHeight));
                 }
                 else
                 {
@@ -92,7 +96,7 @@ namespace ImTK.DebugTools
                         int idx = (startIdx + i) % 3600;
                         if (m_context.TotalFrameGcs[idx] > maxGc) maxGc = m_context.TotalFrameGcs[idx];
                     }
-                    ImGui.PlotLines("##GcChart", ref m_context.TotalFrameGcs[0], 3600, startIdx, (string)null, 0f, maxGc * 1.2f, new Vector2(this.layoutRect.width, this.layoutRect.height - 25f));
+                    ImGui.PlotLines("##GcChart", ref m_context.TotalFrameGcs[0], 3600, startIdx, (string)null, 0f, maxGc * 1.2f, new Vector2(plotWidth, plotHeight));
                 }
                 ImGui.EndGroup();
             }
@@ -134,6 +138,7 @@ namespace ImTK.DebugTools
             float pctMaxWidth = ImGui.CalcTextSize("000.0%").X;
 
             ImGui.Separator();
+            if (layoutRect.size.X <= 0f || layoutRect.size.Y <= 0f) return;
             ImGui.BeginChild("##table", layoutRect.size);
 
             if (ImGui.BeginTable("SubsystemsTreeTable", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY))
@@ -298,7 +303,9 @@ namespace ImTK.DebugTools
             selHandler.AppendFormatted(m_context.SelectedNode.Name);
             RenderEngine.TextBuffered(ref selHandler);
             
-            ImGui.BeginChild("CallersList", new Vector2(0, 0), ImGuiChildFlags.Borders, ImGuiWindowFlags.None);
+            var callersListSize = ImGui.GetContentRegionAvail();
+            if (callersListSize.X <= 0f || callersListSize.Y <= 0f) return;
+            ImGui.BeginChild("CallersList", callersListSize, ImGuiChildFlags.Borders, ImGuiWindowFlags.None);
             
             m_allCallers.Clear();
             CollectAllCallers(m_context.SelectedNode, m_allCallers);

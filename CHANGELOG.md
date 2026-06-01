@@ -93,6 +93,7 @@
 - **日誌字串格式化零分配優化**：在 `LogFormatterBuilder.cs` 中導入了 `[ThreadStatic] StringBuilder` 快取，移除了每次印出日誌時的高頻字串分配，進一步降低 GC 壓力。
 
 ### Fixed (修復)
+- **ImGui 零尺寸崩潰修復 (Zero-Size Assertion Fix)**：修復了在 Hexa.NET.ImGui 環境下，當 `VisualElement` 的 `layoutRect` 在第一幀排版尚未完成時，若傳入 `(0,0)` 的尺寸給 `ImGui.BeginChild`, `ImGui.DockSpace`, `ImGui.PlotLines` 或 `ImGui.InvisibleButton` 會觸發 C++ 底層 `abort() (0xC0000409)` 的致命崩潰問題。現已於 `Panel`, `ProfilerUIElements`, `LogViewerWindow`, `FoldoutDrawer`, `DropdownDrawer` 與 `NumericDragLabelElement` 中全面補上零尺寸的提前返回 (Early Return) 與 `GetContentRegionAvail()` 安全防護。
 - **Profiler 重複計算 (Double Counting) 修復**：導入了基於 **自身時間 (Self Time)** 的計算演算法。實體子節點結束時會從物理父節點扣除耗時，並在每幀結算時循「語意樹 (Virtual Tree)」向上彙整，完美解決實體呼叫與語意路徑脫鉤所造成的重複計算問題。
 - **多執行緒 Profiler 崩潰修復**：將 `ProfilerNode` 的 `Children` 與 `Callers` 替換為 `ConcurrentDictionary`，防止多執行緒併發修改引發的例外崩潰。
 - **動態視窗 ID 命名衝突與不可變性修復 (Window ID Immutability)**：修復了 `LogViewerWindow` 等動態創建視窗因在建構子中指定特定 `windowId`，導致 `Window.Open<T>()` 多次呼叫時引發 ID 註冊衝突並報錯的問題。現已透過 C# 9 的 `init` 屬性將 `windowId` 設為嚴格不可變 (Immutable)，保證僅能在實例化階段分配，徹底防堵運行期任意修改導致全域字典脫節的潛在崩潰。

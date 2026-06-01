@@ -243,7 +243,9 @@ namespace ImTK.DebugTools
             ImGui.Separator();
 
             // 3. 虛擬化捲動區域
-            ImGui.BeginChild("ScrollingRegion", new Vector2(0, 0), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar);
+            var scrollRegionSize = ImGui.GetContentRegionAvail();
+            if (scrollRegionSize.X <= 0f || scrollRegionSize.Y <= 0f) return;
+            ImGui.BeginChild("ScrollingRegion", scrollRegionSize, ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar);
 
             unsafe
             {
