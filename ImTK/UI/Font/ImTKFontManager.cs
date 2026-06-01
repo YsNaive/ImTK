@@ -154,59 +154,31 @@ namespace ImTK.UI
                         }
                     }
 
-                    // if (isDefaultFamily && baseFont.Handle != null)
-                    // {
-                    //     var fallbackConfig = CreateDefaultFontConfig();
-                    //     fallbackConfig.MergeMode = 1;
-                    //     fallbackConfig.SizePixels = baseSizePixels;
-                    //     io.Fonts.AddFontDefault(ref fallbackConfig);
-                    // }
-                }
-
-                if (baseFont.Handle != null)
-                {
-                    float nativeFontSize = ((Hexa.NET.ImGui.ImFont*)baseFont.Handle)->LegacySize;
-                    ImTKLog.Info($"[FontBake] Family={family.Name} Baked Native Size={nativeFontSize}");
-                }
-
-                s_loadedFonts[keyHash] = baseFont;
-            }
-
-            // Hexa.NET.ImGui handles building internally or via Backend. No need to call Build().
-            s_isFontDirty = false;
-            sw.Stop();
-
-            unsafe
-            {
-                if (io.Fonts.Fonts.Size > 0)
-                {
-                    io.FontDefault = io.Fonts.Fonts[0];
-                }
-            }
-
-            for (int i = 0; i < io.Fonts.Fonts.Size; i++)
-            {
-                var font = io.Fonts.Fonts[i];
-                var fontPtr = (Hexa.NET.ImGui.ImFont*)font.Handle;
-                ImTKLog.Info($"[FontAtlas] Index={i} LegacySize={fontPtr->LegacySize}");
-                
-                if (i == 0)
-                {
-                    float* ioPtr = (float*)io.Handle;
-                    for (int j = 0; j < 64; j++)
+                    if (baseFont.Handle != null)
                     {
-                        float val = ioPtr[j];
-                        if (val > 0.01f && val < 1000.0f) // filter out garbage/pointers
-                        {
-                            ImTKLog.Info($"[IOMem] Offset {j * 4} = {val:F3}");
-                        }
+                        float nativeFontSize = ((Hexa.NET.ImGui.ImFont*)baseFont.Handle)->LegacySize;
+                        ImTKLog.Info($"[FontBake] Family={family.Name} Baked Native Size={nativeFontSize}");
+                    }
+
+                    s_loadedFonts[keyHash] = baseFont;
+                }
+
+                // Hexa.NET.ImGui handles building internally or via Backend. No need to call Build().
+                s_isFontDirty = false;
+                sw.Stop();
+
+                unsafe
+                {
+                    if (io.Fonts.Fonts.Size > 0)
+                    {
+                        io.FontDefault = io.Fonts.Fonts[0];
                     }
                 }
+
+                ImTKLog.Info($"Font Atlas Rebuild Complete in {sw.Elapsed.TotalSeconds:F2} seconds.");
+
+                ImTKEventBus.Publish(new OnFontChangedEvent());
             }
-
-            ImTKLog.Info($"Font Atlas Rebuild Complete in {sw.Elapsed.TotalSeconds:F2} seconds.");
-
-            ImTKEventBus.Publish(new OnFontChangedEvent());
         }
 
         public static ImFontPtr GetFont(int familyHash)

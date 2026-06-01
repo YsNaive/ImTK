@@ -93,6 +93,8 @@
 - **日誌字串格式化零分配優化**：在 `LogFormatterBuilder.cs` 中導入了 `[ThreadStatic] StringBuilder` 快取，移除了每次印出日誌時的高頻字串分配，進一步降低 GC 壓力。
 
 ### Fixed (修復)
+- **Hexa.NET.ImGui 預設字體微縮 Bug (13px 幽靈字體)**：修復了 `Hexa.NET.ImGui` 在全域繪製 (如 Docking Tab、Title Bar) 時，因 `io.FontDefault` 未被顯式指派，導致底層回退至 `13px ProggyClean` 內建字型的問題。現已於 `ImTKFontManager` 重建圖集後，強制綁定 `io.FontDefault = io.Fonts.Fonts[0]` 以確保 Consolas (18px) 的全域渲染正確性。
+- **PushFont 擴充方法縮放失真修復**：修正了 `ImGuiStyleHandler`、`Window`、`Panel` 呼叫 `Hexa.NET.ImGui.PushFont(fontPtr, targetSize)` 時，因傳入不正確的參考參數導致的微縮 13.0 字體縮放崩潰。現已全面對齊 `fontPtr->FontSize` 達成無損推入 (Lossless Push)，並在 `ImGuiStyleHandler` 中恢復字體樣式系統 (`H1`, `H2`) 的精確 `targetSize` 縮放能力。
 - **ImGui 零尺寸崩潰修復 (Zero-Size Assertion Fix)**：修復了在 Hexa.NET.ImGui 環境下，當 `VisualElement` 的 `layoutRect` 在第一幀排版尚未完成時，若傳入 `(0,0)` 的尺寸給 `ImGui.BeginChild`, `ImGui.DockSpace`, `ImGui.PlotLines` 或 `ImGui.InvisibleButton` 會觸發 C++ 底層 `abort() (0xC0000409)` 的致命崩潰問題。現已於 `Panel`, `ProfilerUIElements`, `LogViewerWindow`, `FoldoutDrawer`, `DropdownDrawer` 與 `NumericDragLabelElement` 中全面補上零尺寸的提前返回 (Early Return) 與 `GetContentRegionAvail()` 安全防護。
 - **Profiler 重複計算 (Double Counting) 修復**：導入了基於 **自身時間 (Self Time)** 的計算演算法。實體子節點結束時會從物理父節點扣除耗時，並在每幀結算時循「語意樹 (Virtual Tree)」向上彙整，完美解決實體呼叫與語意路徑脫鉤所造成的重複計算問題。
 - **多執行緒 Profiler 崩潰修復**：將 `ProfilerNode` 的 `Children` 與 `Callers` 替換為 `ConcurrentDictionary`，防止多執行緒併發修改引發的例外崩潰。
