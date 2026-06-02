@@ -68,7 +68,7 @@ namespace ImTK.UI
                 {
                     break;
                 }
-                current = current.parent;
+                current = current.hierarchy.parent;
             }
         }
 

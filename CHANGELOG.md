@@ -8,6 +8,16 @@
 ## [Unreleased]
 
 ### Added (新增)
+- `ObjectDrawer` 增加了 `try-catch` 與除錯用的 `Debug` / `Warning` 日誌，確保遇到無法解析的屬性或 Reflection 異常時能顯示提示而不至於崩潰或隱藏錯誤。
+
+### Changed (變更)
+- **重大變更 (Breaking Change)**：移除了 `VisualElement.Update()` 方法。所有的視覺樹狀態變更應當與繪製分離，且不再透過每個元素的 `Update()` 驅動，請改用事件系統、`OnLateUpdate` 或是 `ImTKApplication.ScheduleDeferred` 來進行延遲結構修改，以杜絕繪製時期修改結構的隱患。
+
+### Fixed (修復)
+- **VisualElement 渲染快取刷新修復**：修正 `RenderEngine.MarkRenderDirty` 向上遞迴找尋 `IRenderRoot` 時，錯誤使用邏輯樹 `parent` 而非物理樹 `hierarchy.parent`，導致嵌套在 `contentContainer` 內的元件無法正確觸發重繪的問題（例如 `ObjectDrawer` 內的元件展開後不顯示）。
+- **Theme 繼承邊界修復**：修復了 `VisualElement.theme` 在邏輯樹斷層時，未能正確沿著物理樹 (`hierarchy.parent`) 繼續向上繼承主題，導致內部排版容器丟失全域樣式的問題。
+- **MainMenu OS 視窗重疊修復**：修復了 `MainMenuModule` 開啟 Viewport 功能時，因位移瞬間的座標差異被 ImGui 誤判為溢出主視窗，而產生獨立且重疊的作業系統子視窗閃爍問題。現已透過 `ImGui.SetNextWindowViewport(viewport.ID)` 強制綁定在主視窗上。
+- **ObjectDrawer 內容生成修復**：修復了 `ObjectDrawer` 在使用者點擊展開時，因為依賴已經失效的 `Update` 輪詢導致子節點永遠無法重建（無法顯示內容）的 Bug。現已改為事件驅動並透過 `ScheduleDeferred(RebuildChildren)` 安全地在 `OnLateUpdate` 階段重構節點樹，完美符合新的排版生命週期與渲染樹防護限制。
 - **效能監測工具 (Performance Monitor)**：新增 `ImTKProfiler` 與 `PerformanceMonitorWindow`。
 - **字串內插效能極限優化 (Zero-GC String Interpolation)**：實作了 `NativeUtf8Buffer` 與基於 .NET 10 的 `ImTKUtf8StringHandler` (搭載 `[InterpolatedStringHandler]`)，達成在 UI Render Loop 中傳遞動態格式化字串 (`$"FPS: {fps}"`) 時的**零記憶體分配 (Zero GC Allocation)**，徹底消除高頻繪製時的 GC 壓力，並修復了原先 `TextElement` 違規使用 `fixed` 綁定 C# 字串導致的指標安全漏洞 (Rule 1.4)。
 - 擴充 `RenderEngine` 基礎 API，新增了無 GC 版本的 `RenderEngine.TextBuffered(ref handler)`, `RenderEngine.TextColoredBuffered`, `RenderEngine.TextDisabledBuffered` 與 `RenderEngine.CalcTextSizeBuffered`。並且為各方法提供了 `string` 與 `ReadOnlySpan<byte>` 的重載 (Overloads)。
@@ -61,6 +71,7 @@
 - **HashedString 容量防呆機制**：在 `ImTKEnvironment` 新增 `HashedStringCapacityWarningThreshold`（預設 50000）。當 `HashedString` 全域註冊表超過此容量時會觸發 `ImTKLog.Error`，防範開發者誤將動態字串傳入導致 Memory Leak。
 
 ### Changed (變更)
+- **VisualElement 輪詢機制拔除**：徹底移除了 `VisualElement.cs` 中過時的 `public virtual void Update()` 方法，正式終結 UI 元素層級的每幀輪詢機制，防堵衍生組件誤用。
 - **Profiler 核心重構與 API 簡化**：將 `ImTKProfiler` 的效能指標儲存型別改為 `long` (Ticks/Bytes) 並採用 `Interlocked` 達成無鎖多執行緒安全。同時移除 `ScopeAbsolute`，整併為支援自動路徑拆解的 `Scope` 與 `ScopeRelative`。
 - **Profiler 效能極限優化 (Zero-GC)**：在 `ImTKProfiler` 中導入全自動字串快取機制 (`s_pathCache`)，並新增 `Scope(groupPath, name)` 多載與 `(string, int)` Tuple Callers 紀錄。徹底消除每一幀 Profiler 分析時 `path.Split`、`Type.Name` 字串相加、以及 `CallerFilePath` 字串插值所產生的 Allocation。
 - **效能面板 Zero-GC 重構**：`PerformanceMonitorWindow` 與 `ProfilerUIElements` 全面優化。移除 TreeTable 每幀的 LINQ 排序改用 `ArrayPool` + In-Place Struct Comparer，並且字串繪製皆改為利用 `ImTKUtf8StringHandler` 搭配 `SetTextBuffered` 寫入，達成面板常駐開啟時的零 GC 分配。
@@ -93,6 +104,7 @@
 - **日誌字串格式化零分配優化**：在 `LogFormatterBuilder.cs` 中導入了 `[ThreadStatic] StringBuilder` 快取，移除了每次印出日誌時的高頻字串分配，進一步降低 GC 壓力。
 
 ### Fixed (修復)
+- **ObjectDrawer 內容生成修復**：修復了 `ObjectDrawer` 在使用者點擊展開時，因為依賴已經失效的 `Update` 輪詢導致子節點永遠無法重建（無法顯示內容）的 Bug。現已改為事件驅動並透過 `ScheduleDeferred(RebuildChildren)` 安全地在 `OnLogicUpdate` 階段重構節點樹，完美符合新的排版生命週期與渲染樹防護限制。
 - **Hexa.NET.ImGui 預設字體微縮 Bug (13px 幽靈字體)**：修復了 `Hexa.NET.ImGui` 在全域繪製 (如 Docking Tab、Title Bar) 時，因 `io.FontDefault` 未被顯式指派，導致底層回退至 `13px ProggyClean` 內建字型的問題。現已於 `ImTKFontManager` 重建圖集後，強制綁定 `io.FontDefault = io.Fonts.Fonts[0]` 以確保 Consolas (18px) 的全域渲染正確性。
 - **PushFont 擴充方法縮放失真修復**：修正了 `ImGuiStyleHandler`、`Window`、`Panel` 呼叫 `Hexa.NET.ImGui.PushFont(fontPtr, targetSize)` 時，因傳入不正確的參考參數導致的微縮 13.0 字體縮放崩潰。現已全面對齊 `fontPtr->FontSize` 達成無損推入 (Lossless Push)，並在 `ImGuiStyleHandler` 中恢復字體樣式系統 (`H1`, `H2`) 的精確 `targetSize` 縮放能力。
 - **ImGui 零尺寸崩潰修復 (Zero-Size Assertion Fix)**：修復了在 Hexa.NET.ImGui 環境下，當 `VisualElement` 的 `layoutRect` 在第一幀排版尚未完成時，若傳入 `(0,0)` 的尺寸給 `ImGui.BeginChild`, `ImGui.DockSpace`, `ImGui.PlotLines` 或 `ImGui.InvisibleButton` 會觸發 C++ 底層 `abort() (0xC0000409)` 的致命崩潰問題。現已於 `Panel`, `ProfilerUIElements`, `LogViewerWindow`, `FoldoutDrawer`, `DropdownDrawer` 與 `NumericDragLabelElement` 中全面補上零尺寸的提前返回 (Early Return) 與 `GetContentRegionAvail()` 安全防護。

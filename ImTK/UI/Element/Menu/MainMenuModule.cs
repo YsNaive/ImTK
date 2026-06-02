@@ -162,10 +162,21 @@ namespace ImTK.UI
             }
 
             // 在保留的區域內開啟無邊框視窗，高度取 frameHeight + padding
+            var viewport = ImGui.GetMainViewport();
+            ImGui.SetNextWindowViewport(viewport.ID);
             ImGui.SetNextWindowPos(new Vector2(m_reservedRect.x, m_reservedRect.y));
             ImGui.SetNextWindowSize(new Vector2(m_reservedRect.width, m_reservedRect.height));
-
-            ImGuiWindowFlags windowFlags = ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoBackground;
+            ImGuiWindowFlags windowFlags =
+                ImGuiWindowFlags.NoNav |
+                ImGuiWindowFlags.NoMove |
+                ImGuiWindowFlags.MenuBar |
+                ImGuiWindowFlags.NoResize |
+                ImGuiWindowFlags.NoDocking |
+                ImGuiWindowFlags.NoTitleBar |
+                ImGuiWindowFlags.NoDecoration |
+                ImGuiWindowFlags.NoBackground |
+                ImGuiWindowFlags.NoSavedSettings |
+                ImGuiWindowFlags.NoFocusOnAppearing; 
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0.0f, 0.0f));
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);

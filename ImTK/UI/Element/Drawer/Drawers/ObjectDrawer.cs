@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Collections.Generic;
+using ImTK.Log;
 
 namespace ImTK.UI
 {
@@ -8,21 +9,10 @@ namespace ImTK.UI
     public class ObjectDrawer : FoldoutDrawer<object>
     {
         private bool m_childrenBuilt = false;
-        private bool m_needsRebuild = false;
         private Dictionary<VisualElement, MemberInfo> m_memberMap = new Dictionary<VisualElement, MemberInfo>();
 
         public ObjectDrawer()
         {
-        }
-
-        public override void Update()
-        {
-            base.Update();
-            if (m_needsRebuild)
-            {
-                m_needsRebuild = false;
-                RebuildChildren();
-            }
         }
 
         public override DrawerLayoutMode layoutMode
@@ -33,7 +23,7 @@ namespace ImTK.UI
                 base.layoutMode = value;
                 if (value == DrawerLayoutMode.Expand && !m_childrenBuilt)
                 {
-                    m_needsRebuild = true;
+                    ScheduleDeferred(RebuildChildren);
                 }
             }
         }
@@ -52,7 +42,7 @@ namespace ImTK.UI
                 m_memberMap.Clear();
                 if (isExpanded)
                 {
-                    m_needsRebuild = true;
+                    ScheduleDeferred(RebuildChildren);
                 }
             }
             else if (m_childrenBuilt && m_value != null)
@@ -94,7 +84,7 @@ namespace ImTK.UI
                     m_memberMap.Clear();
                     if (isExpanded)
                     {
-                        m_needsRebuild = true;
+                        ScheduleDeferred(RebuildChildren);
                     }
                 }
                 else if (m_childrenBuilt && m_value != null)
@@ -120,60 +110,84 @@ namespace ImTK.UI
 
         private void RebuildChildren()
         {
-            Clear(); // clear visual children
-            m_memberMap.Clear();
-            m_childrenBuilt = true;
-
-            if (m_value == null) return;
-
-            var type = m_value.GetType();
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-            foreach (var field in fields)
+            try
             {
-                var drawer = FieldDrawerFactory.Create()
-                    .FromType(field.FieldType)
-                    .Label(field.Name)
-                    .AddModifiersFromMember(field)
-                    .Build();
+                Clear(); // clear visual children
+                m_memberMap.Clear();
+                m_childrenBuilt = true;
 
-                if (drawer != null)
+                ImTK.Log.ImTKLog.Debug($"ObjectDrawer.RebuildChildren called! m_value is {(m_value == null ? "null" : m_value.GetType().Name)}");
+
+                if (m_value == null)
                 {
-                    drawer.value = field.GetValue(m_value);
+                    Add(new TextElement { text = " (null)" });
+                    return;
+                }
 
-                    if (drawer is VisualElement ve)
+                var type = m_value.GetType();
+                var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+                var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                
+                ImTK.Log.ImTKLog.Debug($"ObjectDrawer found {fields.Length} fields and {properties.Length} properties.");
+
+                if (fields.Length == 0 && properties.Length == 0)
+                {
+                    Add(new TextElement { text = " (No public fields or properties)" });
+                    return;
+                }
+
+                foreach (var field in fields)
+                {
+                    var drawer = FieldDrawerFactory.Create()
+                        .FromType(field.FieldType)
+                        .Label(field.Name)
+                        .AddModifiersFromMember(field)
+                        .Build();
+
+                    if (drawer != null)
                     {
-                        m_memberMap[ve] = field;
-                        RegisterGenericCallback(ve, field.FieldType);
-                        Add(ve);
+                        drawer.value = field.GetValue(m_value);
+
+                        if (drawer is VisualElement ve)
+                        {
+                            m_memberMap[ve] = field;
+                            RegisterGenericCallback(ve, field.FieldType);
+                            Add(ve);
+                        }
+                    }
+                    else
+                    {
+                        ImTK.Log.ImTKLog.Warning($"ObjectDrawer: FieldDrawerFactory returned null for field {field.Name} of type {field.FieldType.Name}");
+                    }
+                }
+
+                foreach (var prop in properties)
+                {
+                    if (!prop.CanRead || !prop.CanWrite) continue;
+
+                    var drawer = FieldDrawerFactory.Create()
+                        .FromType(prop.PropertyType)
+                        .Label(prop.Name)
+                        .AddModifiersFromMember(prop)
+                        .Build();
+
+                    if (drawer != null)
+                    {
+                        drawer.value = prop.GetValue(m_value);
+
+                        if (drawer is VisualElement ve)
+                        {
+                            m_memberMap[ve] = prop;
+                            RegisterGenericCallback(ve, prop.PropertyType);
+                            Add(ve);
+                        }
                     }
                 }
             }
-
-            foreach (var prop in properties)
+            catch (Exception ex)
             {
-                if (!prop.CanRead || !prop.CanWrite) continue;
-
-                var drawer = FieldDrawerFactory.Create()
-                    .FromType(prop.PropertyType)
-                    .Label(prop.Name)
-                    .AddModifiersFromMember(prop)
-                    .Build();
-
-                if (drawer != null)
-                {
-                    drawer.value = prop.GetValue(m_value);
-
-                    if (drawer is VisualElement ve)
-                    {
-                        m_memberMap[ve] = prop;
-                        RegisterGenericCallback(ve, prop.PropertyType);
-                        Add(ve);
-                    }
-                }
+                ImTK.Log.ImTKLog.Error(ex, "Exception in ObjectDrawer.RebuildChildren");
             }
-
         }
 
         private void RegisterGenericCallback(VisualElement element, Type valueType)
@@ -218,7 +232,5 @@ namespace ImTK.UI
         {
             base.OnEndRender();
         }
-        
-        // Removed Update polling as per user request
     }
 }

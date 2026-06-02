@@ -1117,6 +1117,7 @@ namespace ImTK.UI
             {
                 if (m_theme != null) return m_theme;
                 if (parent != null) return parent.theme;
+                if (hierarchy.parent != null) return hierarchy.parent.theme;
                 return ImTKTheme.GlobalTheme;
             }
             set
@@ -1298,18 +1299,7 @@ namespace ImTK.UI
             return true;
         }
 
-        public virtual void Update()
-        {
-            int childCount = hierarchy.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
-                var child = hierarchy.ChildAt(i);
-                using (ImTKProfiler.ScopeRelative(child.GetType().Name))
-                {
-                    child.Update();
-                }
-            }
-        }
+
 
         public Window GetWindow()
         {

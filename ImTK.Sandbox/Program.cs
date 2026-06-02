@@ -20,9 +20,6 @@ namespace ImTK.Sandbox
                 windowHeight = 900
             };
 
-            // Starts the native test scheme
-            //ImGuiViewportFontTest.Run();
-
             // Starts the ImTK loop
              ImTKSilk.Run(config);
 

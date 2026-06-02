@@ -196,22 +196,6 @@ namespace ImTK.UI
                 ImTKTheme.GlobalTheme.ApplyToImGui();
                 ImTKTheme.isGlobalThemeDirty = false;
             }
-
-            foreach (var kvp in s_windows)
-            {
-                var window = kvp.Value;
-                using (ImTKProfiler.ScopeRelative(window.GetType().Name))
-                {
-                    try
-                    {
-                        window.Update();
-                    }
-                    catch (Exception ex)
-                    {
-                        ImTKLog.Error(ex, $"Exception in Update of window: {window.imguiId}");
-                    }
-                }
-            }
         }
 
         protected internal override void OnEnable()

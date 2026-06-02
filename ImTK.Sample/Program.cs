@@ -21,7 +21,6 @@ namespace ImTK.Sample
                 windowHeight = 800
             };
 
-            // SampleOverviewModule will automatically register and open the OverviewWindow
             ImTKSilk.Run(config);
 
             log.Info("ImTK Sample Closed gracefully.");

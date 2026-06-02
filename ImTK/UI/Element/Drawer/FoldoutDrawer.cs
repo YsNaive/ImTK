@@ -32,7 +32,7 @@ namespace ImTK.UI
             this.style.flexDirection = FlexDirection.Column;
             this.style.alignItems = AlignItems.Stretch;
             m_contentContainer.style.margin = new Thickness(this.theme.indentWidth, 0, 0, 0);
-            // Initially expanded? Let's say expand. Or inline means collapsed for foldout.
+            // Initially expanded?
             isExpanded = false;
         }
 
