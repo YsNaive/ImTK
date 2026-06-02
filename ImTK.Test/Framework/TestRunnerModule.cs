@@ -111,11 +111,33 @@ namespace ImTK.Test.Framework
             var headlessResults = HeadlessRunner.LastResults;
 
             int total = m_tests.Count + headlessResults.Count;
-            int passed = m_tests.Count(t => t.HasRun && t.Passed) + headlessResults.Count(t => t.Passed);
-            int failed = m_tests.Count(t => t.HasRun && !t.Passed) + headlessResults.Count(t => !t.Passed);
-            int pending = m_tests.Count(t => !t.HasRun);
+            int passed = 0;
+            int failed = 0;
+            int pending = 0;
 
-            ImGui.Text($"Total: {total} | Passed: {passed} | Failed: {failed} | Pending: {pending}");
+            foreach (var t in m_tests)
+            {
+                if (!t.HasRun) pending++;
+                else if (t.Passed) passed++;
+                else failed++;
+            }
+
+            foreach (var t in headlessResults)
+            {
+                if (t.Passed) passed++;
+                else failed++;
+            }
+
+            var handler = new ImTK.Core.ImTKUtf8StringHandler(37, 4);
+            handler.AppendLiteral("Total: ");
+            handler.AppendFormatted(total);
+            handler.AppendLiteral(" | Passed: ");
+            handler.AppendFormatted(passed);
+            handler.AppendLiteral(" | Failed: ");
+            handler.AppendFormatted(failed);
+            handler.AppendLiteral(" | Pending: ");
+            handler.AppendFormatted(pending);
+            RenderEngine.TextBuffered(ref handler);
             ImGui.Separator();
 
             if (ImGui.BeginTable("Tests", 5, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))

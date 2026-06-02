@@ -19,6 +19,11 @@
 - **MainMenu OS 視窗重疊修復**：修復了 `MainMenuModule` 開啟 Viewport 功能時，因位移瞬間的座標差異被 ImGui 誤判為溢出主視窗，而產生獨立且重疊的作業系統子視窗閃爍問題。現已透過 `ImGui.SetNextWindowViewport(viewport.ID)` 強制綁定在主視窗上。
 - **ObjectDrawer 內容生成修復**：修復了 `ObjectDrawer` 在使用者點擊展開時，因為依賴已經失效的 `Update` 輪詢導致子節點永遠無法重建（無法顯示內容）的 Bug。現已改為事件驅動並透過 `ScheduleDeferred(RebuildChildren)` 安全地在 `OnLateUpdate` 階段重構節點樹，完美符合新的排版生命週期與渲染樹防護限制。
 - **效能監測工具 (Performance Monitor)**：新增 `ImTKProfiler` 與 `PerformanceMonitorWindow`。
+- **Profiler 零記憶體分配 (Zero-GC) 終極優化**：全面根除了 `ImTKProfiler` 與 `PerformanceMonitorWindow` 中所有殘餘的高頻 GC 記憶體分配，達成完美的 0.000 KB：
+  - 修復了 `ConcurrentDictionary.Values` 與 `GetEnumerator` 隱含造成的裝箱與唯讀集合分配。
+  - 將 `TreeElement` 渲染時的 `Span<T>.Sort()` (因底層框架裝箱 `IComparer<T>`) 替換為零分配的就地插入排序 (In-place Insertion Sort)。
+  - 導入了動態指標初始化防護機制，修復 .NET Hot Reload 時因 `CachedTreeNodeId` 遺失而導致回退為字串分配 (`$"##{node.Name}"`) 的幽靈 GC 問題。
+  - 針對檔案路徑切割全面套用 `ReadOnlySpan<char>` 與對應的 `ImTKUtf8StringHandler.AppendFormatted(ReadOnlySpan<char>)`，實現完全無字串分配的路徑解析。
 - **字串內插效能極限優化 (Zero-GC String Interpolation)**：實作了 `NativeUtf8Buffer` 與基於 .NET 10 的 `ImTKUtf8StringHandler` (搭載 `[InterpolatedStringHandler]`)，達成在 UI Render Loop 中傳遞動態格式化字串 (`$"FPS: {fps}"`) 時的**零記憶體分配 (Zero GC Allocation)**，徹底消除高頻繪製時的 GC 壓力，並修復了原先 `TextElement` 違規使用 `fixed` 綁定 C# 字串導致的指標安全漏洞 (Rule 1.4)。
 - 擴充 `RenderEngine` 基礎 API，新增了無 GC 版本的 `RenderEngine.TextBuffered(ref handler)`, `RenderEngine.TextColoredBuffered`, `RenderEngine.TextDisabledBuffered` 與 `RenderEngine.CalcTextSizeBuffered`。並且為各方法提供了 `string` 與 `ReadOnlySpan<byte>` 的重載 (Overloads)。
 - 全面重構 `TextElement`，將底層 `string` 儲存替換為 `NativeUtf8Buffer`，並實作 `SetTextBuffered` 與 Lazy String 快取機制，達到「單一真相來源」且無痛銜接既有 API。

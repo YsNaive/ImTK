@@ -147,6 +147,15 @@ namespace ImTK.Core
             WrittenCount += bytesWritten;
         }
 
+        public void AppendFormatted(ReadOnlySpan<char> s)
+        {
+            if (s.IsEmpty) return;
+            int maxBytes = Encoding.UTF8.GetMaxByteCount(s.Length);
+            EnsureCapacity(maxBytes);
+            int bytesWritten = Encoding.UTF8.GetBytes(s, m_span.Slice(WrittenCount));
+            WrittenCount += bytesWritten;
+        }
+
         public void AppendFormatted(float value)
         {
             AppendFormatted(value, null);

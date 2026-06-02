@@ -37,8 +37,10 @@ namespace ImTK.Core
         private static readonly List<ImTKObject> s_objects = new List<ImTKObject>();
         private static readonly List<ImTKObject> s_pendingAdd = new List<ImTKObject>();
         private static readonly List<ImTKObject> s_pendingRemove = new List<ImTKObject>();
+        private static readonly List<ImTKObject> s_tempObjects = new List<ImTKObject>();
 
         private static readonly List<Action> s_deferredActions = new List<Action>();
+        private static readonly List<Action> s_tempDeferredActions = new List<Action>();
 
         // Frame phase tracking to prevent reverse-order calls
         private static ApplicationState s_minAllowedFrameState = ApplicationState.LogicUpdate;
@@ -426,29 +428,29 @@ namespace ImTK.Core
                 s_modules.Clear();
                 s_deferredActions.Clear();
 
-                SetState(ApplicationState.Closed);
+                    SetState(ApplicationState.Closed);
                 ImTKLog.Info("ImTKApplication shutdown complete.");
             }
 
             private static void ProcessDeferredActions()
             {
-                Action[] actionsToRun = null;
                 lock (s_deferredActions)
                 {
                     if (s_deferredActions.Count > 0)
                     {
-                        actionsToRun = s_deferredActions.ToArray();
+                        s_tempDeferredActions.AddRange(s_deferredActions);
                         s_deferredActions.Clear();
                     }
                 }
 
-                if (actionsToRun != null)
+                if (s_tempDeferredActions.Count > 0)
                 {
-                    foreach (var action in actionsToRun)
+                    foreach (var action in s_tempDeferredActions)
                     {
                         try { action(); }
                         catch (Exception ex) { ImTKLog.Error(ex, "Exception occurred during deferred action execution."); }
                     }
+                    s_tempDeferredActions.Clear();
                 }
             }
 
@@ -457,9 +459,10 @@ namespace ImTK.Core
                 // Add pending objects (copy to array to prevent modification during iteration)
                 if (s_pendingAdd.Count > 0)
                 {
-                    var adding = s_pendingAdd.ToArray();
+                    s_tempObjects.Clear();
+                    s_tempObjects.AddRange(s_pendingAdd);
                     s_pendingAdd.Clear();
-                    foreach (var obj in adding)
+                    foreach (var obj in s_tempObjects)
                     {
                         s_objects.Add(obj);
                         ImTKLog.Trace($"Registered new ImTKObject: {obj.GetType().Name}");
@@ -469,6 +472,7 @@ namespace ImTK.Core
                             obj.InternalOnEnable();
                         }
                     }
+                    s_tempObjects.Clear();
                 }
 
                 // Check enable/disable state changes for modules
@@ -487,8 +491,9 @@ namespace ImTK.Core
                 }
 
                 // Check enable/disable state changes for objects (copy to array)
-                var currentObjects = s_objects.ToArray();
-                foreach (var obj in currentObjects)
+                s_tempObjects.Clear();
+                s_tempObjects.AddRange(s_objects);
+                foreach (var obj in s_tempObjects)
                 {
                     if (obj.m_enabled && !obj.m_activeInHierarchy)
                     {
@@ -501,13 +506,15 @@ namespace ImTK.Core
                         obj.InternalOnDisable();
                     }
                 }
+                s_tempObjects.Clear();
 
                 // Remove pending objects
                 if (s_pendingRemove.Count > 0)
                 {
-                    var removing = s_pendingRemove.ToArray();
+                    s_tempObjects.Clear();
+                    s_tempObjects.AddRange(s_pendingRemove);
                     s_pendingRemove.Clear();
-                    foreach (var obj in removing)
+                    foreach (var obj in s_tempObjects)
                     {
                         if (obj.m_activeInHierarchy)
                         {
@@ -518,6 +525,7 @@ namespace ImTK.Core
                         s_objects.Remove(obj);
                         ImTKLog.Trace($"Destroyed ImTKObject: {obj.GetType().Name}");
                     }
+                    s_tempObjects.Clear();
                 }
             }
         }

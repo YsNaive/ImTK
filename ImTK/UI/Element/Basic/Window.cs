@@ -120,6 +120,19 @@ namespace ImTK.UI
 
         internal string imguiId => string.IsNullOrEmpty(windowId) ? displayName : $"{displayName}###{windowId}";
 
+        private IntPtr m_imguiIdPtr = IntPtr.Zero;
+        internal IntPtr imguiIdPtr
+        {
+            get
+            {
+                if (m_imguiIdPtr == IntPtr.Zero)
+                {
+                    m_imguiIdPtr = System.Runtime.InteropServices.Marshal.StringToCoTaskMemUTF8(imguiId);
+                }
+                return m_imguiIdPtr;
+            }
+        }
+
         protected bool m_isOpen = false;
 
         [Obsolete("Please use the 'flags' property syntax sugar instead.")]
@@ -244,13 +257,16 @@ namespace ImTK.UI
             }
 
             bool isExpanded;
-            if (!flags.noClose)
+            unsafe
             {
-                isExpanded = ImGui.Begin(imguiId, ref isOpenForImGui, windowFlags);
-            }
-            else
-            {
-                isExpanded = ImGui.Begin(imguiId, windowFlags);
+                if (!flags.noClose)
+                {
+                    isExpanded = ImGui.Begin((byte*)imguiIdPtr, ref isOpenForImGui, windowFlags);
+                }
+                else
+                {
+                    isExpanded = ImGui.Begin((byte*)imguiIdPtr, windowFlags);
+                }
             }
 
             float newDpiScale = ImGui.GetWindowViewport().DpiScale;

@@ -14,6 +14,8 @@ namespace ImTK.Core
     {
         public class ProfilerNode
         {
+            public IntPtr CachedTreeNodeId = IntPtr.Zero;
+            public IntPtr NamePtr = IntPtr.Zero;
             private string m_name;
             public string Name
             {
@@ -21,10 +23,19 @@ namespace ImTK.Core
                 set
                 {
                     m_name = value;
-                    CachedTreeNodeId = $"##{value}";
+                    if (NamePtr != IntPtr.Zero)
+                    {
+                        System.Runtime.InteropServices.Marshal.FreeCoTaskMem(NamePtr);
+                    }
+                    NamePtr = System.Runtime.InteropServices.Marshal.StringToCoTaskMemUTF8(value);
+
+                    if (CachedTreeNodeId != IntPtr.Zero)
+                    {
+                        System.Runtime.InteropServices.Marshal.FreeCoTaskMem(CachedTreeNodeId);
+                    }
+                    CachedTreeNodeId = System.Runtime.InteropServices.Marshal.StringToCoTaskMemUTF8($"##{value}");
                 }
             }
-            public string CachedTreeNodeId;
             public ProfilerNode Parent;
             public ConcurrentDictionary<string, ProfilerNode> Children = new ConcurrentDictionary<string, ProfilerNode>();
             public ConcurrentDictionary<string, ProfilerNode> RelativePathCache = new ConcurrentDictionary<string, ProfilerNode>();
@@ -60,6 +71,20 @@ namespace ImTK.Core
             
             // Callers that recorded into this scope
             public ConcurrentDictionary<(string, int), byte> Callers = new ConcurrentDictionary<(string, int), byte>();
+            public volatile (string, int)[] CallersArray = Array.Empty<(string, int)>();
+
+            public void AddCaller(string filePath, int lineNumber)
+            {
+                var callerKey = (filePath, lineNumber);
+                if (Callers.TryAdd(callerKey, 1))
+                {
+                    lock (this)
+                    {
+                        var list = new System.Collections.Generic.List<(string, int)>(Callers.Keys);
+                        CallersArray = list.ToArray();
+                    }
+                }
+            }
 
             // Max 60 seconds at 60fps = 3600 frames
             public float[] History = new float[3600];
@@ -241,7 +266,7 @@ namespace ImTK.Core
 
                 if (!string.IsNullOrEmpty(callerFile)) 
                 {
-                    m_currentNode.Callers.TryAdd((callerFile, callerLine), 0);
+                    m_currentNode.AddCaller(callerFile, callerLine);
                 }
 
                 stack.Push(m_currentNode);

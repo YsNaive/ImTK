@@ -1,4 +1,5 @@
 using Hexa.NET.ImGui;
+using ImTK.Core;
 using ImTK.Log;
 using ImTK.UI;
 using System;
@@ -13,6 +14,9 @@ namespace ImTK.DebugTools
     {
         // 跨執行緒的暫存佇列
         private readonly ConcurrentQueue<LogEntry> m_incomingQueue = new();
+
+        private static readonly byte[] s_filterHint = Encoding.UTF8.GetBytes("過濾訊息內容...");
+        private static readonly IntPtr s_scrollingRegionId = System.Runtime.InteropServices.Marshal.StringToCoTaskMemUTF8("ScrollingRegion");
 
         // 主執行緒的快取
         private readonly List<LogEntry> m_allLogs = new();
@@ -37,6 +41,7 @@ namespace ImTK.DebugTools
         // 游離的元件
         private readonly LogEntryElement m_logEntryElement;
         private float m_lastDpiScale = 1.0f;
+        private readonly List<string> m_tempKeys = new();
 
         // ILogSink 介面
         public bool enabled { get; set; } = true;
@@ -117,162 +122,174 @@ namespace ImTK.DebugTools
 
             // 1. 同步新進來的 Log
             bool hasNewLogs = false;
-            while (m_incomingQueue.TryDequeue(out var entry))
+            using (ImTKProfiler.ScopeRelative("Sync Logs"))
             {
-                m_allLogs.Add(entry);
-                if (!m_contextFilters.ContainsKey(entry.ContextName))
+                while (m_incomingQueue.TryDequeue(out var entry))
                 {
-                    m_contextFilters[entry.ContextName] = true;
-                    m_isAnyContextFilterChanged = true;
+                    m_allLogs.Add(entry);
+                    if (!m_contextFilters.ContainsKey(entry.ContextName))
+                    {
+                        m_contextFilters[entry.ContextName] = true;
+                        m_isAnyContextFilterChanged = true;
+                    }
+                    
+                    if (IsLogPassingFilter(entry))
+                    {
+                        m_filteredIndices.Add(m_allLogs.Count - 1);
+                        hasNewLogs = true;
+                    }
                 }
-                
-                if (IsLogPassingFilter(entry))
+
+                if (m_isAnyContextFilterChanged)
                 {
-                    m_filteredIndices.Add(m_allLogs.Count - 1);
-                    hasNewLogs = true;
+                    // 若有新的 Context 加入，不需重建，因為預設是 true 且已經通過 filter 加進去過了
+                    m_isAnyContextFilterChanged = false;
                 }
-            }
 
-            if (m_isAnyContextFilterChanged)
-            {
-                // 若有新的 Context 加入，不需重建，因為預設是 true 且已經通過 filter 加進去過了
-                m_isAnyContextFilterChanged = false;
-            }
-
-            if (hasNewLogs && m_autoScroll)
-            {
-                m_requestScrollToBottom = true;
+                if (hasNewLogs && m_autoScroll)
+                {
+                    m_requestScrollToBottom = true;
+                }
             }
 
             // 2. 控制面板 (Top Bar)
-            bool needsRebuild = false;
-
-            if (ImGui.Button("Clear"))
+            using (ImTKProfiler.ScopeRelative("Top Bar"))
             {
-                m_allLogs.Clear();
-                m_filteredIndices.Clear();
-                m_contextFilters.Clear();
-            }
-            
-            ImGui.SameLine();
-            ImGui.Checkbox("Auto-scroll", ref m_autoScroll);
-            
-            ImGui.SameLine();
-            RenderEngine.TextBuffered($"|");
-            ImGui.SameLine();
+                bool needsRebuild = false;
 
-            // Level Filters (Combo)
-            ImGui.SetNextItemWidth(120f);
-            if (ImGui.BeginCombo("Level", "過濾層級..."))
-            {
-                if (ImGui.Button("全選 (Select All)"))
+                if (ImGui.Button("Clear"))
                 {
-                    m_showTrace = m_showDebug = m_showInfo = m_showWarning = m_showError = m_showFatal = true;
-                    needsRebuild = true;
+                    m_allLogs.Clear();
+                    m_filteredIndices.Clear();
+                    m_contextFilters.Clear();
                 }
-                if (ImGui.Button("取消全選 (Deselect All)"))
+                
+                ImGui.SameLine();
+                ImGui.Checkbox("Auto-scroll", ref m_autoScroll);
+                
+                ImGui.SameLine();
+                RenderEngine.TextBuffered("|");
+                ImGui.SameLine();
+
+                // Level Filters (Combo)
+                ImGui.SetNextItemWidth(120f);
+                if (ImGui.BeginCombo("Level", "過濾層級..."))
                 {
-                    m_showTrace = m_showDebug = m_showInfo = m_showWarning = m_showError = m_showFatal = false;
-                    needsRebuild = true;
-                }
-                ImGui.Separator();
-
-                needsRebuild |= ImGui.Checkbox("Trace", ref m_showTrace);
-                needsRebuild |= ImGui.Checkbox("Debug", ref m_showDebug);
-                needsRebuild |= ImGui.Checkbox("Info", ref m_showInfo);
-                needsRebuild |= ImGui.Checkbox("Warning", ref m_showWarning);
-                needsRebuild |= ImGui.Checkbox("Error", ref m_showError);
-                needsRebuild |= ImGui.Checkbox("Fatal", ref m_showFatal);
-
-                ImGui.EndCombo();
-            }
-
-            ImGui.SameLine();
-            RenderEngine.TextBuffered($"|");
-            ImGui.SameLine();
-
-            // Context Filters (Combo)
-            ImGui.SetNextItemWidth(150f);
-            if (ImGui.BeginCombo("Context", "過濾模組..."))
-            {
-                if (ImGui.Button("全選 (Select All)"))
-                {
-                    var allKeys = new List<string>(m_contextFilters.Keys);
-                    foreach (var key in allKeys) m_contextFilters[key] = true;
-                    needsRebuild = true;
-                }
-                if (ImGui.Button("取消全選 (Deselect All)"))
-                {
-                    var allKeys = new List<string>(m_contextFilters.Keys);
-                    foreach (var key in allKeys) m_contextFilters[key] = false;
-                    needsRebuild = true;
-                }
-                ImGui.Separator();
-
-                // 使用暫存陣列或 tolist 避免迴圈內修改 dictionary 的例外
-                var keys = new List<string>(m_contextFilters.Keys);
-                foreach (var key in keys)
-                {
-                    bool isChecked = m_contextFilters[key];
-                    if (ImGui.Checkbox(key, ref isChecked))
+                    if (ImGui.Button("全選 (Select All)"))
                     {
-                        m_contextFilters[key] = isChecked;
+                        m_showTrace = m_showDebug = m_showInfo = m_showWarning = m_showError = m_showFatal = true;
                         needsRebuild = true;
                     }
+                    if (ImGui.Button("取消全選 (Deselect All)"))
+                    {
+                        m_showTrace = m_showDebug = m_showInfo = m_showWarning = m_showError = m_showFatal = false;
+                        needsRebuild = true;
+                    }
+                    ImGui.Separator();
+
+                    needsRebuild |= ImGui.Checkbox("Trace", ref m_showTrace);
+                    needsRebuild |= ImGui.Checkbox("Debug", ref m_showDebug);
+                    needsRebuild |= ImGui.Checkbox("Info", ref m_showInfo);
+                    needsRebuild |= ImGui.Checkbox("Warning", ref m_showWarning);
+                    needsRebuild |= ImGui.Checkbox("Error", ref m_showError);
+                    needsRebuild |= ImGui.Checkbox("Fatal", ref m_showFatal);
+
+                    ImGui.EndCombo();
                 }
-                ImGui.EndCombo();
-            }
 
-            ImGui.SameLine();
+                ImGui.SameLine();
+                RenderEngine.TextBuffered("|");
+                ImGui.SameLine();
 
-            // Text Filter
-            ImGui.SetNextItemWidth(-float.Epsilon); // fill remaining width
-            string tempFilterText = m_filterText;
-            byte[] filterHint = Encoding.UTF8.GetBytes("過濾訊息內容...");
-            if (ImGui.InputTextWithHint("##Filter", filterHint, ref tempFilterText, 256))
-            {
-                m_filterText = tempFilterText;
-                needsRebuild = true;
-            }
+                // Context Filters (Combo)
+                ImGui.SetNextItemWidth(150f);
+                if (ImGui.BeginCombo("Context", "過濾模組..."))
+                {
+                    if (ImGui.Button("全選 (Select All)"))
+                    {
+                        var allKeys = new List<string>(m_contextFilters.Keys);
+                        foreach (var key in allKeys) m_contextFilters[key] = true;
+                        needsRebuild = true;
+                    }
+                    if (ImGui.Button("取消全選 (Deselect All)"))
+                    {
+                        var allKeys = new List<string>(m_contextFilters.Keys);
+                        foreach (var key in allKeys) m_contextFilters[key] = false;
+                        needsRebuild = true;
+                    }
+                    ImGui.Separator();
 
-            if (needsRebuild)
-            {
-                RebuildFilter();
+                    // 使用暫存陣列或 tolist 避免迴圈內修改 dictionary 的例外
+                    m_tempKeys.Clear();
+                    foreach (var k in m_contextFilters.Keys) m_tempKeys.Add(k);
+                    foreach (var key in m_tempKeys)
+                    {
+                        bool isChecked = m_contextFilters[key];
+                        if (ImGui.Checkbox(key, ref isChecked))
+                        {
+                            m_contextFilters[key] = isChecked;
+                            needsRebuild = true;
+                        }
+                    }
+                    ImGui.EndCombo();
+                }
+
+                ImGui.SameLine();
+
+                // Text Filter
+                ImGui.SetNextItemWidth(-float.Epsilon); // fill remaining width
+                string tempFilterText = m_filterText;
+                if (ImGui.InputTextWithHint("##Filter", s_filterHint, ref tempFilterText, 256))
+                {
+                    m_filterText = tempFilterText;
+                    needsRebuild = true;
+                }
+
+                if (needsRebuild)
+                {
+                    RebuildFilter();
+                }
             }
 
             ImGui.Separator();
 
             // 3. 虛擬化捲動區域
-            var scrollRegionSize = ImGui.GetContentRegionAvail();
-            if (scrollRegionSize.X <= 0f || scrollRegionSize.Y <= 0f) return;
-            ImGui.BeginChild("ScrollingRegion", scrollRegionSize, ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar);
-
-            unsafe
+            using (ImTKProfiler.ScopeRelative("Scrolling Region"))
             {
-                ImGuiListClipper clipper = new ImGuiListClipper();
-                clipper.Begin(m_filteredIndices.Count);
-                while (clipper.Step())
+                var scrollRegionSize = ImGui.GetContentRegionAvail();
+                if (scrollRegionSize.X <= 0f || scrollRegionSize.Y <= 0f) return;
+                unsafe
                 {
-                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                    {
-                        var log = m_allLogs[m_filteredIndices[i]];
-                        
-                        // 餵入資料給游離元件
-                        m_logEntryElement.SetData(log);
-                        
-                        RenderEngine.Render(m_logEntryElement);
-                    }
+                    ImGui.BeginChild((byte*)s_scrollingRegionId, scrollRegionSize, ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar);
                 }
-                clipper.End();
-            }
 
-            if (m_requestScrollToBottom)
-            {
-                ImGui.SetScrollHereY(1.0f);
-                m_requestScrollToBottom = false;
-            }
+                unsafe
+                {
+                    ImGuiListClipper clipper = new ImGuiListClipper();
+                    clipper.Begin(m_filteredIndices.Count);
+                    while (clipper.Step())
+                    {
+                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                        {
+                            var log = m_allLogs[m_filteredIndices[i]];
+                            
+                            // 餵入資料給游離元件
+                            m_logEntryElement.SetData(log);
+                            
+                            RenderEngine.Render(m_logEntryElement);
+                        }
+                    }
+                    clipper.End();
+                }
 
-            ImGui.EndChild();
+                if (m_requestScrollToBottom)
+                {
+                    ImGui.SetScrollHereY(1.0f);
+                    m_requestScrollToBottom = false;
+                }
+
+                ImGui.EndChild();
+            }
         }
     }
 }
