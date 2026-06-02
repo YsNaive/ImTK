@@ -98,6 +98,17 @@ namespace ImTK.UI
             s_renderCaches.TryGetValue(root, out var cache);
             return cache;
         }
+
+        public static System.Collections.Generic.IEnumerable<VisualElement> GetVisibleRoots()
+        {
+            foreach (var kvp in s_renderCaches)
+            {
+                if (kvp.Key is IRenderRoot root && !root.hideInHierarchy)
+                {
+                    yield return kvp.Key;
+                }
+            }
+        }
         /// <summary>
         /// Manages the dynamic rendering state during the VisualElement layout and render pass.
         /// Helps defer commands that require an active ImGui Window and tracks inherited state (like Font Families).

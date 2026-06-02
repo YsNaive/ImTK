@@ -231,9 +231,9 @@ namespace ImTK.UI
             UpdateIconVisibility();
         }
 
-        private void UpdateIconVisibility()
+        protected virtual void UpdateIconVisibility()
         {
-            bool hasChildren = m_contentContainer.childCount > 0;
+            bool hasChildren = !isLeaf;
             m_arrowIcon.type = hasChildren ? (m_isExpanded ? IconElement.IconType.DownArrow : IconElement.IconType.RightArrow) : IconElement.IconType.None;
         }
 

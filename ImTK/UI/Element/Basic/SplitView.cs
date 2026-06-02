@@ -21,9 +21,9 @@ namespace ImTK.UI
             }
         }
 
-        [Persistent]
         private float m_fixedPaneDimension = 200f;
-        
+
+        [Persistent]
         public float fixedPaneDimension
         {
             get => m_fixedPaneDimension;
@@ -34,7 +34,6 @@ namespace ImTK.UI
             }
         }
 
-        [Persistent]
         public float minSplitSize { get; set; } = 50f;
 
         public float splitBarSize { get; set; } = 4f;

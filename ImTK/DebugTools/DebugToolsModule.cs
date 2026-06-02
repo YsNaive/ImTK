@@ -22,6 +22,7 @@ namespace ImTK.DebugTools
                 {
                     mainMenu.AddItem("偵錯/日誌 (Log)", _ => Window.Open<LogViewerWindow>(LogViewerWindow.WindowId), 1000);
                     mainMenu.AddItem("偵錯/效能 (Performance)", _ => Window.Open<PerformanceMonitorWindow>(PerformanceMonitorWindow.WindowId), 1001);
+                    mainMenu.AddItem("偵錯/元件樹 (Inspector)", _ => Window.Open<VisualElementInspectorWindow>(VisualElementInspectorWindow.WindowId), 1002);
                 }
             }
         }

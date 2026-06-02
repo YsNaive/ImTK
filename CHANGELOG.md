@@ -7,12 +7,22 @@
 
 ## [Unreleased]
 ### Added
+- **VisualElement Inspector 開發**：在 `DebugTools` 下實作了 `VisualElementInspectorWindow`，提供全域視覺樹的即時檢視。使用 `SplitView` 佈局並支援狀態持久化 (Persistence)。
+- `DebugToolsModule` 中新增 `[MenuItem]`，支援從主選單「偵錯/元件樹 (Inspector)」開啟此工具。
+- `IRenderRoot` 介面新增 `hideInHierarchy` 屬性，允許如 `MenuView` 等內部元件在 Inspector 中自動隱藏，維持視覺樹的乾淨。
 - **全新文字元件 `Label`**：新增繼承自 `TextElement` 的 `Label` 元件。專為單行文字展示設計，預設關閉換行 (`enableWordWrap = false`) 並啟用裁切 (`style.overflow = Overflow.Hidden`)，達到與 `TextElement` (預設換行) 的職責分離。
 - **排版引擎支援 Overflow 裁切**：新增了 `Overflow` 列舉與 `style.overflow` 屬性。當設定為 `Overflow.Hidden` 時，系統會自動在渲染期間建立 `ImGui.PushClipRect` 遮罩，確保超出元件 `layoutRect` 的子內容被正確裁切隱藏。
 - 新增 `SplitView` 容器元件，參考 Unity UITK `TwoPaneSplitView` 設計，支援 `fixedPaneIndex`，並內建拖曳分隔條調整大小功能。
 - 新增 `ScrollView` 容器元件，支援自定義是否顯示水平與垂直捲軸。
 
+### Changed
+- **DebugTools 模組化與重構**：將 `VisualElementInspectorWindow` 與 `VisualElementTreeNode` 由 `UI/Debug` 目錄正式搬移至獨立的 `DebugTools` 命名空間與目錄下。
+- `VisualElementTreeNode` 全面改用 Lazy Loading (延遲載入) 的設計，節點展開時才動態建立子節點。
+- `VisualElementTreeNode` 確保節點更新在 `ImTKApplication.ScheduleDeferred` 中執行，以避免在 GuiRender 階段直接修改視覺樹引發的崩潰例外。
+- `VisualElementInspectorWindow` 的開啟邏輯全面導入 `WindowId` 常數 (`"ImTK.VisualElementInspector"`)，解決多重視窗開啟時可能導致的 ID 衝突崩潰。
+
 ### Fixed (修復)
+- **Inspector 關閉視窗殘留修復**：修正 `RenderEngine.GetVisibleRoots()` 因底層使用 `ConditionalWeakTable` 導致已關閉視窗 (尚未被 GC) 仍會出現在 Inspector 節點樹上的 Bug。現在會透過判斷 `root is Window w && w.hierarchy.parent == null` 來過濾已註銷的無效視窗。
 - **TextElement 排版換行臨界值修復**：修正 `TextElement` 在排版引擎 (`MeasureContent`) 回傳的尺寸與 ImGui 實際渲染時，因浮點數精度導致的「排版不換行但渲染換行」異常。現已在測量時套用 `MathF.Ceiling` 無條件進位，並於 `PushTextWrapPos` 時補償 `0.5f` 緩衝區，確保渲染與排版邏輯完美對齊。
 
 ### Changed
