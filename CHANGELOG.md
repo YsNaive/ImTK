@@ -6,6 +6,20 @@
 且本專案遵循 [語意化版本控制 (Semantic Versioning)](https://semver.org/lang/zh-TW/).
 
 ## [Unreleased]
+### Added
+- 新增 `SplitView` 容器元件，參考 Unity UITK `TwoPaneSplitView` 設計，支援 `fixedPaneIndex`，並內建拖曳分隔條調整大小功能。
+- 新增 `ScrollView` 容器元件，支援自定義是否顯示水平與垂直捲軸。
+
+### Changed
+- `TreeNode` 大幅擴充互動模式，新增 `InteractiveMode` (取代 `openOnArrowOnly`) 支援動態判定展開與選取熱區。
+- `TreeNode` 支援 `selectable` 屬性，並可觸發 `TreeNodeSelectedEvent` 選取事件與提供視覺高亮回饋。
+- `TreeNode` 新增虛擬屬性 `isLeaf` 與事件 `OnExpand` / `OnCollapse`，完美支援實作端進行動態掛載子節點的 Lazy Loading 需求。
+- `SplitView` 分割線的視覺優化，預設顯示組件底色，並在 Hover 與 Active 時給予顏色高亮回饋。
+- `VisualElement` 渲染管線現在支援 `RenderEngine.Context.CurrentRenderOffset`，將捲動偏移的計算延遲至渲染階段，解決 `ScrollView` 捲動時觸發重排的效能問題。
+
+### Fixed (修復)
+- **VisualElement 排版髒標記傳遞修復**：修復了當元件被隱藏 (`DisplayStyle.None`) 然後再次顯示時，其髒標記無法正確向上突破「已乾淨的父節點」進行傳遞的底層 Bug。此修復根治了 `TreeNode` 展開收合時產生的元件重疊與高度計算失效問題。
+- **TreeNode 預設收合狀態修復**：修正了 `TreeNode` 建構時，因 `isExpanded` 預設布林值比對跳過 setter，導致內部 `contentContainer` 忘記設定 `DisplayStyle.None` 而讓節點初始視覺呈現展開的 Bug。
 
 ### Added (新增)
 - `ObjectDrawer` 增加了 `try-catch` 與除錯用的 `Debug` / `Warning` 日誌，確保遇到無法解析的屬性或 Reflection 異常時能顯示提示而不至於崩潰或隱藏錯誤。
@@ -14,6 +28,8 @@
 - **重大變更 (Breaking Change)**：移除了 `VisualElement.Update()` 方法。所有的視覺樹狀態變更應當與繪製分離，且不再透過每個元素的 `Update()` 驅動，請改用事件系統、`OnLateUpdate` 或是 `ImTKApplication.ScheduleDeferred` 來進行延遲結構修改，以杜絕繪製時期修改結構的隱患。
 
 ### Fixed (修復)
+- **TextElement 換行渲染修復**：修正了 `TextElement` 在渲染文字換行時，錯誤地將「相對寬度」傳遞給 `ImGui.PushTextWrapPos` 導致文字在巢狀容器中被嚴重擠壓成單行的 Bug。現已補上 `ImGui.GetCursorPosX()` 將其轉為相對於 Window 的絕對座標，確保所有在右側面板或深層嵌套的文字都能在正確的邊界進行折行。
+- **SplitView 彈性佈局修復**：修正了 `SplitView` 的 `flexGrow` 與尺寸覆寫邏輯誤放在 `MeasureContent` (該方法不會被擁有子節點的容器呼叫) 導致失效的問題。現已重構至獨立的 `UpdateSplitLayout` 並於節點變更時主動呼叫，同時修復了 `SplitView` 預設不會撐開父容器的 shrink-wrap 問題。
 - **VisualElement 渲染快取刷新修復**：修正 `RenderEngine.MarkRenderDirty` 向上遞迴找尋 `IRenderRoot` 時，錯誤使用邏輯樹 `parent` 而非物理樹 `hierarchy.parent`，導致嵌套在 `contentContainer` 內的元件無法正確觸發重繪的問題（例如 `ObjectDrawer` 內的元件展開後不顯示）。
 - **Theme 繼承邊界修復**：修復了 `VisualElement.theme` 在邏輯樹斷層時，未能正確沿著物理樹 (`hierarchy.parent`) 繼續向上繼承主題，導致內部排版容器丟失全域樣式的問題。
 - **MainMenu OS 視窗重疊修復**：修復了 `MainMenuModule` 開啟 Viewport 功能時，因位移瞬間的座標差異被 ImGui 誤判為溢出主視窗，而產生獨立且重疊的作業系統子視窗閃爍問題。現已透過 `ImGui.SetNextWindowViewport(viewport.ID)` 強制綁定在主視窗上。

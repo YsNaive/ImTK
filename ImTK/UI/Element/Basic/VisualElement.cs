@@ -568,7 +568,14 @@ namespace ImTK.UI
         /// </summary>
         internal void MarkMeasureDirty()
         {
-            if (m_isMeasureDirty) return;
+            if (m_isMeasureDirty)
+            {
+                if (hierarchy.parent != null && !hierarchy.parent.m_isMeasureDirty)
+                {
+                    hierarchy.parent.MarkMeasureDirty();
+                }
+                return;
+            }
             m_isMeasureDirty = true;
             if (this is ILayoutRoot) return;
             hierarchy.parent?.MarkMeasureDirty();
@@ -579,7 +586,14 @@ namespace ImTK.UI
         /// </summary>
         internal void MarkArrangeDirty()
         {
-            if (m_isArrangeDirty) return;
+            if (m_isArrangeDirty)
+            {
+                if (hierarchy.parent != null && !hierarchy.parent.m_isArrangeDirty)
+                {
+                    hierarchy.parent.MarkArrangeDirty();
+                }
+                return;
+            }
             m_isArrangeDirty = true;
             if (this is ILayoutRoot) return;
             hierarchy.parent?.MarkArrangeDirty();
@@ -1294,7 +1308,7 @@ namespace ImTK.UI
         {
             if (this.hierarchy.parent != null && !m_useNativeLayout)
             {
-                ImGui.SetCursorScreenPos(this.layoutRect.position);
+                ImGui.SetCursorScreenPos(this.layoutRect.position - RenderEngine.Context.CurrentRenderOffset);
             }
             return true;
         }

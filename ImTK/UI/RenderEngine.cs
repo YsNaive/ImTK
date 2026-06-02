@@ -173,12 +173,41 @@ namespace ImTK.UI
                 }
             }
 
+            // --- Render Offset State Tracking ---
+            private static readonly System.Collections.Generic.Stack<System.Numerics.Vector2> s_renderOffsetStack = new System.Collections.Generic.Stack<System.Numerics.Vector2>();
+
+            public static System.Numerics.Vector2 CurrentRenderOffset
+            {
+                get
+                {
+                    if (s_renderOffsetStack.Count > 0)
+                    {
+                        return s_renderOffsetStack.Peek();
+                    }
+                    return System.Numerics.Vector2.Zero;
+                }
+            }
+
+            public static void PushRenderOffset(System.Numerics.Vector2 offset)
+            {
+                s_renderOffsetStack.Push(offset);
+            }
+
+            public static void PopRenderOffset()
+            {
+                if (s_renderOffsetStack.Count > 0)
+                {
+                    s_renderOffsetStack.Pop();
+                }
+            }
+
             /// <summary>
             /// Clears context state. Useful for resetting state between frames or on application close.
             /// </summary>
             public static void Reset()
             {
                 s_fontFamilyHashStack.Clear();
+                s_renderOffsetStack.Clear();
                 s_pendingWindowCommands.Clear();
                 s_isInsideWindow = false;
                 CurrentDpiScale = 1.0f;

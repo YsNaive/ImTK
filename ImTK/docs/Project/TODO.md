@@ -15,9 +15,7 @@
 * **[Debug/ImGuiTools] 偵錯/ImGui 內建工具**
   * 職責：暴露 ImGui 原生的除錯介面。
   * 基本功能：提供開關顯示 `ShowMetricsWindow` (繪製數據)、`ShowStyleEditor` (樣式編輯)、`ShowStackToolWindow` (ID 追蹤)。
-* **[Debug/Performance] 偵錯/效能**
-  * 職責：監控應用程式運行效能。
-  * 基本功能：顯示 FPS、Frame Time (ms)、C# GC 記憶體使用量。
+
 * **[Debug/VisualElement] 偵錯/元件樹 (Inspector)**
   * 職責：檢視目前 UI 的層級結構與節點狀態。
   * 基本功能：顯示 VisualElement 樹狀圖、選中節點的詳細屬性 (Bounds, 狀態)、畫面高亮顯示選取元件。
