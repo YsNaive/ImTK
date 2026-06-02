@@ -7,8 +7,13 @@
 
 ## [Unreleased]
 ### Added
+- **全新文字元件 `Label`**：新增繼承自 `TextElement` 的 `Label` 元件。專為單行文字展示設計，預設關閉換行 (`enableWordWrap = false`) 並啟用裁切 (`style.overflow = Overflow.Hidden`)，達到與 `TextElement` (預設換行) 的職責分離。
+- **排版引擎支援 Overflow 裁切**：新增了 `Overflow` 列舉與 `style.overflow` 屬性。當設定為 `Overflow.Hidden` 時，系統會自動在渲染期間建立 `ImGui.PushClipRect` 遮罩，確保超出元件 `layoutRect` 的子內容被正確裁切隱藏。
 - 新增 `SplitView` 容器元件，參考 Unity UITK `TwoPaneSplitView` 設計，支援 `fixedPaneIndex`，並內建拖曳分隔條調整大小功能。
 - 新增 `ScrollView` 容器元件，支援自定義是否顯示水平與垂直捲軸。
+
+### Fixed (修復)
+- **TextElement 排版換行臨界值修復**：修正 `TextElement` 在排版引擎 (`MeasureContent`) 回傳的尺寸與 ImGui 實際渲染時，因浮點數精度導致的「排版不換行但渲染換行」異常。現已在測量時套用 `MathF.Ceiling` 無條件進位，並於 `PushTextWrapPos` 時補償 `0.5f` 緩衝區，確保渲染與排版邏輯完美對齊。
 
 ### Changed
 - `TreeNode` 大幅擴充互動模式，新增 `InteractiveMode` (取代 `openOnArrowOnly`) 支援動態判定展開與選取熱區。

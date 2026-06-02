@@ -120,7 +120,7 @@ namespace ImTK.UI
 
                 if (m_value == null)
                 {
-                    Add(new TextElement { text = " (null)" });
+                    Add(new Label(" (null)"));
                     return;
                 }
 
@@ -132,7 +132,7 @@ namespace ImTK.UI
 
                 if (fields.Length == 0 && properties.Length == 0)
                 {
-                    Add(new TextElement { text = " (No public fields or properties)" });
+                    Add(new Label(" (No public fields or properties)"));
                     return;
                 }
 

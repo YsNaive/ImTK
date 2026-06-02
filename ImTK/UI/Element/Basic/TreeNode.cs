@@ -96,7 +96,7 @@ namespace ImTK.UI
         public override VisualElement contentContainer => m_contentContainer;
 
         private IconElement m_arrowIcon;
-        private TextElement m_label;
+        private Label m_label;
 
         public enum InteractiveMode
         {
@@ -195,7 +195,7 @@ namespace ImTK.UI
             
             headerContainer.Add(m_arrowIcon);
 
-            m_label = new TextElement(text);
+            m_label = new Label(text);
             m_label.style.flexGrow = 1;
             headerContainer.Add(m_label);
 

@@ -3,7 +3,11 @@
 在 `ImTK/UI/Element` 目錄下，我們提供了一系列封裝 ImGui 基礎操作的元件。這些元件皆繼承自 `VisualElement`，支援 ImTK 的事件系統與佈景主題樣式設定。
 
 ## TextElement
-`TextElement` 是一個輕量級的文字顯示元件。它底層呼叫了 `ImGui.TextUnformatted`，因此不會處理文字中的格式化符號（如 `%d`），這確保了在顯示任意使用者輸入字串時的安全性。
+`TextElement` 是一個輕量級的文字顯示區塊元件。它底層呼叫了 `ImGui.TextUnformatted` 並預設開啟換行 (`enableWordWrap = true`) 與 `Overflow.Visible`，適合用來展示多行敘述或長篇內容。
+* **主要屬性**：`text` (string), `enableWordWrap` (bool)
+
+## Label
+`Label` 繼承自 `TextElement`，專為「單行標籤」情境設計。它預設關閉換行 (`enableWordWrap = false`) 並啟用裁切 (`style.overflow = Overflow.Hidden`)，確保在嚴格的排版容器內不會將排版撐破或將文字擠至下一行。
 * **主要屬性**：`text` (string)
 
 ## CheckBox

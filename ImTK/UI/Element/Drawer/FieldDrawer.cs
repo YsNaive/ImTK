@@ -109,7 +109,7 @@ namespace ImTK.UI
 
         protected VisualElement m_headerContainer;
         protected IconElement m_iconElement;
-        protected TextElement m_labelElement;
+        protected Label m_labelElement;
         protected VisualElement m_contentContainer;
 
         public override VisualElement contentContainer => m_contentContainer;
@@ -212,9 +212,9 @@ namespace ImTK.UI
             // Base implementation does nothing.
         }
 
-        protected virtual TextElement CreateLabelElement()
+        protected virtual Label CreateLabelElement()
         {
-            return new TextElement();
+            return new Label();
         }
 
         public void RegisterValueChangedCallback(Action<ValueChangedEvent<T>> callback)

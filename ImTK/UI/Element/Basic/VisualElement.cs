@@ -60,6 +60,7 @@ namespace ImTK.UI
             public static readonly HashedString Left = new HashedString("Left");
             public static readonly HashedString Right = new HashedString("Right");
             public static readonly HashedString Display = new HashedString("Display");
+            public static readonly HashedString Overflow = new HashedString("Overflow");
             public static readonly HashedString ColorFamily = new HashedString("ColorFamily");
         }
 
@@ -494,6 +495,11 @@ namespace ImTK.UI
             {
                 get { var p = GetProperty(StyleKey.Display.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<DisplayStyle> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<DisplayStyle> { Value = (DisplayStyle)p.enumValue }); }
                 set { if (value.HasValue) SetEnum(StyleKey.Display, value.Value); else Clear(StyleKey.Display); }
+            }
+            public StyleValue<Overflow>? overflow
+            {
+                get { var p = GetProperty(StyleKey.Overflow.Hash); return p.dataType == StyleDataType.Null ? null : (p.dataType == StyleDataType.HashedString ? new StyleValue<Overflow> { Token = new HashedString("TOKEN_" + p.tokenHash) } : new StyleValue<Overflow> { Value = (Overflow)p.enumValue }); }
+                set { if (value.HasValue) SetEnum(StyleKey.Overflow, value.Value); else Clear(StyleKey.Overflow); }
             }
         }
 
@@ -1095,6 +1101,7 @@ namespace ImTK.UI
                     else if (prop.key == StyleKey.Left.Hash) state.left = isNull ? null : prop.floatValue;
                     else if (prop.key == StyleKey.Right.Hash) state.right = isNull ? null : prop.floatValue;
                     else if (prop.key == StyleKey.Display.Hash) state.display = isNull ? DisplayStyle.Flex : (DisplayStyle)prop.enumValue;
+                    else if (prop.key == StyleKey.Overflow.Hash) state.overflow = isNull ? Overflow.Visible : (Overflow)prop.enumValue;
                 }
             }
 
@@ -1310,6 +1317,10 @@ namespace ImTK.UI
             {
                 ImGui.SetCursorScreenPos(this.layoutRect.position - RenderEngine.Context.CurrentRenderOffset);
             }
+            if (resolvedLayoutState.overflow == Overflow.Hidden)
+            {
+                ImGui.PushClipRect(this.layoutRect.position, this.layoutRect.position + this.layoutRect.size, true);
+            }
             return true;
         }
 
@@ -1332,6 +1343,10 @@ namespace ImTK.UI
 
         public virtual void OnEndRender()
         {
+            if (resolvedLayoutState.overflow == Overflow.Hidden)
+            {
+                ImGui.PopClipRect();
+            }
         }
 
         protected internal virtual bool CheckHoverState()

@@ -17,7 +17,7 @@ namespace ImTK.DebugTools
 
         [Persistent]
         private ProfilerContext m_context;
-        private TextElement m_statsText;
+        private Label m_statsText;
         private Button m_btnTime;
         private Button m_btnGc;
 
@@ -46,7 +46,7 @@ namespace ImTK.DebugTools
             slider.style.height = 30f;
 
             // L3: Stats Text
-            m_statsText = new TextElement();
+            m_statsText = new Label();
 
             // L4: PlotLines
             var plot = new ProfilerPlotElement(m_context);

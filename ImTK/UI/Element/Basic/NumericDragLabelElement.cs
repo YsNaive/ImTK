@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace ImTK.UI
 {
-    public class NumericDragLabelElement : TextElement
+    public class NumericDragLabelElement : Label
     {
         public Action<float> onDrag;
 

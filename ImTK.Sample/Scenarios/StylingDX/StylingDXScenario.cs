@@ -48,7 +48,7 @@ namespace ImTK.Sample.Scenarios.StylingDX
             // Use hex code for explicit color override (StyleColor)
             btnSuccess.style.textColor = "#FFFF00"; 
             
-            var customField = new TextElement("Hex Color Text");
+            var customField = new Label("Hex Color Text");
             customField.style.backgroundColor = 0xFF333333; // uint color assignment
             customField.style.textColor = Color.Magenta; // ImTK.Core.Color assignment
 

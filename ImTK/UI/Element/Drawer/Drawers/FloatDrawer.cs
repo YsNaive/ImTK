@@ -16,7 +16,7 @@ namespace ImTK.UI
             m_contentContainer.Add(new FieldElement(this));
         }
 
-        protected override TextElement CreateLabelElement()
+        protected override Label CreateLabelElement()
         {
             var labelObj = new NumericDragLabelElement();
             labelObj.onDrag = (delta) => {

@@ -31,6 +31,7 @@ namespace ImTK.UI
         public float? right;
 
         public DisplayStyle display;
+        public Overflow overflow;
 
         public static readonly ResolvedLayoutState Default = new ResolvedLayoutState
         {
@@ -53,7 +54,8 @@ namespace ImTK.UI
             bottom = null,
             left = null,
             right = null,
-            display = DisplayStyle.Flex
+            display = DisplayStyle.Flex,
+            overflow = Overflow.Visible
         };
 
         public void Scale(float scale)
@@ -95,7 +97,8 @@ namespace ImTK.UI
                    bottom == other.bottom &&
                    left == other.left &&
                    right == other.right &&
-                   display == other.display;
+                   display == other.display &&
+                   overflow == other.overflow;
         }
 
         public override bool Equals(object obj) => obj is ResolvedLayoutState other && Equals(other);
@@ -123,6 +126,7 @@ namespace ImTK.UI
             hash.Add(left);
             hash.Add(right);
             hash.Add(display);
+            hash.Add(overflow);
             return hash.ToHashCode();
         }
 

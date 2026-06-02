@@ -1,5 +1,5 @@
 ---
-description: 實作自定義 `VisualElement` 的標準 SOP
+description: 開發新的自定義 VisualElement
 ---
 
 ### 🛠️ 實作 `VisualElement` 的標準 SOP

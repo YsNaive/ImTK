@@ -48,7 +48,7 @@ namespace ImTK.Sample.Scenarios.TreeViewTest
             treeView.Add(root1);
             treeView.Add(root2);
 
-            var infoText = new TextElement("Selected: None");
+            var infoText = new Label("Selected: None");
             infoText.style.margin = new Thickness(0, 0, 0, 10);
             treeContainer.Add(infoText);
             treeContainer.Add(treeView);
@@ -62,7 +62,7 @@ namespace ImTK.Sample.Scenarios.TreeViewTest
             rightPanel.style.flexGrow = 1;
             rightPanel.style.alignItems = AlignItems.Center;
             rightPanel.style.justifyContent = JustifyContent.Center;
-            rightPanel.Add(new TextElement("Right Panel Content"));
+            rightPanel.Add(new Label("Right Panel Content"));
 
             split.Add(treeContainer);
             split.Add(rightPanel);

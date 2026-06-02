@@ -26,7 +26,7 @@ namespace ImTK.UI
             {
                 if (enableWordWrap)
                 {
-                    ImGui.PushTextWrapPos(ImGui.GetCursorPosX() + Math.Max(1.0f, layoutRect.width));
+                    ImGui.PushTextWrapPos(ImGui.GetCursorPosX() + Math.Max(1.0f, layoutRect.width + 0.5f));
                     unsafe { ImGui.TextUnformatted((byte*)m_textBuffer.Data); }
                     ImGui.PopTextWrapPos();
                 }

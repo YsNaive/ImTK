@@ -8,6 +8,7 @@ namespace ImTK.UI
     public enum AlignItems { FlexStart, Center, FlexEnd, Stretch }
     public enum PositionType { Static, Relative, Absolute }
     public enum DisplayStyle { Flex, None }
+    public enum Overflow { Visible, Hidden }
 
     /// <summary>
     /// 定義在排版計算 (Measure) 時，父節點對子節點的尺寸測量模式約束。
