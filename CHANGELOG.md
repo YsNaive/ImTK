@@ -7,6 +7,7 @@
 
 ## [Unreleased]
 ### Added
+- **技術文檔全面重構與速查表 (Cheat Sheets)**：對全專案的子系統進行了地毯式掃描，將原本分散或過時的技術說明統整。現在每一個子模組 (包含 `Core`, `Database`, `Log`, `Event`, `UI/Event`, `UI/Element`, `UI/Layout`, `DebugTools`, `DataType`) 都擁有專屬的 `README.md` 作為快速查找入口 (Quick Reference)，確保所有文件精準對齊當前的架構程式碼。
 - **VisualElement Inspector 開發**：在 `DebugTools` 下實作了 `VisualElementInspectorWindow`，提供全域視覺樹的即時檢視。使用 `SplitView` 佈局並支援狀態持久化 (Persistence)。
 - `DebugToolsModule` 中新增 `[MenuItem]`，支援從主選單「偵錯/元件樹 (Inspector)」開啟此工具。
 - `IRenderRoot` 介面新增 `hideInHierarchy` 屬性，允許如 `MenuView` 等內部元件在 Inspector 中自動隱藏，維持視覺樹的乾淨。
