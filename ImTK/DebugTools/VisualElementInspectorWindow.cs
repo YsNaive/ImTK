@@ -6,7 +6,6 @@ namespace ImTK.DebugTools
     public class VisualElementInspectorWindow : Window
     {
         public const string WindowId = "ImTK.VisualElementInspector";
-        public override bool hideInHierarchy => true;
 
         private TreeView<VisualElementTreeNode> m_treeView;
         private Label m_idLabel;
@@ -91,14 +90,13 @@ namespace ImTK.DebugTools
 
         private System.Collections.Generic.List<VisualElement> GetActiveRoots()
         {
-            var allRoots = RenderEngine.GetVisibleRoots();
             var activeRoots = new System.Collections.Generic.List<VisualElement>();
-            foreach (var root in allRoots)
+            foreach (var window in Window.activeWindows)
             {
-                // If a Window has no parent, it means it was closed and unregistered from Panel
-                if (root is Window w && w.hierarchy.parent == null)
+                if (window is VisualElementInspectorWindow)
                     continue;
-                activeRoots.Add(root);
+                    
+                activeRoots.Add(window);
             }
             return activeRoots;
         }

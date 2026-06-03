@@ -38,7 +38,6 @@ namespace ImTK.UI
         public string name { get; set; }
         public int priority { get; set; }
         public bool isMenuBar { get; set; } = false;
-        public bool hideInHierarchy => false;
 
         private List<IMenuElement> m_sortedMenuElements = new List<IMenuElement>();
 

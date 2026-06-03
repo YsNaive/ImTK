@@ -6,13 +6,13 @@ using System.Runtime.CompilerServices;
 
 namespace ImTK.UI
 {
-    public enum RenderOpType : byte
+    internal enum RenderOpType : byte
     {
         Begin,
         End
     }
 
-    public struct RenderOp
+    internal struct RenderOp
     {
         public VisualElement Element;
         public RenderOpType Type;
@@ -98,17 +98,6 @@ namespace ImTK.UI
             s_renderCaches.TryGetValue(root, out var cache);
             return cache;
         }
-
-        public static System.Collections.Generic.IEnumerable<VisualElement> GetVisibleRoots()
-        {
-            foreach (var kvp in s_renderCaches)
-            {
-                if (kvp.Key is IRenderRoot root && !root.hideInHierarchy)
-                {
-                    yield return kvp.Key;
-                }
-            }
-        }
         /// <summary>
         /// Manages the dynamic rendering state during the VisualElement layout and render pass.
         /// Helps defer commands that require an active ImGui Window and tracks inherited state (like Font Families).
@@ -147,13 +136,13 @@ namespace ImTK.UI
             private static bool s_isInsideWindow = false;
             private static readonly System.Collections.Generic.Queue<Action> s_pendingWindowCommands = new System.Collections.Generic.Queue<Action>();
 
-            public static float CurrentDpiScale { get; set; } = 1.0f;
-            public static float MainViewportDpiScale { get; set; } = 1.0f;
+            public static float CurrentDpiScale { get; internal set; } = 1.0f;
+            public static float MainViewportDpiScale { get; internal set; } = 1.0f;
 
             public static bool IsInsideWindow
             {
                 get => s_isInsideWindow;
-                set => s_isInsideWindow = value;
+                internal set => s_isInsideWindow = value;
             }
 
             /// <summary>
@@ -241,7 +230,7 @@ namespace ImTK.UI
             t_listPool.Push(list);
         }
 
-        public static void ComputeStyleRecursive(VisualElement node)
+        internal static void ComputeStyleRecursive(VisualElement node)
         {
             var list = GetList();
             BuildRenderListRecursive(node, list);
@@ -266,7 +255,7 @@ namespace ImTK.UI
             list[beginIndex] = new RenderOp { Element = node, Type = RenderOpType.Begin, SkipCount = (list.Count - 1) - beginIndex - 1 };
         }
 
-        public static void RenderFlat(VisualElement node)
+        internal static void RenderFlat(VisualElement node)
         {
             var list = GetList();
             BuildRenderListRecursive(node, list);
@@ -274,7 +263,7 @@ namespace ImTK.UI
             ReleaseList(list);
         }
 
-        public static void RenderFlat(System.Collections.Generic.List<RenderOp> renderList)
+        internal static void RenderFlat(System.Collections.Generic.List<RenderOp> renderList)
         {
             for (int i = 0; i < renderList.Count; i++)
             {

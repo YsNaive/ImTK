@@ -8,7 +8,7 @@ namespace ImTK.UI
         private static readonly List<StyleProperty> s_composedProps = new List<StyleProperty>();
         private static readonly List<StyleProperty> s_translatedProps = new List<StyleProperty>();
 
-        public static void ComputeStyleFlat(System.Collections.Generic.List<RenderOp> renderList)
+        internal static void ComputeStyleFlat(System.Collections.Generic.List<RenderOp> renderList)
         {
             for (int i = 0; i < renderList.Count; i++)
             {

@@ -102,8 +102,6 @@ namespace ImTK.UI
         
         public string windowId { get; init; }
 
-        public virtual bool hideInHierarchy => false;
-
         public override string persistenceKey 
         {
             get
@@ -117,6 +115,8 @@ namespace ImTK.UI
         }
 
         public bool isFocused { get; private set; }
+        
+        public static System.Collections.Generic.IReadOnlyList<Window> activeWindows => Panel.ActiveWindows;
 
         public float CurrentDpiScale { get; private set; } = 1.0f;
 

@@ -7,12 +7,18 @@ using System.Numerics;
 
 namespace ImTK.UI
 {
+    public struct OnWindowOpenedEvent : ImTK.Event.IImTKEvent { public Window Window; }
+    public struct OnWindowClosedEvent : ImTK.Event.IImTKEvent { public Window Window; }
+
     public class Panel : ImTKModule
     {
 
         private readonly List<(Func<Rect, Rect> func, int priority)> m_reservedAreas = new();
 
         private static readonly Dictionary<WindowKey, Window> s_windows = new Dictionary<WindowKey, Window>();
+        private static readonly List<Window> s_activeWindowsList = new List<Window>();
+        public static IReadOnlyList<Window> ActiveWindows => s_activeWindowsList;
+
         private static readonly Queue<Window> s_windowsToAdd = new Queue<Window>();
         private static readonly Queue<Window> s_windowsToRemove = new Queue<Window>();
 
@@ -39,6 +45,9 @@ namespace ImTK.UI
                     throw new InvalidOperationException($"A window of type '{key.Type}' with windowId '{key.WindowId}' is already open.");
                 }
                 s_windows[key] = window;
+                s_activeWindowsList.Add(window);
+                ImTK.Event.ImTKEventBus.Publish(new OnWindowOpenedEvent { Window = window });
+                
                 if (s_hostElement != null)
                 {
                     s_hostElement.hierarchy.Add(window);
@@ -61,6 +70,9 @@ namespace ImTK.UI
                 RenderEngine.SaveAllPersistentStates();
 
                 s_windows.Remove(key);
+                s_activeWindowsList.Remove(window);
+                ImTK.Event.ImTKEventBus.Publish(new OnWindowClosedEvent { Window = window });
+                
                 if (s_hostElement != null)
                 {
                     s_hostElement.hierarchy.Remove(window);
@@ -235,6 +247,8 @@ namespace ImTK.UI
 
         protected internal override void OnGuiRender()
         {
+            RenderEngine.Context.Reset();
+
             ImGuiViewportPtr viewport = ImGui.GetMainViewport();
 
             Rect currentRect = new Rect(viewport.WorkPos, viewport.WorkSize);

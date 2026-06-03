@@ -17,7 +17,7 @@ namespace ImTK.UI.Persistence
 
         /// 掃描 RenderList，為所有未讀取狀態的元件載入狀態。
         /// </summary>
-        public static void LoadNewStates(string rootId, List<RenderOp> renderList)
+        internal static void LoadNewStates(string rootId, List<RenderOp> renderList)
         {
             if (renderList == null || renderList.Count == 0)
                 return;
@@ -59,7 +59,7 @@ namespace ImTK.UI.Persistence
         /// <summary>
         /// 掃描所有傳入的渲染清單，收集狀態並標記 CacheAsset 為 Dirty。
         /// </summary>
-        public static void SaveAllStates(Dictionary<string, List<RenderOp>> rootsToSave)
+        internal static void SaveAllStates(Dictionary<string, List<RenderOp>> rootsToSave)
         {
             ImTKCacheAsset cacheAsset;
             try

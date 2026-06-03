@@ -13,6 +13,6 @@
 5. **維護檢查 ( Maintenance)**
    - 檢查本次更動範圍，若牽涉到既存的 Test 與 Sample，需同步檢查相關內容是否需要同步更新。
 6. **文檔同步更新 (Documentation Sync)**
-   - 如果有修改現有架構或新增功能，確認已同步更新或新增對應子模組（如 `Core/`, `UI/` 等）的 `README.md` 或 Markdown 技術文檔。
+   - 如果有修改現有架構或新增功能，確認已按照[專案文檔規範](./DocumentationSpecifications.md)同步更新或新增對應子模組（如 `Core/`, `UI/` 等）的 `README.md` 或 Markdown 技術文檔。
 7. **更新 Changelog (Update Changelog)**
    - 確保本次提交的新功能、修復或架構變更，已經如實且精簡地記錄到根目錄 `CHANGELOG.md` 的 `[Unreleased]` 區塊中。

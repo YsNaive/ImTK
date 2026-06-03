@@ -7,14 +7,19 @@
 
 ## [Unreleased]
 ### Added
+- **視窗全域事件**：在 `Panel` 中新增 `OnWindowOpenedEvent` 與 `OnWindowClosedEvent` 結構體 (實作 `IImTKEvent`)，透過 `ImTKEventBus` 發布視窗開關事件，達成型別安全且零記憶體的事件傳遞。
 - **技術文檔全面重構與速查表 (Cheat Sheets)**：對全專案的子系統進行了地毯式掃描，將原本分散或過時的技術說明統整。現在每一個子模組 (包含 `Core`, `Database`, `Log`, `Event`, `UI/Event`, `UI/Element`, `UI/Layout`, `DebugTools`, `DataType`) 都擁有專屬的 `README.md` 作為快速查找入口 (Quick Reference)，確保所有文件精準對齊當前的架構程式碼。
 - **VisualElement Inspector 開發**：在 `DebugTools` 下實作了 `VisualElementInspectorWindow`，提供全域視覺樹的即時檢視。使用 `SplitView` 佈局並支援狀態持久化 (Persistence)。
 - `DebugToolsModule` 中新增 `[MenuItem]`，支援從主選單「偵錯/元件樹 (Inspector)」開啟此工具。
-- `IRenderRoot` 介面新增 `hideInHierarchy` 屬性，允許如 `MenuView` 等內部元件在 Inspector 中自動隱藏，維持視覺樹的乾淨。
 - **全新文字元件 `Label`**：新增繼承自 `TextElement` 的 `Label` 元件。專為單行文字展示設計，預設關閉換行 (`enableWordWrap = false`) 並啟用裁切 (`style.overflow = Overflow.Hidden`)，達到與 `TextElement` (預設換行) 的職責分離。
 - **排版引擎支援 Overflow 裁切**：新增了 `Overflow` 列舉與 `style.overflow` 屬性。當設定為 `Overflow.Hidden` 時，系統會自動在渲染期間建立 `ImGui.PushClipRect` 遮罩，確保超出元件 `layoutRect` 的子內容被正確裁切隱藏。
 - 新增 `SplitView` 容器元件，參考 Unity UITK `TwoPaneSplitView` 設計，支援 `fixedPaneIndex`，並內建拖曳分隔條調整大小功能。
 - 新增 `ScrollView` 容器元件，支援自定義是否顯示水平與垂直捲軸。
+
+### Changed
+- **API 封裝與安全性提升**：將 `RenderEngine` 內部之管線 API (`RenderOpType`, `ComputeStyleRecursive`, `RenderFlat`) 與 `Context` 狀態寫入權限全面轉為 `internal`，防止外部不當呼叫。
+- **視窗狀態集中管理**：統一由 `Panel` 維護 `ActiveWindows` 有序清單，`Window.activeWindows` 轉為語法糖。
+- **IRenderRoot 純淨化**：移除 `IRenderRoot` 的 `hideInHierarchy` 屬性，使其回歸純粹的標記介面。`VisualElementInspectorWindow` 改為直接監聽 `Window.activeWindows`，不再干涉如 `MenuView` 等特殊根節點。
 
 ### Changed
 - **DebugTools 模組化與重構**：將 `VisualElementInspectorWindow` 與 `VisualElementTreeNode` 由 `UI/Debug` 目錄正式搬移至獨立的 `DebugTools` 命名空間與目錄下。
