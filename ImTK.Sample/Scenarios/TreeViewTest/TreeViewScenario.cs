@@ -1,6 +1,7 @@
 using ImTK.Core;
 using ImTK.UI;
 using ImTK.Sample.Framework;
+using System.Collections.Generic;
 
 namespace ImTK.Sample.Scenarios.TreeViewTest
 {
@@ -15,6 +16,38 @@ namespace ImTK.Sample.Scenarios.TreeViewTest
         }
     }
 
+    public class StringNodeData
+    {
+        public string Text;
+        public List<StringNodeData> Children = new List<StringNodeData>();
+    }
+
+    public class StringTreeView : TreeView<StringNodeData>
+    {
+        protected override VisualElement MakeItem()
+        {
+            var label = new Label();
+            label.useNativeLayout = true;
+            return label;
+        }
+
+        protected override void BindItem(VisualElement ui, StringNodeData item)
+        {
+            var label = (Label)ui;
+            label.text = item.Text;
+        }
+
+        protected override IEnumerable<StringNodeData> FetchChildren(StringNodeData item)
+        {
+            return item.Children;
+        }
+
+        protected override bool HasChildren(StringNodeData item)
+        {
+            return item.Children != null && item.Children.Count > 0;
+        }
+    }
+
     public class TreeViewWindow : Window
     {
         public TreeViewWindow() : base("TreeView Test")
@@ -26,27 +59,27 @@ namespace ImTK.Sample.Scenarios.TreeViewTest
             treeContainer.style.flexGrow = 1;
             treeContainer.style.padding = new Thickness(10);
 
-            var treeView = new TreeView<TreeNode>();
+            var treeView = new StringTreeView();
             treeView.allowMultiSelect = false;
+            treeView.style.flexGrow = 1f;
 
             // Root Node 1
-            var root1 = new TreeNode("Root Node 1");
+            var root1 = new StringNodeData { Text = "Root Node 1" };
 
-            var child1_1 = new TreeNode("Child 1.1");
-            var child1_2 = new TreeNode("Child 1.2");
-            var child1_2_1 = new TreeNode("Child 1.2.1");
+            var child1_1 = new StringNodeData { Text = "Child 1.1" };
+            var child1_2 = new StringNodeData { Text = "Child 1.2" };
+            var child1_2_1 = new StringNodeData { Text = "Child 1.2.1" };
             
-            child1_2.Add(child1_2_1);
-            root1.Add(child1_1);
-            root1.Add(child1_2);
+            child1_2.Children.Add(child1_2_1);
+            root1.Children.Add(child1_1);
+            root1.Children.Add(child1_2);
 
             // Root Node 2
-            var root2 = new TreeNode("Root Node 2");
-            root2.Add(new TreeNode("Child 2.1"));
-            root2.Add(new TreeNode("Child 2.2"));
+            var root2 = new StringNodeData { Text = "Root Node 2" };
+            root2.Children.Add(new StringNodeData { Text = "Child 2.1" });
+            root2.Children.Add(new StringNodeData { Text = "Child 2.2" });
 
-            treeView.Add(root1);
-            treeView.Add(root2);
+            treeView.itemsSource = new List<StringNodeData> { root1, root2 };
 
             var infoText = new Label("Selected: None");
             infoText.style.margin = new Thickness(0, 0, 0, 10);
@@ -55,7 +88,7 @@ namespace ImTK.Sample.Scenarios.TreeViewTest
 
             treeView.onSelectionChanged += (node) => 
             {
-                infoText.text = $"Selected: {(node != null ? node.text : "None")}";
+                infoText.text = $"Selected: {(node != null ? node.Text : "None")}";
             };
 
             var rightPanel = new VisualElement();

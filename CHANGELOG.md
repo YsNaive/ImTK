@@ -22,12 +22,13 @@
 - **IRenderRoot 純淨化**：移除 `IRenderRoot` 的 `hideInHierarchy` 屬性，使其回歸純粹的標記介面。`VisualElementInspectorWindow` 改為直接監聽 `Window.activeWindows`，不再干涉如 `MenuView` 等特殊根節點。
 
 ### Changed
-- **DebugTools 模組化與重構**：將 `VisualElementInspectorWindow` 與 `VisualElementTreeNode` 由 `UI/Debug` 目錄正式搬移至獨立的 `DebugTools` 命名空間與目錄下。
-- `VisualElementTreeNode` 全面改用 Lazy Loading (延遲載入) 的設計，節點展開時才動態建立子節點。
-- `VisualElementTreeNode` 確保節點更新在 `ImTKApplication.ScheduleDeferred` 中執行，以避免在 GuiRender 階段直接修改視覺樹引發的崩潰例外。
+- **DebugTools 架構重構**：將 `VisualElementInspectorWindow` 全面重構，廢棄舊有手動刻畫的 `VisualElementTreeNode`，改為繼承並採用內建的 `TreeView<VisualElement>` 進行虛擬化渲染 (`Virtualization`)。
+- `InspectorTreeView` 現在天然支援節點的延遲載入與巨量資料的高效捲動，徹底解決了先前於 `GuiRender` 階段修改視覺樹所引發的崩潰例外。
 - `VisualElementInspectorWindow` 的開啟邏輯全面導入 `WindowId` 常數 (`"ImTK.VisualElementInspector"`)，解決多重視窗開啟時可能導致的 ID 衝突崩潰。
 
 ### Fixed (修復)
+- **TreeView 渲染狀態崩潰修復**：修正了 `TreeView` 覆寫 `OnBeginRender` 時未呼叫 `base.OnBeginRender()`，導致與 `base.OnEndRender()` 不對稱，從而觸發 ImGui 內部 `PopClipRect` 空堆疊斷言崩潰 (`Size > 0`) 的嚴重錯誤。現已補齊呼叫，確保渲染狀態棧的完美對稱。
+- **TreeNode 排版重疊與越界修復**：修正了 `TreeNode` 展開箭頭與文字重疊的問題。將錯誤的絕對座標定位 (`ImGui.SetCursorScreenPos`) 替換為安全的 `ImGui.Dummy` 搭配 `ImGui.SameLine()`，確保排版正確推進且不會觸發 ImGui 的邊界外延展警告 (`code uses SetCursorPos to extend window boundaries`)。
 - **Inspector 關閉視窗殘留修復**：修正 `RenderEngine.GetVisibleRoots()` 因底層使用 `ConditionalWeakTable` 導致已關閉視窗 (尚未被 GC) 仍會出現在 Inspector 節點樹上的 Bug。現在會透過判斷 `root is Window w && w.hierarchy.parent == null` 來過濾已註銷的無效視窗。
 - **TextElement 排版換行臨界值修復**：修正 `TextElement` 在排版引擎 (`MeasureContent`) 回傳的尺寸與 ImGui 實際渲染時，因浮點數精度導致的「排版不換行但渲染換行」異常。現已在測量時套用 `MathF.Ceiling` 無條件進位，並於 `PushTextWrapPos` 時補償 `0.5f` 緩衝區，確保渲染與排版邏輯完美對齊。
 

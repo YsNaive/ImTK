@@ -3,11 +3,38 @@ using System.Collections.Generic;
 
 namespace ImTK.DebugTools
 {
+    public class InspectorTreeView : TreeView<VisualElement>
+    {
+        protected override VisualElement MakeItem()
+        {
+            var label = new Label();
+            label.useNativeLayout = true;
+            return label;
+        }
+
+        protected override void BindItem(VisualElement ui, VisualElement item)
+        {
+            var label = (Label)ui;
+            label.text = $"{item.GetType().Name} [ID:{item.m_elementId}]" + 
+                         (string.IsNullOrEmpty(item.persistenceKey) ? "" : $" ({item.persistenceKey})");
+        }
+
+        protected override IEnumerable<VisualElement> FetchChildren(VisualElement item)
+        {
+            return item.hierarchy.Children();
+        }
+
+        protected override bool HasChildren(VisualElement item)
+        {
+            return item.hierarchy.childCount > 0;
+        }
+    }
+
     public class VisualElementInspectorWindow : Window
     {
         public const string WindowId = "ImTK.VisualElementInspector";
 
-        private TreeView<VisualElementTreeNode> m_treeView;
+        private InspectorTreeView m_treeView;
         private Label m_idLabel;
 
         public VisualElementInspectorWindow() : base("UI Inspector", WindowId)
@@ -19,12 +46,9 @@ namespace ImTK.DebugTools
             splitView.persistenceKey = "InspectorSplitView";
             splitView.style.flexGrow = 1f;
 
-            m_treeView = new TreeView<VisualElementTreeNode>();
+            m_treeView = new InspectorTreeView();
+            m_treeView.style.flexGrow = 1f;
             m_treeView.onSelectionChanged += OnSelectionChanged;
-
-            var scrollView = new ScrollView();
-            scrollView.style.flexGrow = 1f;
-            scrollView.Add(m_treeView);
 
             var rightPanel = new VisualElement();
             rightPanel.style.padding = new Thickness(10);
@@ -32,13 +56,12 @@ namespace ImTK.DebugTools
             m_idLabel = new Label("Selected ID: None");
             rightPanel.Add(m_idLabel);
 
-            splitView.Add(scrollView);
+            splitView.Add(m_treeView);
             splitView.Add(rightPanel);
 
             this.Add(splitView);
         }
 
-        private HashSet<VisualElement> m_knownRoots = new HashSet<VisualElement>();
         private float m_scanTimer = 0f;
 
         protected override void OnEnable()
@@ -54,33 +77,8 @@ namespace ImTK.DebugTools
             if (m_scanTimer > 1.0f)
             {
                 m_scanTimer = 0f;
-                CheckRoots();
-            }
-        }
-
-        private void CheckRoots()
-        {
-            var currentRoots = GetActiveRoots();
-            bool changed = false;
-            int count = 0;
-
-            foreach (var root in currentRoots)
-            {
-                count++;
-                if (!m_knownRoots.Contains(root))
-                {
-                    changed = true;
-                    break;
-                }
-            }
-
-            if (!changed && count != m_knownRoots.Count)
-            {
-                changed = true;
-            }
-
-            if (changed)
-            {
+                // 每秒重新指派一次 itemsSource，底層的 RebuildFlattenedList 會在保留狀態的前提下，
+                // 高效地同步所有展開節點的最新子節點狀態 (無需重建物件池)。
                 ImTK.Core.ImTKApplication.ScheduleDeferred(() => 
                 {
                     RefreshTree();
@@ -93,9 +91,6 @@ namespace ImTK.DebugTools
             var activeRoots = new System.Collections.Generic.List<VisualElement>();
             foreach (var window in Window.activeWindows)
             {
-                if (window is VisualElementInspectorWindow)
-                    continue;
-                    
                 activeRoots.Add(window);
             }
             return activeRoots;
@@ -103,21 +98,14 @@ namespace ImTK.DebugTools
 
         public void RefreshTree()
         {
-            m_treeView.Clear();
-            m_knownRoots.Clear();
-            var roots = GetActiveRoots();
-            foreach (var root in roots)
-            {
-                m_knownRoots.Add(root);
-                m_treeView.Add(new VisualElementTreeNode(root));
-            }
+            m_treeView.itemsSource = GetActiveRoots();
         }
 
-        private void OnSelectionChanged(VisualElementTreeNode node)
+        private void OnSelectionChanged(VisualElement element)
         {
-            if (node != null && node.targetElement != null)
+            if (element != null)
             {
-                m_idLabel.text = $"Selected ID: {node.targetElement.m_elementId}";
+                m_idLabel.text = $"Selected ID: {element.m_elementId}";
             }
             else
             {

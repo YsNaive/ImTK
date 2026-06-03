@@ -1,252 +1,166 @@
 using Hexa.NET.ImGui;
-using ImTK.Log;
-using System;
+using ImTK.Core;
+using System.Numerics;
 
 namespace ImTK.UI
 {
-    public interface ITreeView
-    {
-        // Interface for TreeView methods if needed by TreeNode
-    }
-
     public class TreeNode : VisualElement
     {
-        private class TreeNodeHeaderContainer : VisualElement
+        private NativeUtf8Buffer m_nativeIdBuffer = new NativeUtf8Buffer();
+        
+        // Data populated by TreeView
+        public int indentDepth { get; set; }
+        public bool hasChildren { get; set; }
+        public bool isExpanded { get; set; }
+        public bool isSelected { get; set; }
+        
+        public object itemData { get; set; }
+        
+        public VisualElement contentElement { get; private set; }
+
+        public TreeNode(VisualElement content)
         {
-            private TreeNode m_treeNode;
-            public TreeNodeHeaderContainer(TreeNode treeNode)
+            useNativeLayout = true; // Skip Yoga
+            contentElement = content;
+            if (contentElement != null)
             {
-                m_treeNode = treeNode;
-                this.style.flexDirection = FlexDirection.Row;
-                this.style.alignItems = AlignItems.Center;
-                this.style.flexGrow = 1;
-            }
-
-            protected internal override bool CheckHoverState()
-            {
-                return ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
-            }
-
-            public override void OnRender()
-            {
-                ImGui.SetNextItemAllowOverlap();
-                if (this.layoutRect.size.X <= 0f || this.layoutRect.size.Y <= 0f) return;
-                
-                string idStr = $"###treenode_btn_{m_treeNode.GetHashCode()}";
-                
-                ImGui.SetCursorScreenPos(this.layoutRect.position);
-                unsafe
+                contentElement.useNativeLayout = true;
+                ImTK.Core.ImTKApplication.ScheduleDeferred(() => 
                 {
-                    fixed (char* idPtr = idStr)
-                    {
-                        if (ImGui.InvisibleButton((byte*)idPtr, this.layoutRect.size))
-                        {
-                            bool clickedOnArrow = ImGui.GetMousePos().X <= (this.layoutRect.position.X + 20);
-                            var mode = m_treeNode.interactiveMode;
-                            
-                            if (m_treeNode.selectable)
-                            {
-                                if (!clickedOnArrow || mode == InteractiveMode.FullHeader)
-                                {
-                                    m_treeNode.isSelected = true;
-                                    
-                                    var selEvt = EventPool<TreeNodeSelectedEvent>.Get();
-                                    selEvt.node = m_treeNode;
-                                    selEvt.source = m_treeNode;
-                                    EventDispatcher.Enqueue(selEvt);
-                                }
-                            }
-
-                            bool shouldExpand = false;
-                            if (mode == InteractiveMode.FullHeader) shouldExpand = true;
-                            else if (mode == InteractiveMode.OnlyArrowIcon && clickedOnArrow) shouldExpand = true;
-
-                            if (shouldExpand && !m_treeNode.isLeaf)
-                            {
-                                m_treeNode.isExpanded = !m_treeNode.isExpanded;
-                            }
-                        }
-                    }
-                }
-
-                bool isHovered = CheckHoverState();
-                
-                if (m_treeNode.isSelected)
-                {
-                    ImGui.GetWindowDrawList().AddRectFilled(
-                        this.layoutRect.position,
-                        this.layoutRect.position + this.layoutRect.size,
-                        ImGui.GetColorU32(ImGuiCol.HeaderActive)
-                    );
-                }
-                else if (isHovered)
-                {
-                    ImGui.GetWindowDrawList().AddRectFilled(
-                        this.layoutRect.position,
-                        this.layoutRect.position + this.layoutRect.size,
-                        ImGui.GetColorU32(ImGuiCol.HeaderHovered)
-                    );
-                }
+                    this.Add(contentElement);
+                });
             }
         }
 
-        public VisualElement headerContainer { get; private set; }
-        private VisualElement m_contentContainer;
 
-        public override VisualElement contentContainer => m_contentContainer;
 
-        private IconElement m_arrowIcon;
-        private Label m_label;
-
-        public enum InteractiveMode
+        public void SetNodeId(int uniqueId)
         {
-            OnlyArrowIcon,
-            FullHeader,
-            Auto,
-            None
+            m_nativeIdBuffer.SetString($"###treenode_btn_{uniqueId}");
         }
 
-        private InteractiveMode m_interactiveMode = InteractiveMode.Auto;
-        public InteractiveMode interactiveMode
+        protected internal override bool CheckHoverState()
         {
-            get
+            return ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        }
+
+        public override bool OnBeginRender()
+        {
+            if (m_nativeIdBuffer.IsEmpty) return false;
+
+            var size = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetFrameHeight());
+            ImGui.BeginGroup();
+
+            var originalPos = ImGui.GetCursorScreenPos();
+            
+            // Draw InvisibleButton for the entire row FIRST so we can check hover correctly!
+            bool clicked = false;
+            unsafe
             {
-                if (m_interactiveMode == InteractiveMode.Auto)
-                {
-                    if (isLeaf) return InteractiveMode.FullHeader;
-                    return selectable ? InteractiveMode.OnlyArrowIcon : InteractiveMode.FullHeader;
-                }
-                if (isLeaf && m_interactiveMode != InteractiveMode.None) return InteractiveMode.None;
-                return m_interactiveMode;
+                clicked = ImGui.InvisibleButton((byte*)m_nativeIdBuffer.Data, size);
             }
-            set => m_interactiveMode = value;
-        }
-
-        public bool selectable { get; set; } = true;
-
-        public virtual bool isLeaf => childCount == 0;
-
-        private bool m_isExpanded = false;
-        public bool isExpanded
-        {
-            get => m_isExpanded;
-            set
+            
+            bool isHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+            
+            // Render selection background
+            if (isSelected)
             {
-                if (m_isExpanded != value)
+                ImGui.GetWindowDrawList().AddRectFilled(
+                    originalPos,
+                    originalPos + size,
+                    ImGui.GetColorU32(ImGuiCol.HeaderActive)
+                );
+            }
+            else if (isHovered)
+            {
+                ImGui.GetWindowDrawList().AddRectFilled(
+                    originalPos,
+                    originalPos + size,
+                    ImGui.GetColorU32(ImGuiCol.HeaderHovered)
+                );
+            }
+
+            // Handle Click
+            if (clicked)
+            {
+                float arrowXStart = originalPos.X + (indentDepth * 15f);
+                float arrowXEnd = arrowXStart + 20f;
+                bool clickedOnArrow = ImGui.GetMousePos().X >= arrowXStart && ImGui.GetMousePos().X <= arrowXEnd;
+                
+                if (clickedOnArrow && hasChildren)
                 {
-                    m_isExpanded = value;
-                    m_contentContainer.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
-                    UpdateIconVisibility();
-                    
-                    if (value) OnExpand();
-                    else OnCollapse();
-                    
+                    isExpanded = !isExpanded;
                     var evt = EventPool<TreeNodeExpandedEvent>.Get();
                     evt.node = this;
-                    evt.isExpanded = value;
+                    evt.isExpanded = isExpanded;
                     evt.source = this;
                     EventDispatcher.Enqueue(evt);
                 }
-            }
-        }
-
-        private bool m_isSelected = false;
-        public bool isSelected
-        {
-            get => m_isSelected;
-            set
-            {
-                if (m_isSelected != value)
+                else
                 {
-                    m_isSelected = value;
-                    RenderEngine.MarkRenderDirty(this);
+                    var selEvt = EventPool<TreeNodeSelectedEvent>.Get();
+                    selEvt.node = this;
+                    selEvt.source = this;
+                    EventDispatcher.Enqueue(selEvt);
                 }
             }
-        }
 
-        public string text
-        {
-            get => m_label?.text;
-            set
+            // Restore cursor pos for drawing content (still inside the Group)
+            ImGui.SetCursorScreenPos(originalPos);
+
+            // Render indent
+            if (indentDepth > 0)
             {
-                if (m_label != null) m_label.text = value;
+                ImGui.Indent(indentDepth * 15f);
             }
-        }
 
-        protected virtual void OnExpand() { }
-        protected virtual void OnCollapse() { }
-
-        public TreeNode(string text = "")
-        {
-            this.style.flexDirection = FlexDirection.Column;
-            this.style.alignItems = AlignItems.Stretch;
-
-            headerContainer = new TreeNodeHeaderContainer(this);
-            this.hierarchy.Add(headerContainer);
-
-            m_arrowIcon = new IconElement();
-            m_arrowIcon.type = IconElement.IconType.RightArrow;
-            m_arrowIcon.style.width = 15;
-            m_arrowIcon.style.height = 15;
-            m_arrowIcon.style.margin = new Thickness(0, 5, 0, 0);
-            
-            // By default hidden if no children, to keep natural alignment
-            m_arrowIcon.type = IconElement.IconType.None;
-            
-            headerContainer.Add(m_arrowIcon);
-
-            m_label = new Label(text);
-            m_label.style.flexGrow = 1;
-            headerContainer.Add(m_label);
-
-            m_contentContainer = new VisualElement();
-            m_contentContainer.style.flexDirection = FlexDirection.Column;
-            m_contentContainer.style.alignItems = AlignItems.Stretch;
-            m_contentContainer.style.margin = new Thickness(20, 0, 0, 0);
-            m_contentContainer.style.display = DisplayStyle.None;
-            
-            this.hierarchy.Add(m_contentContainer);
-        }
-
-        public new void Add(VisualElement child)
-        {
-            if (!(child is TreeNode))
+            // Draw arrow if has children
+            if (hasChildren)
             {
-                ImTKLog.Error($"Cannot add '{child.GetType().Name}' to TreeNode. Only TreeNode objects can be added.");
-                return;
+                var drawList = ImGui.GetWindowDrawList();
+                float arrowSize = ImGui.GetFontSize() * 0.6f;
+                // Center the arrow in the 20px space allocated for it
+                Vector2 center = ImGui.GetCursorScreenPos() + new Vector2(10f, size.Y * 0.5f);
+                uint color = ImGui.GetColorU32(ImGuiCol.Text);
+
+                if (isExpanded)
+                {
+                    Vector2 p1 = center + new Vector2(-arrowSize * 0.5f, -arrowSize * 0.25f);
+                    Vector2 p2 = center + new Vector2(arrowSize * 0.5f, -arrowSize * 0.25f);
+                    Vector2 p3 = center + new Vector2(0, arrowSize * 0.5f);
+                    drawList.AddTriangleFilled(p1, p2, p3, color);
+                }
+                else
+                {
+                    Vector2 p1 = center + new Vector2(-arrowSize * 0.2f, -arrowSize * 0.4f);
+                    Vector2 p2 = center + new Vector2(-arrowSize * 0.2f, arrowSize * 0.4f);
+                    Vector2 p3 = center + new Vector2(arrowSize * 0.35f, 0);
+                    drawList.AddTriangleFilled(p1, p2, p3, color);
+                }
             }
-            base.Add(child);
-            UpdateIconVisibility();
-        }
+            
+            // Use Dummy instead of SetCursorPosX to properly advance and register the window/group bounding box 
+            // without triggering ImGui's boundary extension assert.
+            ImGui.Dummy(new Vector2(20f, 0f));
+            ImGui.SameLine(0, 0);
 
-        public new void Remove(VisualElement child)
-        {
-            base.Remove(child);
-            UpdateIconVisibility();
-        }
-
-        public new void Clear()
-        {
-            base.Clear();
-            UpdateIconVisibility();
-        }
-
-        protected virtual void UpdateIconVisibility()
-        {
-            bool hasChildren = !isLeaf;
-            m_arrowIcon.type = hasChildren ? (m_isExpanded ? IconElement.IconType.DownArrow : IconElement.IconType.RightArrow) : IconElement.IconType.None;
-        }
-
-        public ITreeView GetTreeView()
-        {
-            var p = this.parent;
-            while (p != null)
+            // Fix Label layoutRect so it doesn't clip to 0x0 when overflow is hidden
+            if (contentElement != null)
             {
-                if (p is ITreeView tv) return tv;
-                if (!(p is TreeNode)) break;
-                p = p.parent;
+                contentElement.layoutRect = new Rect(ImGui.GetCursorScreenPos(), new Vector2(size.X - (indentDepth * 15f) - 20f, size.Y));
             }
-            return null;
+
+            // Let RenderEngine render the contentElement (which is in our hierarchy)
+            return true;
+        }
+
+        public override void OnEndRender()
+        {
+            if (indentDepth > 0)
+            {
+                ImGui.Unindent(indentDepth * 15f);
+            }
+            ImGui.EndGroup();
         }
     }
 }

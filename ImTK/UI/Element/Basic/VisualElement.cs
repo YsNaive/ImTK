@@ -1317,7 +1317,7 @@ namespace ImTK.UI
             {
                 ImGui.SetCursorScreenPos(this.layoutRect.position - RenderEngine.Context.CurrentRenderOffset);
             }
-            if (resolvedLayoutState.overflow == Overflow.Hidden)
+            if (resolvedLayoutState.overflow == Overflow.Hidden && !m_useNativeLayout)
             {
                 ImGui.PushClipRect(this.layoutRect.position, this.layoutRect.position + this.layoutRect.size, true);
             }
@@ -1343,7 +1343,7 @@ namespace ImTK.UI
 
         public virtual void OnEndRender()
         {
-            if (resolvedLayoutState.overflow == Overflow.Hidden)
+            if (resolvedLayoutState.overflow == Overflow.Hidden && !m_useNativeLayout)
             {
                 ImGui.PopClipRect();
             }

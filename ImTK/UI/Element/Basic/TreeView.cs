@@ -1,131 +1,242 @@
 using ImTK.Log;
 using System;
 using System.Collections.Generic;
+using Hexa.NET.ImGui;
+using ImTK.Core;
 
 namespace ImTK.UI
 {
-    public class TreeView<TNode> : VisualElement, ITreeView where TNode : TreeNode
+    public struct TreeViewNodeData<T>
     {
+        public T Data;
+        public int Depth;
+        public bool HasChildren;
+    }
+
+    public abstract class TreeView<TData> : VisualElement
+    {
+        private IEnumerable<TData> m_itemsSource;
+        public IEnumerable<TData> itemsSource
+        {
+            get => m_itemsSource;
+            set
+            {
+                m_itemsSource = value;
+                RebuildFlattenedList();
+            }
+        }
+
         public bool allowMultiSelect { get; set; } = false;
 
-        private List<TNode> m_selectedNodes = new List<TNode>();
+        private HashSet<TData> m_expandedItems = new HashSet<TData>();
+        private List<TData> m_selectedItems = new List<TData>();
+        
+        private List<TreeViewNodeData<TData>> m_flattenedList = new List<TreeViewNodeData<TData>>();
+        
+        private List<TreeNode> m_nodePool = new List<TreeNode>();
+        private NativeUtf8Buffer m_childIdBuffer = new NativeUtf8Buffer();
 
-        public IReadOnlyList<TNode> selectedNodes => m_selectedNodes;
-        public TNode selectedNode => m_selectedNodes.Count > 0 ? m_selectedNodes[0] : null;
+        public IReadOnlyList<TData> selectedItems => m_selectedItems;
+        public TData selectedItem => m_selectedItems.Count > 0 ? m_selectedItems[0] : default;
 
-        public event Action<TNode> onSelectionChanged;
+        public event Action<TData> onSelectionChanged;
+
+        protected abstract VisualElement MakeItem();
+        protected abstract void BindItem(VisualElement ui, TData item);
+        protected abstract IEnumerable<TData> FetchChildren(TData item);
+        protected abstract bool HasChildren(TData item);
 
         public TreeView()
         {
-            this.style.flexDirection = FlexDirection.Column;
-            this.style.alignItems = AlignItems.Stretch;
+            useNativeLayout = false; // Participate in Yoga Layout
             
             RegisterCallback<TreeNodeSelectedEvent>(OnNodeSelected);
+            RegisterCallback<TreeNodeExpandedEvent>(OnNodeExpanded);
+            
+            m_childIdBuffer.SetString($"TreeView_{m_elementId}");
         }
 
         private void OnNodeSelected(TreeNodeSelectedEvent evt)
         {
-            if (evt.node is TNode tNode)
+            if (evt.node.itemData is TData data)
             {
-                SetSelection(tNode);
+                SetSelection(data);
                 evt.StopPropagation();
             }
         }
 
-        public void SetSelection(TNode node)
+        private void OnNodeExpanded(TreeNodeExpandedEvent evt)
+        {
+            if (evt.node.itemData is TData data)
+            {
+                if (evt.isExpanded) m_expandedItems.Add(data);
+                else m_expandedItems.Remove(data);
+                
+                RebuildFlattenedList();
+                evt.StopPropagation();
+            }
+        }
+
+        public void SetSelection(TData node)
         {
             if (!allowMultiSelect)
             {
-                ClearSelection();
-                if (node != null)
-                {
-                    node.isSelected = true;
-                    m_selectedNodes.Add(node);
-                }
+                m_selectedItems.Clear();
+                if (node != null) m_selectedItems.Add(node);
             }
             else
             {
                 if (node != null)
                 {
-                    if (node.isSelected)
-                    {
-                        node.isSelected = false;
-                        m_selectedNodes.Remove(node);
-                    }
-                    else
-                    {
-                        node.isSelected = true;
-                        m_selectedNodes.Add(node);
-                    }
+                    if (m_selectedItems.Contains(node)) m_selectedItems.Remove(node);
+                    else m_selectedItems.Add(node);
                 }
             }
-
             onSelectionChanged?.Invoke(node);
+            RenderEngine.MarkRenderDirty(this);
         }
 
         public void ClearSelection()
         {
-            foreach (var n in m_selectedNodes)
-            {
-                n.isSelected = false;
-            }
-            m_selectedNodes.Clear();
-        }
-
-        public new void Add(VisualElement child)
-        {
-            if (!(child is TNode))
-            {
-                ImTKLog.Error($"Cannot add '{child.GetType().Name}' to TreeView<{typeof(TNode).Name}>. Only {typeof(TNode).Name} objects can be added.");
-                return;
-            }
-            base.Add(child);
+            m_selectedItems.Clear();
+            onSelectionChanged?.Invoke(default);
+            RenderEngine.MarkRenderDirty(this);
         }
 
         public void ExpandAll()
         {
-            foreach (var child in hierarchy.Children())
+            if (m_itemsSource == null) return;
+            foreach (var root in m_itemsSource)
             {
-                if (child is TreeNode node)
-                {
-                    ExpandRecursive(node);
-                }
+                ExpandAllRecursive(root);
             }
+            RebuildFlattenedList();
         }
 
-        private void ExpandRecursive(TreeNode node)
+        private void ExpandAllRecursive(TData data)
         {
-            node.isExpanded = true;
-            foreach (var child in node.contentContainer.hierarchy.Children())
+            if (HasChildren(data))
             {
-                if (child is TreeNode childNode)
+                m_expandedItems.Add(data);
+                var children = FetchChildren(data);
+                if (children != null)
                 {
-                    ExpandRecursive(childNode);
+                    foreach (var child in children)
+                    {
+                        ExpandAllRecursive(child);
+                    }
                 }
             }
         }
 
         public void CollapseAll()
         {
-            foreach (var child in hierarchy.Children())
+            m_expandedItems.Clear();
+            RebuildFlattenedList();
+        }
+
+        public void RebuildFlattenedList()
+        {
+            m_flattenedList.Clear();
+            if (m_itemsSource == null) return;
+
+            foreach (var root in m_itemsSource)
             {
-                if (child is TreeNode node)
+                AddNodeToListRecursive(root, 0);
+            }
+            RenderEngine.MarkRenderDirty(this);
+        }
+
+        private void AddNodeToListRecursive(TData data, int depth)
+        {
+            bool hasChildren = HasChildren(data);
+            m_flattenedList.Add(new TreeViewNodeData<TData> 
+            { 
+                Data = data, 
+                Depth = depth, 
+                HasChildren = hasChildren 
+            });
+
+            if (hasChildren && m_expandedItems.Contains(data))
+            {
+                var children = FetchChildren(data);
+                if (children != null)
                 {
-                    CollapseRecursive(node);
+                    foreach (var child in children)
+                    {
+                        AddNodeToListRecursive(child, depth + 1);
+                    }
                 }
             }
         }
 
-        private void CollapseRecursive(TreeNode node)
+        public override bool OnBeginRender()
         {
-            node.isExpanded = false;
-            foreach (var child in node.contentContainer.hierarchy.Children())
+            base.OnBeginRender();
+            // Do NOT render children recursively. We will handle virtualization manually.
+            return false;
+        }
+
+        public override void OnRender()
+        {
+            var size = this.layoutRect.size;
+            if (size.X <= 0 || size.Y <= 0) return;
+
+            unsafe
             {
-                if (child is TreeNode childNode)
+                if (!ImGui.BeginChild((byte*)m_childIdBuffer.Data, size, ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
                 {
-                    CollapseRecursive(childNode);
+                    ImGui.EndChild();
+                    return;
                 }
+                
+                ImGuiListClipper clipper = new ImGuiListClipper();
+                clipper.Begin(m_flattenedList.Count);
+                
+                int poolIndex = 0;
+                while (clipper.Step())
+                {
+                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                    {
+                        var data = m_flattenedList[i];
+                        
+                        TreeNode node = GetOrCreateNode(poolIndex++);
+                        node.indentDepth = data.Depth;
+                        node.hasChildren = data.HasChildren;
+                        node.isExpanded = m_expandedItems.Contains(data.Data);
+                        node.isSelected = m_selectedItems.Contains(data.Data);
+                        node.itemData = data.Data;
+                        
+                        BindItem(node.contentElement, data.Data);
+                        
+                        RenderEngine.Render(node);
+                    }
+                }
+                clipper.End();
+                
+                ImGui.EndChild();
             }
+        }
+
+        private TreeNode GetOrCreateNode(int poolIndex)
+        {
+            if (poolIndex < m_nodePool.Count)
+            {
+                return m_nodePool[poolIndex];
+            }
+            
+            var customUI = MakeItem();
+            var node = new TreeNode(customUI);
+            node.SetNodeId(poolIndex);
+            
+            // 遵守生命週期規範，在 Render 階段外的安全時機才將節點加入視覺樹中
+            ImTK.Core.ImTKApplication.ScheduleDeferred(() => 
+            {
+                this.Add(node);
+            });
+            m_nodePool.Add(node);
+            
+            return node;
         }
     }
 }
