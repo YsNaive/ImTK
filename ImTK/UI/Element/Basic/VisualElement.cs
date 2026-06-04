@@ -1331,11 +1331,19 @@ namespace ImTK.UI
         {
             if (this.hierarchy.parent != null && !m_useNativeLayout)
             {
-                ImGui.SetCursorScreenPos(this.layoutRect.position - RenderEngine.Context.CurrentRenderOffset);
+                var rawPos = this.layoutRect.position - RenderEngine.Context.CurrentRenderOffset;
+                var snappedPos = new Vector2(MathF.Floor(rawPos.X), MathF.Floor(rawPos.Y));
+                ImGui.SetCursorScreenPos(snappedPos);
             }
+
+            var resolvedLayoutState = this.resolvedLayoutState;
+
             if (resolvedLayoutState.overflow == Overflow.Hidden && !m_useNativeLayout)
             {
-                ImGui.PushClipRect(this.layoutRect.position, this.layoutRect.position + this.layoutRect.size, true);
+                var rawPos = this.layoutRect.position - RenderEngine.Context.CurrentRenderOffset;
+                var snappedPos = new Vector2(MathF.Floor(rawPos.X), MathF.Floor(rawPos.Y));
+                var snappedSize = new Vector2(MathF.Ceiling(this.layoutRect.width), MathF.Ceiling(this.layoutRect.height));
+                ImGui.PushClipRect(snappedPos, snappedPos + snappedSize, true);
             }
             return true;
         }

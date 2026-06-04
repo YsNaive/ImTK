@@ -80,6 +80,7 @@ namespace ImTK.UI
 
                     uint oldLayoutHash = element.resolvedStyle.GetLayoutHash();
                     ResolvedLayoutState oldLayoutState = element.resolvedLayoutState;
+                    float oldDpiScale = element.resolvedStyle.currentDpiScale;
 
                     element.resolvedStyle.Clear();
                     if (element.parent != null)
@@ -196,9 +197,11 @@ namespace ImTK.UI
                     ImGuiStyleHandler.Diff(element.parent?.resolvedStyle, element.resolvedStyle, element.requiredStyle);
                     
                     uint newLayoutHash = element.resolvedStyle.GetLayoutHash();
-                    if (oldLayoutHash != newLayoutHash || oldLayoutState != element.resolvedLayoutState)
+                    float newDpiScale = element.resolvedStyle.currentDpiScale;
+                    if (oldLayoutHash != newLayoutHash || oldLayoutState != element.resolvedLayoutState || oldDpiScale != newDpiScale)
                     {
                         element.MarkMeasureDirty();
+                        element.MarkArrangeDirty();
                     }
 
                     element.m_isStyleDirty = false;

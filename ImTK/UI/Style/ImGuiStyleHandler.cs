@@ -14,6 +14,7 @@ namespace ImTK.UI
         private readonly List<StyleProperty> m_properties = new List<StyleProperty>();
         private bool m_fontWasPushed = false;
         private float m_currentDpiScale = 1.0f;
+        internal float currentDpiScale => m_currentDpiScale;
 
         public void Clear()
         {

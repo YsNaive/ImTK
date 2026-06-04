@@ -46,7 +46,8 @@ namespace ImTK.UI
             {
                 var drawList = ImGui.GetWindowDrawList();
                 float size = ImGui.GetFontSize() * 0.6f;
-                Vector2 center = this.layoutRect.position + this.layoutRect.size * 0.5f;
+                Vector2 actualRectPos = this.layoutRect.position - RenderEngine.Context.CurrentRenderOffset;
+                Vector2 center = actualRectPos + this.layoutRect.size * 0.5f;
 
                 uint color = ImGui.GetColorU32(ImGuiCol.Text);
 

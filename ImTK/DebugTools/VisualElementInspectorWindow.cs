@@ -49,7 +49,7 @@ namespace ImTK.DebugTools
         public const string WindowId = "ImTK.VisualElementInspector";
 
         private InspectorTreeView m_treeView;
-        private Label m_idLabel;
+        private InspectorPropertiesPanel m_propertiesPanel;
         private VisualElement m_selectedElement;
         private VisualElementGizmoContext m_gizmoContext;
 
@@ -66,16 +66,10 @@ namespace ImTK.DebugTools
             m_treeView.style.flexGrow = 1f;
             m_treeView.onSelectionChanged += OnSelectionChanged;
 
-            var rightPanel = new VisualElement();
-            rightPanel.style.padding = new Thickness(10);
-
-            m_idLabel = new Label("Selected ID: None");
-            rightPanel.Add(m_idLabel);
-
-
+            m_propertiesPanel = new InspectorPropertiesPanel();
 
             splitView.Add(m_treeView);
-            splitView.Add(rightPanel);
+            splitView.Add(m_propertiesPanel);
 
             this.Add(splitView);
         }
@@ -151,14 +145,7 @@ namespace ImTK.DebugTools
         private void OnSelectionChanged(VisualElement element)
         {
             m_selectedElement = element;
-            if (element != null)
-            {
-                m_idLabel.text = $"Selected ID: {element.m_elementId}";
-            }
-            else
-            {
-                m_idLabel.text = "Selected ID: None";
-            }
+            m_propertiesPanel.SetTarget(m_selectedElement);
         }
 
         private int GetElementDepth(VisualElement element)

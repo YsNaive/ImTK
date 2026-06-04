@@ -111,7 +111,7 @@ namespace ImTK.UI
                 unsafe {
                     size = ImGui.CalcTextSize((byte*)m_textBuffer.Data);
                 }
-                return new System.Numerics.Vector2(MathF.Ceiling(size.X), MathF.Ceiling(ImGui.GetTextLineHeight()));
+                return new System.Numerics.Vector2(MathF.Ceiling(size.X), MathF.Ceiling(size.Y));
             }
         }
     }

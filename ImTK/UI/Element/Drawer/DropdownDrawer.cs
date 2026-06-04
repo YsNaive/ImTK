@@ -121,6 +121,11 @@ namespace ImTK.UI
                 this.style.flexGrow = 1;
             }
 
+            protected override Vector2 MeasureContent(LayoutConstraint constraint)
+            {
+                return new Vector2(0, ImGui.GetFrameHeight());
+            }
+
             /// <summary>
             /// 渲染 Preview 按鈕並管理 Popup 生命週期。
             /// InvisibleButton 解決兩個核心問題：
@@ -167,7 +172,9 @@ namespace ImTK.UI
                     min.X + padding.X,
                     min.Y + (height - ImGui.GetFontSize()) * 0.5f
                 );
-                drawList.PushClipRect(min, contentMax, true);
+                // Expand clip rect slightly upwards to prevent clipping font ascenders
+                var clipMin = new Vector2(min.X, min.Y - 2f);
+                drawList.PushClipRect(clipMin, contentMax, true);
                 drawList.AddText(textPos, ImGui.GetColorU32(ImGuiCol.Text), previewText);
                 drawList.PopClipRect();
 
