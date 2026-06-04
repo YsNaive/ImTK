@@ -109,7 +109,8 @@ namespace ImTK.UI
             {
                 if (value.HasValue)
                 {
-                    if (value.Value.IsToken) SetStringToken(key, new StyleValue<HashedString> { Token = value.Value.Token });
+                    if (value.Value.IsNull) Clear(key);
+                    else if (value.Value.IsToken) SetStringToken(key, new StyleValue<HashedString> { Token = value.Value.Token });
                     else SetColor(key, new StyleValue<Color> { Value = value.Value.Value });
                 }
                 else Clear(key);
@@ -127,7 +128,8 @@ namespace ImTK.UI
             {
                 if (value.HasValue)
                 {
-                    if (value.Value.IsToken) SetStringToken(key, new StyleValue<HashedString> { Token = value.Value.Token });
+                    if (value.Value.IsNull) Clear(key);
+                    else if (value.Value.IsToken) SetStringToken(key, new StyleValue<HashedString> { Token = value.Value.Token });
                     else SetVector2(key, new StyleValue<Vector2> { Value = value.Value.Value });
                 }
                 else Clear(key);
@@ -318,7 +320,14 @@ namespace ImTK.UI
                 {
                     if (value.HasValue)
                     {
-                        if (value.Value.IsToken)
+                        if (value.Value.IsNull)
+                        {
+                            Clear(StyleKey.PaddingLeft);
+                            Clear(StyleKey.PaddingTop);
+                            Clear(StyleKey.PaddingRight);
+                            Clear(StyleKey.PaddingBottom);
+                        }
+                        else if (value.Value.IsToken)
                         {
                             var tokenVal = new StyleValue<float> { Token = value.Value.Token };
                             SetFloat(StyleKey.PaddingLeft, tokenVal);
@@ -410,7 +419,14 @@ namespace ImTK.UI
                 {
                     if (value.HasValue)
                     {
-                        if (value.Value.IsToken)
+                        if (value.Value.IsNull)
+                        {
+                            Clear(StyleKey.MarginLeft);
+                            Clear(StyleKey.MarginTop);
+                            Clear(StyleKey.MarginRight);
+                            Clear(StyleKey.MarginBottom);
+                        }
+                        else if (value.Value.IsToken)
                         {
                             var tokenVal = new StyleValue<float> { Token = value.Value.Token };
                             SetFloat(StyleKey.MarginLeft, tokenVal);

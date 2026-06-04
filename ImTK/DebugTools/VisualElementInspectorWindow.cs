@@ -7,6 +7,12 @@ namespace ImTK.DebugTools
     {
         protected override VisualElement MakeItem()
         {
+            var container = new VisualElement();
+            container.useNativeLayout = true;
+            
+            // Temporary hack: Since TreeNode wraps us in an ImGui.BeginGroup and calls SameLine,
+            // we should just use TextElement for the placeholder and text, and we will format it as "[Icon] TypeName" 
+            // instead of a complex nested container which would break TreeNode's native layout expectations.
             var label = new Label();
             label.useNativeLayout = true;
             return label;
@@ -15,8 +21,16 @@ namespace ImTK.DebugTools
         protected override void BindItem(VisualElement ui, VisualElement item)
         {
             var label = (Label)ui;
-            label.text = $"{item.GetType().Name} [ID:{item.m_elementId}]" + 
-                         (string.IsNullOrEmpty(item.persistenceKey) ? "" : $" ({item.persistenceKey})");
+            label.text = $"[ ] {item.GetType().Name}"; // Placeholder icon space
+            
+            if (item.resolvedLayoutState.display == ImTK.UI.DisplayStyle.None)
+            {
+                label.style.textColor = new ImTK.Color(0.5f, 0.5f, 0.5f, 1f);
+            }
+            else
+            {
+                label.style.textColor = ImTK.UI.StyleKeyword.Null;
+            }
         }
 
         protected override IEnumerable<VisualElement> FetchChildren(VisualElement item)
@@ -36,6 +50,8 @@ namespace ImTK.DebugTools
 
         private InspectorTreeView m_treeView;
         private Label m_idLabel;
+        private VisualElement m_selectedElement;
+        private VisualElementGizmoContext m_gizmoContext;
 
         public VisualElementInspectorWindow() : base("UI Inspector", WindowId)
         {
@@ -56,6 +72,8 @@ namespace ImTK.DebugTools
             m_idLabel = new Label("Selected ID: None");
             rightPanel.Add(m_idLabel);
 
+
+
             splitView.Add(m_treeView);
             splitView.Add(rightPanel);
 
@@ -67,12 +85,41 @@ namespace ImTK.DebugTools
         protected override void OnEnable()
         {
             base.OnEnable();
+            
+            m_gizmoContext = new VisualElementGizmoContext
+            {
+                filter = (node) => 
+                {
+                    if (node == m_treeView.hoveredItem) return true;
+                    var current = m_selectedElement;
+                    while (current != null)
+                    {
+                        if (current == node) return true;
+                        current = current.hierarchy.parent;
+                    }
+                    return false;
+                },
+                action = DrawBoxModel
+            };
+            ImTK.UI.RenderEngine.RegisterGizmoContext(m_gizmoContext);
+            
             RefreshTree();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            if (m_gizmoContext != null)
+            {
+                ImTK.UI.RenderEngine.UnregisterGizmoContext(m_gizmoContext);
+                m_gizmoContext = null;
+            }
         }
 
         public override void OnRender()
         {
             base.OnRender();
+
             m_scanTimer += (float)ImTK.Core.Time.DeltaTime;
             if (m_scanTimer > 1.0f)
             {
@@ -103,6 +150,7 @@ namespace ImTK.DebugTools
 
         private void OnSelectionChanged(VisualElement element)
         {
+            m_selectedElement = element;
             if (element != null)
             {
                 m_idLabel.text = $"Selected ID: {element.m_elementId}";
@@ -110,6 +158,59 @@ namespace ImTK.DebugTools
             else
             {
                 m_idLabel.text = "Selected ID: None";
+            }
+        }
+
+        private int GetElementDepth(VisualElement element)
+        {
+            int depth = 0;
+            var current = element;
+            while (current.hierarchy.parent != null)
+            {
+                depth++;
+                current = current.hierarchy.parent;
+            }
+            return depth;
+        }
+
+        private void DrawBoxModel(VisualElement node)
+        {
+            var viewport = Hexa.NET.ImGui.ImGui.GetWindowViewport();
+            var drawList = Hexa.NET.ImGui.ImGui.GetForegroundDrawList(viewport);
+            
+            var rect = node.layoutRect;
+            System.Numerics.Vector2 min = new System.Numerics.Vector2(rect.x, rect.y);
+            System.Numerics.Vector2 max = new System.Numerics.Vector2(rect.x + rect.width, rect.y + rect.height);
+
+            bool isSelectedOrParent = false;
+            var current = m_selectedElement;
+            while (current != null)
+            {
+                if (current == node)
+                {
+                    isSelectedOrParent = true;
+                    break;
+                }
+                current = current.hierarchy.parent;
+            }
+
+            if (isSelectedOrParent)
+            {
+                int depth = GetElementDepth(node);
+                float hue = ((depth * 15f) % 360f) / 360f;
+                float r = 0, g = 0, b = 0;
+                Hexa.NET.ImGui.ImGui.ColorConvertHSVtoRGB(hue, 1f, 1f, ref r, ref g, ref b);
+                
+                uint color = new ImTK.Color(r, g, b, 1f).ToUInt32();
+                drawList.AddRect(min, max, color, 0f, Hexa.NET.ImGui.ImDrawFlags.None, 1f);
+            }
+            else if (node == m_treeView.hoveredItem)
+            {
+                uint blueTranslucent = new ImTK.Color(0f, 0.5f, 1f, 0.1f).ToUInt32();
+                drawList.AddRectFilled(min, max, blueTranslucent);
+                
+                uint blueSolid = new ImTK.Color(0f, 0.5f, 1f, 1f).ToUInt32();
+                drawList.AddRect(min, max, blueSolid, 0f, Hexa.NET.ImGui.ImDrawFlags.None, 1f);
             }
         }
     }

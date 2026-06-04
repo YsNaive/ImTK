@@ -6,6 +6,11 @@
 且本專案遵循 [語意化版本控制 (Semantic Versioning)](https://semver.org/lang/zh-TW/).
 
 ## [Unreleased]
+### Changed
+- **VisualElement Gizmo 抽離與重構**：將 `VisualElement.OnGizmoRender` 徹底抽離，不再綁定於元件本身。改由 `VisualElementGizmoContext` 統一註冊管理，搭配 `RenderEngine.RegisterGizmoContext` 提供高彈性的除錯繪製注入。
+- **RenderEngine 排版效能優化**：移除了 `RenderGizmoPass` 的全域迴圈遍歷，並將 Gizmo 繪圖注入點提早至 `RenderOpType.Begin` 階段 (與排版引擎同步)，達成 O(1) 的效能消耗與正確的 Parent->Child 繪圖疊加順序。
+- **Inspector Box Model 可視化升級**：大幅優化 `VisualElementInspectorWindow` 內的 Gizmo，現支援精確高亮選中物件及其所有父節點層級（採 HSV 著色），並為游標 Hover 項目提供即時的半透明焦點反饋。
+
 ### Added
 - **視窗全域事件**：在 `Panel` 中新增 `OnWindowOpenedEvent` 與 `OnWindowClosedEvent` 結構體 (實作 `IImTKEvent`)，透過 `ImTKEventBus` 發布視窗開關事件，達成型別安全且零記憶體的事件傳遞。
 - **技術文檔全面重構與速查表 (Cheat Sheets)**：對全專案的子系統進行了地毯式掃描，將原本分散或過時的技術說明統整。現在每一個子模組 (包含 `Core`, `Database`, `Log`, `Event`, `UI/Event`, `UI/Element`, `UI/Layout`, `DebugTools`, `DataType`) 都擁有專屬的 `README.md` 作為快速查找入口 (Quick Reference)，確保所有文件精準對齊當前的架構程式碼。

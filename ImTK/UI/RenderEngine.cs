@@ -217,6 +217,19 @@ namespace ImTK.UI
         [ThreadStatic]
         private static System.Collections.Generic.Stack<System.Collections.Generic.List<RenderOp>> t_listPool;
 
+        private static readonly System.Collections.Generic.List<VisualElementGizmoContext> s_gizmoContexts = new();
+
+        public static void RegisterGizmoContext(VisualElementGizmoContext context)
+        {
+            if (!s_gizmoContexts.Contains(context))
+                s_gizmoContexts.Add(context);
+        }
+
+        public static void UnregisterGizmoContext(VisualElementGizmoContext context)
+        {
+            s_gizmoContexts.Remove(context);
+        }
+
         private static System.Collections.Generic.List<RenderOp> GetList()
         {
             if (t_listPool == null) t_listPool = new System.Collections.Generic.Stack<System.Collections.Generic.List<RenderOp>>();
@@ -302,6 +315,25 @@ namespace ImTK.UI
                     {
                         bool shouldRenderChildren = node.OnBeginRender();
                         node.OnRender();
+
+                        if (s_gizmoContexts.Count > 0)
+                        {
+                            for (int j = s_gizmoContexts.Count - 1; j >= 0; j--)
+                            {
+                                var ctx = s_gizmoContexts[j];
+                                if (ctx.filter == null || ctx.filter(node))
+                                {
+                                    try
+                                    {
+                                        ctx.action?.Invoke(node);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        ImTKLog.Error(ex, $"Exception in VisualElementGizmoContext action for {node.GetType().Name}");
+                                    }
+                                }
+                            }
+                        }
 
                         if (!shouldRenderChildren && op.SkipCount > 0)
                         {

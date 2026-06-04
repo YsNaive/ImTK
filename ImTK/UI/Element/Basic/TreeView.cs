@@ -38,6 +38,7 @@ namespace ImTK.UI
 
         public IReadOnlyList<TData> selectedItems => m_selectedItems;
         public TData selectedItem => m_selectedItems.Count > 0 ? m_selectedItems[0] : default;
+        public TData hoveredItem { get; private set; }
 
         public event Action<TData> onSelectionChanged;
 
@@ -194,6 +195,7 @@ namespace ImTK.UI
                 clipper.Begin(m_flattenedList.Count);
                 
                 int poolIndex = 0;
+                TData newHoveredItem = default;
                 while (clipper.Step())
                 {
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
@@ -210,9 +212,15 @@ namespace ImTK.UI
                         BindItem(node.contentElement, data.Data);
                         
                         RenderEngine.Render(node);
+                        
+                        if (node.m_wasHovered)
+                        {
+                            newHoveredItem = data.Data;
+                        }
                     }
                 }
                 clipper.End();
+                hoveredItem = newHoveredItem;
                 
                 ImGui.EndChild();
             }
