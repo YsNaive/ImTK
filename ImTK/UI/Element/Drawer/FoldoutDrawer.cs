@@ -60,9 +60,10 @@ namespace ImTK.UI
                 if (m_drawer.m_isHeaderHovered)
                 {
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                    var drawPos = this.layoutRect.position - RenderEngine.Context.CurrentRenderOffset;
                     ImGui.GetWindowDrawList().AddRectFilled(
-                        this.layoutRect.position,
-                        this.layoutRect.position + this.layoutRect.size,
+                        drawPos,
+                        drawPos + this.layoutRect.size,
                         ImGui.GetColorU32(ImGuiCol.HeaderHovered)
                     );
                 }
