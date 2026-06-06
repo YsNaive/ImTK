@@ -169,7 +169,8 @@ namespace ImTK.UI
             else if (prop.key == VisualElement.StyleKey.DisabledAlpha.Hash)
             {
                 prop.category = prop.dataType == StyleDataType.HashedString ? StyleCategory.ThemeToken : StyleCategory.ImGuiStyle;
-                prop.key = ImTKTheme.Tokens.DisabledAlpha.Hash;
+                prop.key = (int)ImGuiStyleVar.DisabledAlpha;
+                prop.isInheritable = true;
             }
             else if (prop.key == VisualElement.StyleKey.SelectionColor.Hash)
             {
