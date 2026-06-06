@@ -34,9 +34,14 @@ namespace ImTK.DebugTools
             }
         }
 
-        protected override IEnumerable<VisualElement> FetchChildren(VisualElement item)
+        protected override IEnumerable<VisualElement> GetItemChildren(VisualElement item)
         {
             return item.hierarchy.Children();
+        }
+
+        protected override VisualElement GetItemParent(VisualElement item)
+        {
+            return item.hierarchy.parent;
         }
 
         protected override bool HasChildren(VisualElement item)
@@ -53,6 +58,14 @@ namespace ImTK.DebugTools
         private InspectorPropertiesPanel m_propertiesPanel;
         private VisualElement m_selectedElement;
         private VisualElementGizmoContext m_gizmoContext;
+        private VisualElementGizmoContext m_pickingGizmoContext;
+        private VisualElementGizmoContext m_windowBlockerGizmoContext;
+        
+        private Button m_pickingModeBtn;
+        private bool m_isPickingMode = false;
+        private VisualElement m_currentHoveredPick = null;
+        private VisualElement m_lastFrameHoveredPick = null;
+        private int m_lastFrameCount = -1;
 
         public VisualElementInspectorWindow() : base("UI Inspector", WindowId)
         {
@@ -63,13 +76,28 @@ namespace ImTK.DebugTools
             splitView.persistenceKey = "InspectorSplitView";
             splitView.style.flexGrow = 1f;
 
+            var leftPanel = new VisualElement();
+            leftPanel.style.flexGrow = 1f;
+            leftPanel.style.flexDirection = ImTK.UI.FlexDirection.Column;
+
+            m_pickingModeBtn = new Button("Picking Mode");
+            m_pickingModeBtn.style.margin = new ImTK.UI.Thickness(5f);
+            m_pickingModeBtn.onClicked += (evt) => {
+                m_isPickingMode = !m_isPickingMode;
+                m_pickingModeBtn.style.colorFamily = m_isPickingMode ? ImTK.UI.ThemeColorFamily.Warning : ImTK.UI.ThemeColorFamily.Normal;
+                ImTK.Log.ImTKLog.Trace($"Picking Mode toggled: {m_isPickingMode}");
+            };
+
             m_treeView = new InspectorTreeView();
             m_treeView.style.flexGrow = 1f;
             m_treeView.onSelectionChanged += OnSelectionChanged;
 
+            leftPanel.Add(m_pickingModeBtn);
+            leftPanel.Add(m_treeView);
+
             m_propertiesPanel = new InspectorPropertiesPanel();
 
-            splitView.Add(m_treeView);
+            splitView.Add(leftPanel);
             splitView.Add(m_propertiesPanel);
 
             this.Add(splitView);
@@ -85,6 +113,8 @@ namespace ImTK.DebugTools
             {
                 filter = (node) => 
                 {
+                    if (m_isPickingMode) return node == m_lastFrameHoveredPick;
+                    
                     if (node == m_treeView.hoveredItem) return true;
                     var current = m_selectedElement;
                     while (current != null)
@@ -97,6 +127,50 @@ namespace ImTK.DebugTools
                 action = DrawBoxModel
             };
             ImTK.UI.RenderEngine.RegisterGizmoContext(m_gizmoContext);
+
+            m_pickingGizmoContext = new VisualElementGizmoContext
+            {
+                filter = (node) => m_isPickingMode,
+                action = (node) => 
+                {
+                    int currentFrame = Hexa.NET.ImGui.ImGui.GetFrameCount();
+                    if (currentFrame != m_lastFrameCount)
+                    {
+                        m_lastFrameHoveredPick = m_currentHoveredPick;
+                        m_currentHoveredPick = null;
+                        m_lastFrameCount = currentFrame;
+                    }
+
+                    var rect = node.layoutRect;
+                    var offset = ImTK.UI.RenderEngine.Context.CurrentRenderOffset;
+                    System.Numerics.Vector2 min = rect.position - offset;
+                    System.Numerics.Vector2 size = new System.Numerics.Vector2(rect.width, rect.height);
+                    
+                    if (size.X <= 0 || size.Y <= 0) return;
+
+                    if (Hexa.NET.ImGui.ImGui.IsMouseHoveringRect(min, min + size, true))
+                    {
+                        m_currentHoveredPick = node;
+                    }
+                }
+            };
+
+            m_windowBlockerGizmoContext = new VisualElementGizmoContext
+            {
+                filter = (node) => m_isPickingMode && node is ImTK.UI.Window,
+                action = (node) =>
+                {
+                    Hexa.NET.ImGui.ImGui.SetCursorPos(new System.Numerics.Vector2(0, 0));
+                    
+                    var size = Hexa.NET.ImGui.ImGui.GetContentRegionAvail();
+                    Hexa.NET.ImGui.ImGui.PushID(node.GetHashCode());
+                    Hexa.NET.ImGui.ImGui.InvisibleButton("##blocker", size);
+                    Hexa.NET.ImGui.ImGui.PopID();
+                }
+            };
+
+            ImTK.UI.RenderEngine.RegisterGizmoContext(m_pickingGizmoContext);
+            ImTK.UI.RenderEngine.RegisterGizmoContext(m_windowBlockerGizmoContext);
             
             RefreshTree();
         }
@@ -109,23 +183,82 @@ namespace ImTK.DebugTools
                 ImTK.UI.RenderEngine.UnregisterGizmoContext(m_gizmoContext);
                 m_gizmoContext = null;
             }
+            if (m_pickingGizmoContext != null)
+            {
+                ImTK.UI.RenderEngine.UnregisterGizmoContext(m_pickingGizmoContext);
+                m_pickingGizmoContext = null;
+            }
+            if (m_windowBlockerGizmoContext != null)
+            {
+                ImTK.UI.RenderEngine.UnregisterGizmoContext(m_windowBlockerGizmoContext);
+                m_windowBlockerGizmoContext = null;
+            }
         }
 
         public override void OnRender()
         {
             base.OnRender();
 
+            int currentFrame = Hexa.NET.ImGui.ImGui.GetFrameCount();
+            if (currentFrame != m_lastFrameCount)
+            {
+                m_lastFrameHoveredPick = m_currentHoveredPick;
+                m_currentHoveredPick = null;
+                m_lastFrameCount = currentFrame;
+            }
+
+            if (m_isPickingMode)
+            {
+                Hexa.NET.ImGui.ImGui.SetMouseCursor(Hexa.NET.ImGui.ImGuiMouseCursor.Hand);
+                m_treeView.externalHoveredItem = m_lastFrameHoveredPick;
+                
+                if (Hexa.NET.ImGui.ImGui.IsMouseClicked(Hexa.NET.ImGui.ImGuiMouseButton.Left))
+                {
+                    m_isPickingMode = false;
+                    m_pickingModeBtn.style.colorFamily = ImTK.UI.ThemeColorFamily.Normal;
+                    ImTK.Log.ImTKLog.Trace("Picking Mode disabled (element selected).");
+                    
+                    var pick = m_lastFrameHoveredPick;
+                    m_currentHoveredPick = null;
+                    m_lastFrameHoveredPick = null;
+                    m_treeView.externalHoveredItem = null;
+
+                    if (pick != null)
+                    {
+                        ImTK.Core.ImTKApplication.ScheduleDeferred(() => 
+                        {
+                            m_treeView.Reveal(pick);
+                        });
+                    }
+                }
+            }
+            else
+            {
+                m_currentHoveredPick = null;
+                m_lastFrameHoveredPick = null;
+                m_treeView.externalHoveredItem = null;
+            }
+
             m_scanTimer += (float)ImTK.Core.Time.DeltaTime;
             if (m_scanTimer > 1.0f)
             {
                 m_scanTimer = 0f;
-                // 每秒重新指派一次 itemsSource，底層的 RebuildFlattenedList 會在保留狀態的前提下，
-                // 高效地同步所有展開節點的最新子節點狀態 (無需重建物件池)。
                 ImTK.Core.ImTKApplication.ScheduleDeferred(() => 
                 {
                     RefreshTree();
                 });
             }
+        }
+
+        private bool IsInsideInspector(VisualElement element)
+        {
+            VisualElement current = element;
+            while (current != null)
+            {
+                if (current == this) return true;
+                current = current.hierarchy.parent;
+            }
+            return false;
         }
 
         private System.Collections.Generic.List<VisualElement> GetActiveRoots()
@@ -201,7 +334,7 @@ namespace ImTK.DebugTools
                 uint color = new ImTK.Color(r, g, b, 1f).ToUInt32();
                 drawList.AddRect(min, max, color, 0f, Hexa.NET.ImGui.ImDrawFlags.None, 1f);
             }
-            else if (node == m_treeView.hoveredItem)
+            else if (node == m_treeView.hoveredItem || (m_isPickingMode && node == m_currentHoveredPick))
             {
                 uint blueTranslucent = new ImTK.Color(0f, 0.5f, 1f, 0.1f).ToUInt32();
                 drawList.AddRectFilled(min, max, blueTranslucent);

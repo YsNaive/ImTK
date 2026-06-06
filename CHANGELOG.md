@@ -12,6 +12,7 @@
 - **Inspector Box Model 可視化升級**：大幅優化 `VisualElementInspectorWindow` 內的 Gizmo，現支援精確高亮選中物件及其所有父節點層級（採 HSV 著色），並為游標 Hover 項目提供即時的半透明焦點反饋。
 
 ### Added
+- **UI Inspector**: 實作了無干擾的 Picking Mode，利用純數學 `IsMouseHoveringRect(..., clip: true)` 進行精準的游標攔截 (Hit-Testing)，並藉由專屬 Window 遮罩完美適配 Multi-Viewport 與避免 ImGui 渲染崩潰。
 - **Inspector Style 編輯擴展**：為 `StyleThickness` 與 `StyleSpacing` 新增了原生的 Inspector 編輯支援。
   - 實作 `ThicknessDrawer` 提供 L, T, R, B 的邊距編輯，並優化 `Vector2Drawer` 為 x, y 標示。
   - 實作 `StyleThicknessDrawer` 與 `StyleSpacingDrawer`，完整支援 Unset / Token / Value 模式的無縫切換與 Fallback 預設值處理。

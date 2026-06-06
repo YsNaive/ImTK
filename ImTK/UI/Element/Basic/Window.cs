@@ -329,8 +329,11 @@ namespace ImTK.UI
             return isExpanded;
         }
 
+        private bool m_cachedWindowHovered;
+
         public override void OnEndRender()
         {
+            m_cachedWindowHovered = ImGui.IsWindowHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
             End();
 
             if (!m_isOpenForImGuiCache && m_isOpen)
@@ -341,7 +344,7 @@ namespace ImTK.UI
 
         protected internal override bool CheckHoverState()
         {
-            return ImGui.IsWindowHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+            return m_cachedWindowHovered;
         }
 
         protected virtual void OnEnable() { }

@@ -13,6 +13,7 @@ namespace ImTK.UI
         public bool hasChildren { get; set; }
         public bool isExpanded { get; set; }
         public bool isSelected { get; set; }
+        public bool forceHoverState { get; set; }
         
         public object itemData { get; set; }
         
@@ -60,7 +61,7 @@ namespace ImTK.UI
                 clicked = ImGui.InvisibleButton((byte*)m_nativeIdBuffer.Data, size);
             }
             
-            bool isHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+            bool isHovered = forceHoverState || ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
             
             // Render selection background
             if (isSelected)

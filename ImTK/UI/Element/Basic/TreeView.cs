@@ -39,12 +39,14 @@ namespace ImTK.UI
         public IReadOnlyList<TData> selectedItems => m_selectedItems;
         public TData selectedItem => m_selectedItems.Count > 0 ? m_selectedItems[0] : default;
         public TData hoveredItem { get; private set; }
+        public TData externalHoveredItem { get; set; }
 
         public event Action<TData> onSelectionChanged;
 
         protected abstract VisualElement MakeItem();
         protected abstract void BindItem(VisualElement ui, TData item);
-        protected abstract IEnumerable<TData> FetchChildren(TData item);
+        protected abstract IEnumerable<TData> GetItemChildren(TData item);
+        protected virtual TData GetItemParent(TData item) { return default; }
         protected abstract bool HasChildren(TData item);
 
         public TreeView()
@@ -104,6 +106,44 @@ namespace ImTK.UI
             RenderEngine.MarkRenderDirty(this);
         }
 
+        public void SetExpanded(TData item, bool expanded)
+        {
+            if (expanded) m_expandedItems.Add(item);
+            else m_expandedItems.Remove(item);
+            RebuildFlattenedList();
+        }
+
+        public void Reveal(TData item)
+        {
+            if (EqualityComparer<TData>.Default.Equals(item, default)) return;
+
+            HashSet<TData> visited = new HashSet<TData>();
+            TData current = GetItemParent(item);
+
+            while (!EqualityComparer<TData>.Default.Equals(current, default))
+            {
+                if (!visited.Add(current)) break; // Circular dependency detected
+                m_expandedItems.Add(current);
+                current = GetItemParent(current);
+            }
+
+            RebuildFlattenedList();
+            SetSelection(item);
+            ScrollTo(item);
+        }
+
+        private int m_pendingScrollIndex = -1;
+
+        public void ScrollTo(TData item)
+        {
+            int index = m_flattenedList.FindIndex(n => EqualityComparer<TData>.Default.Equals(n.Data, item));
+            if (index >= 0)
+            {
+                m_pendingScrollIndex = index;
+                RenderEngine.MarkRenderDirty(this);
+            }
+        }
+
         public void ExpandAll()
         {
             if (m_itemsSource == null) return;
@@ -119,7 +159,7 @@ namespace ImTK.UI
             if (HasChildren(data))
             {
                 m_expandedItems.Add(data);
-                var children = FetchChildren(data);
+                var children = GetItemChildren(data);
                 if (children != null)
                 {
                     foreach (var child in children)
@@ -160,7 +200,7 @@ namespace ImTK.UI
 
             if (hasChildren && m_expandedItems.Contains(data))
             {
-                var children = FetchChildren(data);
+                var children = GetItemChildren(data);
                 if (children != null)
                 {
                     foreach (var child in children)
@@ -191,6 +231,13 @@ namespace ImTK.UI
                     return;
                 }
                 
+                if (m_pendingScrollIndex >= 0)
+                {
+                    float scrollY = m_pendingScrollIndex * ImGui.GetFrameHeight();
+                    ImGui.SetScrollY(scrollY);
+                    m_pendingScrollIndex = -1;
+                }
+                
                 ImGuiListClipper clipper = new ImGuiListClipper();
                 clipper.Begin(m_flattenedList.Count);
                 
@@ -207,6 +254,7 @@ namespace ImTK.UI
                         node.hasChildren = data.HasChildren;
                         node.isExpanded = m_expandedItems.Contains(data.Data);
                         node.isSelected = m_selectedItems.Contains(data.Data);
+                        node.forceHoverState = EqualityComparer<TData>.Default.Equals(data.Data, externalHoveredItem);
                         node.itemData = data.Data;
                         
                         BindItem(node.contentElement, data.Data);
