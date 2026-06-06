@@ -12,6 +12,9 @@
 - **Inspector Box Model 可視化升級**：大幅優化 `VisualElementInspectorWindow` 內的 Gizmo，現支援精確高亮選中物件及其所有父節點層級（採 HSV 著色），並為游標 Hover 項目提供即時的半透明焦點反饋。
 
 ### Added
+- **Inspector Style 編輯擴展**：為 `StyleThickness` 與 `StyleSpacing` 新增了原生的 Inspector 編輯支援。
+  - 實作 `ThicknessDrawer` 提供 L, T, R, B 的邊距編輯，並優化 `Vector2Drawer` 為 x, y 標示。
+  - 實作 `StyleThicknessDrawer` 與 `StyleSpacingDrawer`，完整支援 Unset / Token / Value 模式的無縫切換與 Fallback 預設值處理。
 - **視窗全域事件**：在 `Panel` 中新增 `OnWindowOpenedEvent` 與 `OnWindowClosedEvent` 結構體 (實作 `IImTKEvent`)，透過 `ImTKEventBus` 發布視窗開關事件，達成型別安全且零記憶體的事件傳遞。
 - **技術文檔全面重構與速查表 (Cheat Sheets)**：對全專案的子系統進行了地毯式掃描，將原本分散或過時的技術說明統整。現在每一個子模組 (包含 `Core`, `Database`, `Log`, `Event`, `UI/Event`, `UI/Element`, `UI/Layout`, `DebugTools`, `DataType`) 都擁有專屬的 `README.md` 作為快速查找入口 (Quick Reference)，確保所有文件精準對齊當前的架構程式碼。
 - **VisualElement Inspector 開發**：在 `DebugTools` 下實作了 `VisualElementInspectorWindow`，提供全域視覺樹的即時檢視。使用 `SplitView` 佈局並支援狀態持久化 (Persistence)。

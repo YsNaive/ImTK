@@ -1,7 +1,8 @@
-using System;
-using System.Numerics;
 using Hexa.NET.ImGui;
 using ImTK.Core;
+using ImTK.Log;
+using System;
+using System.Numerics;
 
 namespace ImTK.UI
 {
@@ -55,6 +56,7 @@ namespace ImTK.UI
 
                 if (changed || ImGui.IsItemDeactivatedAfterEdit())
                 {
+                    ImTKLog.Trace($"ColorDrawer changed! New color: {v}");
                     m_drawer.SetValueWithChanged(new Color(v));
                 }
             }

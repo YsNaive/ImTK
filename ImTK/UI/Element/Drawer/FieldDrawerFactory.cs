@@ -102,7 +102,27 @@ namespace ImTK.UI
                     // 無法使用泛型 EnumDrawer 來渲染未知的 Enum 基底型別
                     return null;
                 }
-                drawerType = drawerType.MakeGenericType(m_valueType);
+                Type searchType = m_valueType;
+                if (searchType.IsGenericType && searchType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    searchType = Nullable.GetUnderlyingType(searchType);
+                }
+
+                if (searchType.IsGenericType && drawerType.GetGenericArguments().Length == searchType.GetGenericArguments().Length)
+                {
+                    try
+                    {
+                        drawerType = drawerType.MakeGenericType(searchType.GetGenericArguments());
+                    }
+                    catch
+                    {
+                        drawerType = drawerType.MakeGenericType(searchType);
+                    }
+                }
+                else
+                {
+                    drawerType = drawerType.MakeGenericType(searchType);
+                }
             }
 
             var drawer = (IFieldDrawer)Activator.CreateInstance(drawerType);

@@ -13,8 +13,8 @@ namespace ImTK.UI
 
         public Vector2Drawer()
         {
-            m_xDrawer = new FloatDrawer() { label = "X", labelWidth = null, iconType = IconElement.IconType.Null };
-            m_yDrawer = new FloatDrawer() { label = "Y", labelWidth = null, iconType = IconElement.IconType.Null };
+            m_xDrawer = new FloatDrawer() { label = "x", labelWidth = null, iconType = IconElement.IconType.Null };
+            m_yDrawer = new FloatDrawer() { label = "y", labelWidth = null, iconType = IconElement.IconType.Null };
 
             m_xDrawer.RegisterValueChangedCallback((evt) => SetValueWithChanged(new System.Numerics.Vector2(evt.newValue, m_yDrawer.value)));
             m_yDrawer.RegisterValueChangedCallback((evt) => SetValueWithChanged(new System.Numerics.Vector2(m_xDrawer.value, evt.newValue)));

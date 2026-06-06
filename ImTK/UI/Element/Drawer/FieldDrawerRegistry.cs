@@ -35,7 +35,23 @@ namespace ImTK.UI
                     var types = assembly.GetTypes();
                     foreach (var type in types)
                     {
-                        if (type.IsAbstract || !typeof(IFieldDrawer).IsAssignableFrom(type))
+                        if (type.IsAbstract)
+                            continue;
+
+                        bool isDrawer = typeof(IFieldDrawer).IsAssignableFrom(type);
+                        if (!isDrawer)
+                        {
+                            foreach (var iface in type.GetInterfaces())
+                            {
+                                if (iface == typeof(IFieldDrawer))
+                                {
+                                    isDrawer = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!isDrawer)
                             continue;
 
                         var attr = type.GetCustomAttribute<CustomFieldDrawerAttribute>();
@@ -46,11 +62,14 @@ namespace ImTK.UI
                                 drawerType = type,
                                 attribute = attr
                             });
+                            ImTK.Log.ImTKLog.Trace($"Registered Drawer: {type.Name} for target {attr.targetType.Name}");
                         }
                     }
                 }
                 catch (ReflectionTypeLoadException) { }
             }
+
+            ImTK.Log.ImTKLog.Info($"Registered {s_drawerDefinitions.Count} FieldDrawers.");
         }
 
         public static Type FindDrawerType(Type targetType, IEnumerable<Attribute> modifiers)
@@ -77,6 +96,14 @@ namespace ImTK.UI
             if (s_typeCache.TryGetValue(key, out Type cachedType))
                 return cachedType;
 
+            ImTK.Log.ImTKLog.Trace($"Finding drawer for {targetType.Name} (IsGeneric: {targetType.IsGenericType})");
+
+            Type searchType = targetType;
+            if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                searchType = Nullable.GetUnderlyingType(targetType);
+            }
+
             Type bestMatch = null;
             int bestDepth = int.MaxValue;
 
@@ -85,15 +112,25 @@ namespace ImTK.UI
                 if (def.attribute.requiredModifier != modifierType)
                     continue;
 
-                if (def.attribute.targetType == targetType)
+                if (def.attribute.targetType == searchType)
                 {
                     bestMatch = def.drawerType;
                     break;
                 }
 
-                if (def.attribute.allowInheritType && def.attribute.targetType.IsAssignableFrom(targetType))
+                if (searchType.IsGenericType && def.attribute.targetType.IsGenericTypeDefinition)
                 {
-                    int depth = GetInheritanceDepth(targetType, def.attribute.targetType);
+                    bool match = searchType.GetGenericTypeDefinition() == def.attribute.targetType;
+                    if (match)
+                    {
+                        bestMatch = def.drawerType;
+                        break;
+                    }
+                }
+
+                if (def.attribute.allowInheritType && def.attribute.targetType.IsAssignableFrom(searchType))
+                {
+                    int depth = GetInheritanceDepth(searchType, def.attribute.targetType);
                     if (depth < bestDepth)
                     {
                         bestDepth = depth;
@@ -101,6 +138,8 @@ namespace ImTK.UI
                     }
                 }
             }
+
+            ImTK.Log.ImTKLog.Trace($"Found bestMatch for {targetType.Name}: {bestMatch?.Name ?? "null"}");
 
             // Fallback for objects if allowInheritType matched none, or just return null and let factory handle it
             if (bestMatch != null)

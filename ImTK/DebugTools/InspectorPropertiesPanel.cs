@@ -342,6 +342,21 @@ namespace ImTK.DebugTools
 
             if (drawer != null && drawer is VisualElement ve)
             {
+                if (drawer is StyleColorDrawer colorDrawer)
+                {
+                    colorDrawer.defaultColorProvider = () =>
+                    {
+                        var name = prop.Name.ToLowerInvariant();
+                        if (name.Contains("background") || name.Contains("surface"))
+                            return ImGui.GetStyle().Colors[(int)ImGuiCol.ChildBg];
+                        if (name.Contains("text"))
+                            return ImGui.GetStyle().Colors[(int)ImGuiCol.Text];
+                        if (name.Contains("border"))
+                            return ImGui.GetStyle().Colors[(int)ImGuiCol.Border];
+                        return Color.Black;
+                    };
+                }
+
                 drawer.SetValueWithoutNotify(propValue);
                 RegisterGenericCallback(ve, prop.PropertyType, prop);
                 m_drawerContainer.Add(ve);
