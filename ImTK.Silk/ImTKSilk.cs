@@ -82,6 +82,10 @@ namespace ImTK.Silk
             ImGuiImplGLFW.InitForOpenGL((Hexa.NET.ImGui.Backends.GLFW.GLFWwindow*)s_window.Handle, true);
             ImGuiImplOpenGL3.Init("#version 330");
 
+            float xScale, yScale;
+            unsafe { Hexa.NET.GLFW.GLFW.GetWindowContentScale(s_window, &xScale, &yScale); }
+            if (xScale > 0) ImTK.UI.RenderEngine.Context.MainViewportDpiScale = xScale;
+
             ImTKApplication.Lifecycle.Initialize();
             ImTKApplication.Lifecycle.GraphicsSetup();
 

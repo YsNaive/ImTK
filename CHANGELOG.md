@@ -32,6 +32,7 @@
 - `VisualElementInspectorWindow` 的開啟邏輯全面導入 `WindowId` 常數 (`"ImTK.VisualElementInspector"`)，解決多重視窗開啟時可能導致的 ID 衝突崩潰。
 
 ### Fixed (修復)
+- **初始 DPI 縮放字體渲染異常修復**：修復了 ImGui 在第一幀尚未初始化完成前，`GetMainViewport().DpiScale` 回傳 1.0 導致預設字體 (`io.FontDefault`) 被錯誤地以未縮放的 18px 烘焙，進而造成底層原生的 Docking Tab 與經過 `PushFont` 動態放大的 Window 內容產生大小落差的 Bug。現已改由 `ImTKSilk` 初始化時主動透過 `GLFW.GetWindowContentScale` 抽取系統視窗的真實 DPI 並寫入 `RenderEngine` 全域狀態，確保第一次字型烘焙即套用正確的縮放倍率。
 - **跨螢幕 DPI 縮放排版錯位修復**：修正了當視窗首次於不同 DPI 螢幕渲染時，部分沒有實體 Padding/Margin 的元件（如 `TextElement`）因未能觸發 `MarkMeasureDirty`，導致其排版高度被永久卡死在舊的 DPI，進而發生藍色 Gizmo 外框比文字還矮的異常「切斷」現象。現已強制在 DPI 變動時同步呼叫 `MarkMeasureDirty` 與 `MarkArrangeDirty` 確保排版完全更新。
 - **TreeView 渲染狀態崩潰修復**：修正了 `TreeView` 覆寫 `OnBeginRender` 時未呼叫 `base.OnBeginRender()`，導致與 `base.OnEndRender()` 不對稱，從而觸發 ImGui 內部 `PopClipRect` 空堆疊斷言崩潰 (`Size > 0`) 的嚴重錯誤。現已補齊呼叫，確保渲染狀態棧的完美對稱。
 - **TreeNode 排版重疊與越界修復**：修正了 `TreeNode` 展開箭頭與文字重疊的問題。將錯誤的絕對座標定位 (`ImGui.SetCursorScreenPos`) 替換為安全的 `ImGui.Dummy` 搭配 `ImGui.SameLine()`，確保排版正確推進且不會觸發 ImGui 的邊界外延展警告 (`code uses SetCursorPos to extend window boundaries`)。

@@ -83,7 +83,7 @@ namespace ImTK.UI
             float mainDpi = ImTKTheme.GlobalTheme.globalFontScale;
             if (ImGui.GetCurrentContext().Handle != null)
             {
-                mainDpi = ImGui.GetMainViewport().DpiScale * ImTKTheme.GlobalTheme.globalFontScale;
+                mainDpi = ImTK.UI.RenderEngine.Context.MainViewportDpiScale * ImTKTheme.GlobalTheme.globalFontScale;
             }
             if (mainDpi <= 0.0f) mainDpi = 1.0f;
 
