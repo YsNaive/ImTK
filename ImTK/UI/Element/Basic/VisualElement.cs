@@ -578,6 +578,13 @@ namespace ImTK.UI
         internal bool m_isMeasureDirty = true;
         internal bool m_isArrangeDirty = true;
         internal Vector2 m_desiredSize;
+
+        /// <summary>
+        /// 元件內部實際內容的大小。對一般元件而言，這等同於 Measure 計算後的 m_desiredSize。
+        /// 但對於 ScrollView 等具有捲動空間的容器，這會回報完整的內部內容大小，而非被截斷的視窗大小。
+        /// </summary>
+        public virtual Vector2 contentSize => m_desiredSize;
+
         /// <summary>
         /// 排版引擎 (Layout Engine) 計算後賦予此元件的最終絕對座標與尺寸。
         /// 在渲染階段 (Render) 會依據此矩形進行剪裁與繪製。

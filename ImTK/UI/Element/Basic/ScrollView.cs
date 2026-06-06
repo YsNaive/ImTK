@@ -20,6 +20,7 @@ namespace ImTK.UI
         private static readonly IntPtr s_scrollViewId = System.Runtime.InteropServices.Marshal.StringToCoTaskMemUTF8("ScrollView");
 
         private Vector2 m_contentSize;
+        public override Vector2 contentSize => m_contentSize;
         private bool m_wasExpanded;
         private bool m_beginChildCalled;
 
@@ -48,6 +49,19 @@ namespace ImTK.UI
             float h = constraint.HeightMode == MeasureMode.Exactly ? constraint.AvailableHeight : Math.Min(m_contentSize.Y, constraint.AvailableHeight);
 
             return new Vector2(w, h);
+        }
+
+        protected override void ArrangeContent(Rect finalRect)
+        {
+            var padding = resolvedLayoutState.padding;
+            bool horizScroll = flags.horizontalScrollbar || flags.alwaysHorizontalScrollbar;
+            bool vertScroll = !flags.noScrollbar;
+
+            float virtualWidth = horizScroll ? Math.Max(finalRect.width, m_contentSize.X + padding.horizontal) : finalRect.width;
+            float virtualHeight = vertScroll ? Math.Max(finalRect.height, m_contentSize.Y + padding.vertical) : finalRect.height;
+
+            Rect virtualRect = new Rect(finalRect.x, finalRect.y, virtualWidth, virtualHeight);
+            base.ArrangeContent(virtualRect);
         }
 
         public override bool OnBeginRender()

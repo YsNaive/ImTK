@@ -1,3 +1,4 @@
+using ImTK.Log;
 using ImTK.UI;
 using System.Collections.Generic;
 
@@ -166,8 +167,17 @@ namespace ImTK.DebugTools
             var drawList = Hexa.NET.ImGui.ImGui.GetForegroundDrawList(viewport);
             
             var rect = node.layoutRect;
-            System.Numerics.Vector2 min = new System.Numerics.Vector2(rect.x, rect.y);
-            System.Numerics.Vector2 max = new System.Numerics.Vector2(rect.x + rect.width, rect.y + rect.height);
+            var offset = ImTK.UI.RenderEngine.Context.CurrentRenderOffset;
+            System.Numerics.Vector2 min = rect.position - offset;
+            
+            // 使用元件本身的 contentSize 來包覆被裁切或超出範圍的內容 (包含 ScrollView 等滾動容器的完整大小)
+            System.Numerics.Vector2 targetSize = node.contentSize;
+
+            float drawWidth = Math.Max(rect.width, targetSize.X);
+            float drawHeight = Math.Max(rect.height, targetSize.Y);
+            
+            System.Numerics.Vector2 max = min + new System.Numerics.Vector2(drawWidth, drawHeight);
+
 
             bool isSelectedOrParent = false;
             var current = m_selectedElement;

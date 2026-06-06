@@ -22,7 +22,6 @@ namespace ImTK.DebugTools
             this.style.padding = new Thickness(10f);
             this.style.itemSpacing = new System.Numerics.Vector2(0, 10f);
             this.flags.horizontalScrollbar = true;
-
             m_header = new InspectorHeaderView();
             m_header.style.minHeight = 160f;
 
@@ -66,7 +65,10 @@ namespace ImTK.DebugTools
         protected override System.Numerics.Vector2 MeasureContent(LayoutConstraint constraint)
         {
             // Fixed height to prevent overlapping with siblings during Yoga layout
-            return new System.Numerics.Vector2(constraint.AvailableWidth > 0 ? constraint.AvailableWidth : 200f, 260f);
+            // 如果 AvailableWidth 是無限大 (例如在水平捲動的 ScrollView 中)，我們只回報基本的最小寬度 (200f)
+            // 在排版階段 (ArrangeContent) 會透過 Flexbox 的 AlignItems.Stretch 自動拉伸填滿虛擬寬度
+            float width = float.IsPositiveInfinity(constraint.AvailableWidth) ? 200f : (constraint.AvailableWidth > 0 ? constraint.AvailableWidth : 200f);
+            return new System.Numerics.Vector2(width, 260f);
         }
 
         public override void OnRender()
@@ -143,9 +145,29 @@ namespace ImTK.DebugTools
     {
         public VisualElement target;
 
+        private (float minW, float minH, float stepX, float stepY) GetBoxSizes()
+        {
+            float lineHeight = ImGui.GetTextLineHeight();
+            float stepY = lineHeight * 1.25f;
+            float stepX = Math.Max(lineHeight * 1.25f, ImGui.CalcTextSize("999.9").X + 16f); // 確保橫向能容納文字與 Padding
+            
+            float contentW = ImGui.CalcTextSize("9999.9 x 9999.9").X + 24f; // 給 content 加一點 padding
+            float contentH = lineHeight * 2f;
+            
+            float minW = contentW + 6 * stepX;
+            float minH = contentH + 6 * stepY;
+            
+            return (minW, minH, stepX, stepY);
+        }
+
         protected override System.Numerics.Vector2 MeasureContent(LayoutConstraint constraint)
         {
-            return new System.Numerics.Vector2(constraint.AvailableWidth > 0 ? constraint.AvailableWidth : 300f, 180f);
+            var (minW, minH, _, _) = GetBoxSizes();
+            
+            float width = float.IsPositiveInfinity(constraint.AvailableWidth) ? minW : Math.Max(minW, constraint.AvailableWidth);
+            float height = float.IsPositiveInfinity(constraint.AvailableHeight) ? minH : Math.Max(minH, constraint.AvailableHeight);
+            
+            return new System.Numerics.Vector2(width, height);
         }
 
         public override void OnRender()
@@ -155,20 +177,14 @@ namespace ImTK.DebugTools
 
             var drawList = ImGui.GetWindowDrawList();
             
-            // LayoutRect is logical, we must apply RenderOffset for absolute ImGui draw commands
+            var (boxWidth, boxHeight, stepX, stepY) = GetBoxSizes();
+            
             var actualRectPos = layoutRect.position - RenderEngine.Context.CurrentRenderOffset;
             var center = new System.Numerics.Vector2(actualRectPos.X + layoutRect.width / 2f, actualRectPos.Y + layoutRect.height / 2f);
             
-            float boxWidth = Math.Min(layoutRect.width, 300f);
-            float boxHeight = Math.Min(layoutRect.height, 160f);
-            
-            // Outer Box (Margin)
+            // 置中繪製，不強迫填滿整個 layoutRect
             System.Numerics.Vector2 marginMin = new System.Numerics.Vector2(center.X - boxWidth / 2f, center.Y - boxHeight / 2f);
             System.Numerics.Vector2 marginMax = new System.Numerics.Vector2(center.X + boxWidth / 2f, center.Y + boxHeight / 2f);
-
-            // Use fixed step sizes so the text fits comfortably between the boxes
-            float stepX = 25f;
-            float stepY = 25f;
 
             System.Numerics.Vector2 borderMin = new System.Numerics.Vector2(marginMin.X + stepX, marginMin.Y + stepY);
             System.Numerics.Vector2 borderMax = new System.Numerics.Vector2(marginMax.X - stepX, marginMax.Y - stepY);
@@ -200,18 +216,24 @@ namespace ImTK.DebugTools
             // Function to draw text safely
             void DrawLabel(System.Numerics.Vector2 pos, string name, string val)
             {
+                bool hasName = !string.IsNullOrEmpty(name);
                 var h = new ImTKUtf8StringHandler(32, 2);
-                h.AppendFormatted(name);
-                h.AppendLiteral(" ");
+                if (hasName)
+                {
+                    h.AppendFormatted(name);
+                    h.AppendLiteral(" ");
+                }
                 h.AppendFormatted(val);
                 
                 var size = RenderEngine.CalcTextSizeBuffered(ref h);
                 var textPos = new System.Numerics.Vector2(pos.X - size.X / 2f, pos.Y - size.Y / 2f);
                 
-                // Re-create handler because CalcTextSizeBuffered consumed it
                 var h2 = new ImTKUtf8StringHandler(32, 2);
-                h2.AppendFormatted(name);
-                h2.AppendLiteral(" ");
+                if (hasName)
+                {
+                    h2.AppendFormatted(name);
+                    h2.AppendLiteral(" ");
+                }
                 h2.AppendFormatted(val);
                 
                 ImGui.SetCursorScreenPos(textPos);
@@ -221,18 +243,32 @@ namespace ImTK.DebugTools
             var rs = target.resolvedLayoutState;
             var tMargin = rs.margin;
             var tPadding = rs.padding;
+            string borderStr = "-";
+            if (target.resolvedStyle.TryGetFloat(StyleKey.BorderWidth.Hash, out float bw))
+            {
+                borderStr = bw.ToString("F1");
+            }
 
-            // Simplified Layout labels (Top)
+            // Top
             DrawLabel(new System.Numerics.Vector2(center.X, marginMin.Y + stepY / 2f), "margin", tMargin.top.ToString("F1"));
-            DrawLabel(new System.Numerics.Vector2(center.X, borderMin.Y + stepY / 2f), "border", "-");
+            DrawLabel(new System.Numerics.Vector2(center.X, borderMin.Y + stepY / 2f), "border", borderStr);
             DrawLabel(new System.Numerics.Vector2(center.X, paddingMin.Y + stepY / 2f), "padding", tPadding.top.ToString("F1"));
             DrawLabel(center, $"{target.layoutRect.width:F1} x {target.layoutRect.height:F1}", "");
 
             // Left
             DrawLabel(new System.Numerics.Vector2(marginMin.X + stepX / 2f, center.Y), "", tMargin.left.ToString("F1"));
-            DrawLabel(new System.Numerics.Vector2(borderMin.X + stepX / 2f, center.Y), "", "-");
+            DrawLabel(new System.Numerics.Vector2(borderMin.X + stepX / 2f, center.Y), "", borderStr);
             DrawLabel(new System.Numerics.Vector2(paddingMin.X + stepX / 2f, center.Y), "", tPadding.left.ToString("F1"));
 
+            // Right
+            DrawLabel(new System.Numerics.Vector2(marginMax.X - stepX / 2f, center.Y), "", tMargin.right.ToString("F1"));
+            DrawLabel(new System.Numerics.Vector2(borderMax.X - stepX / 2f, center.Y), "", borderStr);
+            DrawLabel(new System.Numerics.Vector2(paddingMax.X - stepX / 2f, center.Y), "", tPadding.right.ToString("F1"));
+
+            // Bottom
+            DrawLabel(new System.Numerics.Vector2(center.X, marginMax.Y - stepY / 2f), "", tMargin.bottom.ToString("F1"));
+            DrawLabel(new System.Numerics.Vector2(center.X, borderMax.Y - stepY / 2f), "", borderStr);
+            DrawLabel(new System.Numerics.Vector2(center.X, paddingMax.Y - stepY / 2f), "", tPadding.bottom.ToString("F1"));
         }
     }
 
