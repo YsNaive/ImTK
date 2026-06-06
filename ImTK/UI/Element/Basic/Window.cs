@@ -136,6 +136,7 @@ namespace ImTK.UI
         }
 
         protected bool m_isOpen = false;
+        public bool isOpen => m_isOpen;
 
         [Obsolete("Please use the 'flags' property syntax sugar instead.")]
         public ImGuiWindowFlags windowFlags { get => flags.Value; set => flags.Value = value; }
