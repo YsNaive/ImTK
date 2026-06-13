@@ -221,7 +221,11 @@ namespace ImTK.UI
         public override void OnRender()
         {
             var size = this.layoutRect.size;
-            if (size.X <= 0 || size.Y <= 0) return;
+            if (size.X <= 0 || size.Y <= 0) 
+            {
+                ImGui.Dummy(System.Numerics.Vector2.Zero);
+                return;
+            }
 
             unsafe
             {

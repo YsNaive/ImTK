@@ -75,6 +75,7 @@ namespace ImTK.UI
             {
                 if (size.X <= 0 || size.Y <= 0) 
                 {
+                    ImGui.Dummy(System.Numerics.Vector2.Zero);
                     return false;
                 }
 
