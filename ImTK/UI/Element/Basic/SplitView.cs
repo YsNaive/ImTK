@@ -169,6 +169,8 @@ namespace ImTK.UI
                 splitterRect = new Rect(layoutRect.x, y, layoutRect.width, splitBarSize);
             }
 
+            if (splitterRect.width <= 0 || splitterRect.height <= 0) return;
+
             ImGui.SetCursorScreenPos(splitterRect.position - RenderEngine.Context.CurrentRenderOffset);
             
             // 使用唯一 ID 防止多個 SplitView 衝突

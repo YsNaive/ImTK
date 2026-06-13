@@ -294,26 +294,29 @@ namespace ImTK.UI
                 }
                 
                 // 根據距離（修改次數）進行排序，距離越小越前面。若距離相同則保留原順序
-                this.hierarchy.SortChildren((a, b) =>
+                ImTK.Core.ImTKApplication.ScheduleDeferred(() =>
                 {
-                    if (isEmpty)
+                    this.hierarchy.SortChildren((a, b) =>
                     {
-                        return m_originalOrder.IndexOf(a).CompareTo(m_originalOrder.IndexOf(b));
-                    }
+                        if (isEmpty)
+                        {
+                            return m_originalOrder.IndexOf(a).CompareTo(m_originalOrder.IndexOf(b));
+                        }
+                        
+                        int scoreA = scores.TryGetValue(a, out int sa) ? sa : int.MaxValue;
+                        int scoreB = scores.TryGetValue(b, out int sb) ? sb : int.MaxValue;
+                        
+                        int cmp = scoreA.CompareTo(scoreB);
+                        if (cmp == 0)
+                        {
+                            // 分數相同時，依照原始順序排列
+                            return m_originalOrder.IndexOf(a).CompareTo(m_originalOrder.IndexOf(b));
+                        }
+                        return cmp;
+                    }, notify: false);
                     
-                    int scoreA = scores.TryGetValue(a, out int sa) ? sa : int.MaxValue;
-                    int scoreB = scores.TryGetValue(b, out int sb) ? sb : int.MaxValue;
-                    
-                    int cmp = scoreA.CompareTo(scoreB);
-                    if (cmp == 0)
-                    {
-                        // 分數相同時，依照原始順序排列
-                        return m_originalOrder.IndexOf(a).CompareTo(m_originalOrder.IndexOf(b));
-                    }
-                    return cmp;
-                }, notify: false);
-                
-                RenderEngine.MarkRenderDirty(this);
+                    RenderEngine.MarkRenderDirty(this);
+                });
             }
 
             /// <summary>
