@@ -234,6 +234,22 @@ namespace ImTK.Database
             _cache.Clear();
         }
 
+        public void Unload(string relativePath)
+        {
+            string normalizedPath = relativePath.Replace('\\', '/');
+            if (_cache.TryRemove(normalizedPath, out var asset))
+            {
+                if (asset is ImTKAsset implAsset)
+                {
+                    implAsset.InternalDispose();
+                }
+                else
+                {
+                    asset.Dispose();
+                }
+            }
+        }
+
         #endregion
     }
 }

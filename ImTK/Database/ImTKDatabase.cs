@@ -56,5 +56,14 @@ namespace ImTK.Database
         {
             Manager.UnloadAll();
         }
+
+        /// <summary>
+        /// 從本地資料庫中卸載指定資源。
+        /// </summary>
+        /// <param name="path">相對於 LocalDataPath 的相對路徑。</param>
+        public static void Unload(string path)
+        {
+            Manager.Unload(path);
+        }
     }
 }

@@ -89,6 +89,8 @@ namespace ImTK.Silk
             ImTKApplication.Lifecycle.Initialize();
             ImTKApplication.Lifecycle.GraphicsSetup();
 
+            ImTK.Database.ImTKDatabase.RegisterImporter(typeof(ImTK.Database.Texture2D), new ImTK.Silk.Importers.TextureImporter(s_gl));
+
             double lastTime = Hexa.NET.GLFW.GLFW.GetTime();
 
             while (Hexa.NET.GLFW.GLFW.WindowShouldClose(s_window) == 0)
