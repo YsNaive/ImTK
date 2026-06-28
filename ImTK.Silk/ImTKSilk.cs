@@ -76,6 +76,7 @@ namespace ImTK.Silk
                 io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
                 io.ConfigViewportsNoDecoration = false;
             }
+            io.ConfigWindowsMoveFromTitleBarOnly = s_config.windowMoveFromTitleBarOnly;
             ImGuiImplGLFW.SetCurrentContext(ImGui.GetCurrentContext());
             ImGuiImplOpenGL3.SetCurrentContext(ImGui.GetCurrentContext());
 

@@ -19,5 +19,10 @@ namespace ImTK.Silk
         /// The path where ImGui configuration (.ini) and ImTK window states are saved.
         /// </summary>
         public string configFolderPath = "imgui";
+
+        /// <summary>
+        /// When true, windows can only be moved by dragging their title bar, not from anywhere inside the window.
+        /// </summary>
+        public bool windowMoveFromTitleBarOnly = false;
     }
 }
