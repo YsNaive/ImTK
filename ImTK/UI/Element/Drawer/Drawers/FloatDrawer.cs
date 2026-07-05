@@ -11,6 +11,8 @@ namespace ImTK.UI
 
         public float step { get; set; } = 0f;
 
+        public string format { get; set; } = "%.3f";
+
         public FloatDrawer()
         {
             m_contentContainer.Add(new FieldElement(this));
@@ -53,7 +55,7 @@ namespace ImTK.UI
                 ImGui.SetNextItemWidth(this.layoutRect.width);
                 float v = m_drawer.value;
 
-                bool changed = ImGui.InputFloat(m_drawer.cachedId, ref v, m_drawer.step, m_drawer.step * 100f, "%.3f", ImGuiInputTextFlags.None);
+                bool changed = ImGui.InputFloat(m_drawer.cachedId, ref v, m_drawer.step, m_drawer.step * 100f, m_drawer.format, ImGuiInputTextFlags.None);
 
                 if (changed || ImGui.IsItemDeactivatedAfterEdit())
                 {
