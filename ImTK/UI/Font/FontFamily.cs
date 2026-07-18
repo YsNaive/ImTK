@@ -19,13 +19,8 @@ namespace ImTK.UI
             FontSources.Add(source);
         }
 
-        [Obsolete("Use AddSource instead")]
-        public void AddFallback(string path)
-        {
-            FontSources.Add(new FontSource(path));
-        }
 
-        [Obsolete("GlyphRanges are defined per FontSource")]
-        public IntPtr GlyphRanges { get; private set; }
+
+
     }
 }
