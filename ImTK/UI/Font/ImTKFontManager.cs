@@ -19,6 +19,16 @@ namespace ImTK.UI
 
         private static bool s_isFontDirty = true;
 
+        private static readonly ushort[] s_cjkGlyphRanges = new ushort[]
+        {
+            0x0020, 0x00FF, // Basic Latin + Latin Supplement
+            0x2000, 0x206F, // General Punctuation
+            0x3000, 0x30FF, // CJK Symbols and Punctuation + Kana
+            0x4E00, 0x9FFF, // CJK Unified Ideographs (All Chinese characters)
+            0xFF00, 0xFFEF, // Halfwidth and Fullwidth Forms
+            0
+        };
+
         public static readonly int DefaultFontFamilyHash = new ImTK.HashedString("ImGuiDefault").Hash;
         private static readonly string DefaultFontFamilyName = "ImGuiDefault";
 
@@ -141,10 +151,23 @@ namespace ImTK.UI
                             config.OversampleV = 1;
                         }
 
+                        // Only the FIRST (primary) font carries the full CJK glyph ranges.
+                        // Merge fonts use null (default ASCII range) to prevent Font Atlas texture overflow
+                        // which would silently corrupt all rendering (blank output, no "??" fallback).
                         ImFontPtr font;
                         unsafe
                         {
-                            font = io.Fonts.AddFontFromFileTTF(source.ResolvedPath, baseSizePixels, &config, (uint*)0);
+                            if (isFirst)
+                            {
+                                fixed (ushort* rangesPtr = s_cjkGlyphRanges)
+                                {
+                                    font = io.Fonts.AddFontFromFileTTF(source.ResolvedPath, baseSizePixels, &config, (uint*)rangesPtr);
+                                }
+                            }
+                            else
+                            {
+                                font = io.Fonts.AddFontFromFileTTF(source.ResolvedPath, baseSizePixels, &config, (uint*)0);
+                            }
                         }
 
                         if (isFirst && font.Handle != null)
@@ -152,6 +175,14 @@ namespace ImTK.UI
                             baseFont = font;
                             isFirst = false;
                         }
+                    }
+
+                    if (isFirst || baseFont.Handle == null)
+                    {
+                        ImTKLog.Warning($"No valid font files found for Family '{family.Name}'. Falling back to ImGui default font.");
+                        var fallbackConfig = CreateDefaultFontConfig();
+                        fallbackConfig.SizePixels = baseSizePixels;
+                        baseFont = io.Fonts.AddFontDefault(ref fallbackConfig);
                     }
 
                     if (baseFont.Handle != null)

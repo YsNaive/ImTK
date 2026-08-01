@@ -10,10 +10,12 @@
 	<ItemGroup>
 		<PackageReference Include="Silk.NET.Input" Version="2.23.0" />
 		<PackageReference Include="Silk.NET.OpenGL" Version="2.23.0" />
-		<PackageReference Include="Hexa.NET.ImGui" Version="*-*" />
-		<PackageReference Include="Hexa.NET.ImGui.Backends.GLFW" Version="*-*" />
-		<PackageReference Include="Hexa.NET.ImGui.Backends" Version="*-*" />
-		<PackageReference Include="Hexa.NET.GLFW" Version="*-*" />
+		<!-- Hexa.NET packages pinned to the 2.x era used during initial development (May 2026).   -->
+		<!-- 3.0.0-experimental and above were released 2026-07-31 and have breaking API changes.  -->
+		<PackageReference Include="Hexa.NET.ImGui" Version="2.2.10-prerelease" />
+		<PackageReference Include="Hexa.NET.ImGui.Backends.GLFW" Version="1.0.19-prerelease" />
+		<PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.19-prerelease" />
+		<PackageReference Include="Hexa.NET.GLFW" Version="1.0.5" />
 		<PackageReference Include="Silk.NET.Windowing" Version="2.23.0" />
 		<PackageReference Include="StbImageSharp" Version="2.30.15" />
 	</ItemGroup>

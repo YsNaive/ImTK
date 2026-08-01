@@ -7,6 +7,7 @@
     <Nullable>disable</Nullable>
     <RootNamespace>ImTK</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);CS9191;CS0649</NoWarn>
 </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Hexa.NET.ImGui" Version="*-*" />
+    <!-- Pinned to 2.x era (3.x released 2026-07-31 has breaking API changes) -->
+    <PackageReference Include="Hexa.NET.ImGui" Version="2.2.10-prerelease" />
   </ItemGroup>
 
 
