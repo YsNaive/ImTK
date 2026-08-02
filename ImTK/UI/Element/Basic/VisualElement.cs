@@ -685,6 +685,17 @@ namespace ImTK.UI
             MeasureMode mainMode = isRow ? constraint.WidthMode : constraint.HeightMode;
             MeasureMode crossMode = isRow ? constraint.HeightMode : constraint.WidthMode;
 
+            if (isRow)
+            {
+                if (state.width.HasValue) { availableMain = state.width.Value; mainMode = MeasureMode.Exactly; }
+                if (state.height.HasValue) { availableCross = state.height.Value; crossMode = MeasureMode.Exactly; }
+            }
+            else
+            {
+                if (state.height.HasValue) { availableMain = state.height.Value; mainMode = MeasureMode.Exactly; }
+                if (state.width.HasValue) { availableCross = state.width.Value; crossMode = MeasureMode.Exactly; }
+            }
+
             float borderX = 0;
             if (resolvedStyle.TryGetFloat((int)ImGuiStyleVar.WindowBorderSize, out float bw)) borderX = bw;
             float borderY = borderX;
