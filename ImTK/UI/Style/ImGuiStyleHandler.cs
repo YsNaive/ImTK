@@ -15,6 +15,7 @@ namespace ImTK.UI
         private bool m_fontWasPushed = false;
         private float m_currentDpiScale = 1.0f;
         internal float currentDpiScale => m_currentDpiScale;
+        internal void SetDpiScale(float scaleFactor) => m_currentDpiScale = scaleFactor;
 
         public void Clear()
         {
@@ -109,6 +110,7 @@ namespace ImTK.UI
         public void CopyFrom(ImGuiStyleHandler parent)
         {
             if (parent == null) return;
+            m_currentDpiScale = parent.m_currentDpiScale;
             foreach (var prop in parent.m_properties)
             {
                 if (prop.isInheritable) TrySetProperty(prop);

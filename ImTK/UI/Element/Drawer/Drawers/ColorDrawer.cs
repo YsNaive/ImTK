@@ -28,7 +28,7 @@ namespace ImTK.UI
 
             protected override Vector2 MeasureContent(LayoutConstraint constraint)
             {
-                return new Vector2(ImGui.GetFrameHeight(), ImGui.GetFrameHeight());
+                return new Vector2(GetFrameHeight(), GetFrameHeight());
             }
 
             public override void OnRender()

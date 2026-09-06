@@ -82,7 +82,10 @@ namespace ImTK.UI
                     ResolvedLayoutState oldLayoutState = element.resolvedLayoutState;
                     float oldDpiScale = element.resolvedStyle.currentDpiScale;
 
+                    var dpiScale = RenderEngine.Context.CurrentDpiScale;
                     element.resolvedStyle.Clear();
+                    element.resolvedStyle.SetDpiScale(dpiScale);
+
                     if (element.parent != null)
                     {
                         element.resolvedStyle.CopyFrom(element.parent.resolvedStyle);
@@ -102,6 +105,10 @@ namespace ImTK.UI
                     if (themeToInject != null)
                     {
                         themeToInject.InjectToStyleHandler(element.resolvedStyle);
+                        if (dpiScale != 1.0f)
+                        {
+                            element.resolvedStyle.Scale(dpiScale);
+                        }
                     }
 
                     s_translatedProps.Clear();
@@ -118,6 +125,10 @@ namespace ImTK.UI
                     }
 
                     element.ResolveLayoutState(s_translatedProps);
+                    if (dpiScale != 1.0f)
+                    {
+                        element.resolvedLayoutState.Scale(dpiScale);
+                    }
 
                     var theme = element.theme ?? ImTKTheme.GlobalTheme;
 
@@ -153,6 +164,22 @@ namespace ImTK.UI
                             }
                         }
 
+                        if (dpiScale != 1.0f && finalProp.category == StyleCategory.ImGuiStyle)
+                        {
+                            if (finalProp.dataType == StyleDataType.Float && finalProp.key < (int)ImGuiStyleVar.Count)
+                            {
+                                ImGuiStyleVar varIdx = (ImGuiStyleVar)finalProp.key;
+                                if (varIdx != ImGuiStyleVar.Alpha && varIdx != ImGuiStyleVar.DisabledAlpha)
+                                {
+                                    finalProp.floatValue *= dpiScale;
+                                }
+                            }
+                            else if (finalProp.dataType == StyleDataType.Vector2 && finalProp.key < (int)ImGuiStyleVar.Count)
+                            {
+                                finalProp.vector2Value *= dpiScale;
+                            }
+                        }
+
                         element.resolvedStyle.TrySetProperty(finalProp);
                     }
 
@@ -185,13 +212,6 @@ namespace ImTK.UI
                             key = (int)ImGuiStyleVar.FramePadding,
                             vector2Value = paddingVec
                         });
-                    }
-
-                    var dpiScale = RenderEngine.Context.CurrentDpiScale;
-                    if (dpiScale != 1.0f)
-                    {
-                        element.resolvedLayoutState.Scale(dpiScale);
-                        element.resolvedStyle.Scale(dpiScale);
                     }
 
                     ImGuiStyleHandler.Diff(element.parent?.resolvedStyle, element.resolvedStyle, element.requiredStyle);

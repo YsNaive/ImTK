@@ -1093,6 +1093,14 @@ namespace ImTK.UI
         public ImGuiStyleHandler resolvedStyle { get; } = new ImGuiStyleHandler();
         public ResolvedLayoutState resolvedLayoutState { get; internal set; } = ResolvedLayoutState.Default;
 
+        public float GetFrameHeight()
+        {
+            var padding = ImGui.GetStyle().FramePadding;
+            if (resolvedStyle.TryGetVector2((int)ImGuiStyleVar.FramePadding, out var overridePadding))
+                padding = overridePadding;
+            return ImGui.GetTextLineHeight() + padding.Y * 2;
+        }
+
         internal void ResolveLayoutState(List<StyleProperty> composedProps)
         {
             var state = ResolvedLayoutState.Default;

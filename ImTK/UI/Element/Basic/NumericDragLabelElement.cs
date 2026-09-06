@@ -24,7 +24,7 @@ namespace ImTK.UI
         protected override Vector2 MeasureContent(LayoutConstraint constraint)
         {
             var size = base.MeasureContent(constraint);
-            float minWidth = ImGui.GetFrameHeight();
+            float minWidth = GetFrameHeight();
             size.X = Math.Max(size.X, minWidth);
             return size;
         }
@@ -37,7 +37,7 @@ namespace ImTK.UI
             unsafe {
                 textSize = ImGui.CalcTextSize((byte*)m_textBuffer.Data);
             }
-            float frameHeight = ImGui.GetFrameHeight();
+            float frameHeight = GetFrameHeight();
             
             // Optional: allow subsequent items to overlap this button
             ImGui.SetNextItemAllowOverlap();

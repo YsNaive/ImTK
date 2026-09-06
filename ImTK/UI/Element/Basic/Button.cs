@@ -101,8 +101,7 @@ namespace ImTK.UI
             if (resolvedStyle.TryGetVector2((int)ImGuiStyleVar.FramePadding, out var overridePadding))
                 padding = overridePadding;
             
-            float frameHeight = ImGui.GetTextLineHeight() + padding.Y * 2;
-            return new System.Numerics.Vector2(textSize.X + padding.X * 2, frameHeight);
+            return new System.Numerics.Vector2(textSize.X + padding.X * 2, GetFrameHeight());
         }
 
         public override void OnRender()

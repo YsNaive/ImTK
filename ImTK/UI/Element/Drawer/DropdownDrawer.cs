@@ -123,7 +123,7 @@ namespace ImTK.UI
 
             protected override Vector2 MeasureContent(LayoutConstraint constraint)
             {
-                return new Vector2(0, ImGui.GetFrameHeight());
+                return new Vector2(0, GetFrameHeight());
             }
 
             /// <summary>
@@ -144,7 +144,7 @@ namespace ImTK.UI
                 float width  = this.layoutRect.width;
                 float height = this.layoutRect.height > 0f
                     ? this.layoutRect.height
-                    : ImGui.GetFrameHeight();
+                    : GetFrameHeight();
 
                 if (width <= 0f || height <= 0f) return false;
 

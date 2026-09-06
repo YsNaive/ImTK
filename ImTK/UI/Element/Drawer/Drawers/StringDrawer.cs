@@ -84,7 +84,7 @@ namespace ImTK.UI
                     }
                     else
                     {
-                        return new Vector2(0, ImGui.GetFrameHeight());
+                        return new Vector2(0, GetFrameHeight());
                     }
                 }
 

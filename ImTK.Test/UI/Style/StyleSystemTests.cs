@@ -19,6 +19,7 @@ namespace ImTK.Test.UI.Style
             TestStyleRevertToThemeDefault();
             TestThemeTokenResolution();
             TestFontInheritanceAndSizing();
+            TestDpiScalingHierarchyConsistency();
         }
 
         private bool HasColor(ImGuiStyleHandler handler, ImGuiCol col) => handler.GetActiveProperties().Any(p => p.dataType == StyleDataType.Color && p.key == (int)col);
@@ -194,6 +195,52 @@ namespace ImTK.Test.UI.Style
             // The required style for child MUST push both if font size changed!
             ImTKAssert.IsTrue(HasFontFamily(child.requiredStyle), "Child required style MUST push font family to fetch correct font size!");
             ImTKAssert.IsTrue(HasFontSize(child.requiredStyle), "Child required style should push font size");
+        }
+
+        private void TestDpiScalingHierarchyConsistency()
+        {
+            float originalScale = RenderEngine.Context.CurrentDpiScale;
+            try
+            {
+                RenderEngine.Context.CurrentDpiScale = 1.5f;
+
+                var root = new VisualElement();
+                var child1 = new VisualElement();
+                var child2 = new VisualElement();
+                var child3 = new VisualElement();
+                root.Add(child1);
+                child1.Add(child2);
+                child2.Add(child3);
+
+                RenderEngine.ComputeStyleRecursive(root);
+
+                ImTKAssert.IsTrue(root.resolvedStyle.TryGetVector2((int)ImGuiStyleVar.FramePadding, out var rootPad), "Root must have FramePadding");
+                ImTKAssert.IsTrue(child1.resolvedStyle.TryGetVector2((int)ImGuiStyleVar.FramePadding, out var child1Pad), "Child1 must have FramePadding");
+                ImTKAssert.IsTrue(child2.resolvedStyle.TryGetVector2((int)ImGuiStyleVar.FramePadding, out var child2Pad), "Child2 must have FramePadding");
+                ImTKAssert.IsTrue(child3.resolvedStyle.TryGetVector2((int)ImGuiStyleVar.FramePadding, out var child3Pad), "Child3 must have FramePadding");
+
+                // Base theme padding scaled by 1.5x
+                var basePadding = ImTKTheme.GlobalTheme.padding;
+                ImTKAssert.AreEqual(basePadding.X * 1.5f, rootPad.X, "Root FramePadding.X must be scaled by 1.5x");
+                ImTKAssert.AreEqual(basePadding.Y * 1.5f, rootPad.Y, "Root FramePadding.Y must be scaled by 1.5x");
+
+                // Hierarchy must NOT exponentially compound DPI scaling (i.e. child3 == root, NOT root * 1.5^3)
+                ImTKAssert.AreEqual(rootPad.X, child1Pad.X, "Child1 FramePadding.X must equal Root FramePadding.X");
+                ImTKAssert.AreEqual(rootPad.Y, child1Pad.Y, "Child1 FramePadding.Y must equal Root FramePadding.Y");
+                ImTKAssert.AreEqual(rootPad.X, child2Pad.X, "Child2 FramePadding.X must equal Root FramePadding.X");
+                ImTKAssert.AreEqual(rootPad.Y, child2Pad.Y, "Child2 FramePadding.Y must equal Root FramePadding.Y");
+                ImTKAssert.AreEqual(rootPad.X, child3Pad.X, "Child3 FramePadding.X must equal Root FramePadding.X");
+                ImTKAssert.AreEqual(rootPad.Y, child3Pad.Y, "Child3 FramePadding.Y must equal Root FramePadding.Y");
+
+                // Verify GetFrameHeight() consistency across hierarchy
+                float rootFrameHeight = root.GetFrameHeight();
+                float child3FrameHeight = child3.GetFrameHeight();
+                ImTKAssert.AreEqual(rootFrameHeight, child3FrameHeight, "Root and Child3 GetFrameHeight() must be equal");
+            }
+            finally
+            {
+                RenderEngine.Context.CurrentDpiScale = originalScale;
+            }
         }
     }
 }
